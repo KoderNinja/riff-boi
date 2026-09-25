@@ -13,14 +13,17 @@
   <section id="screen-home" class="screen">
     <h1 class="logo">Riff Boy</h1>
     <button id="new-riff-btn" class="big-btn">New Riff</button>
+    <!-- Only shown when the address ends in ?debug (for tuning note detection) -->
+    <button id="save-readings-btn" class="small-btn" hidden>Save last recording's readings</button>
   </section>
 
   <!-- Recording screen -->
   <section id="screen-recording" class="screen" hidden>
     <h2 class="screen-title">Listening…</h2>
+    <pre id="live-tab" class="tab"></pre>
     <div class="note-display">
-      <div id="note-name" class="note-name">–</div>
-      <div id="note-freq" class="note-freq">Play a note</div>
+      <span id="note-name" class="note-name">–</span>
+      <span id="note-freq" class="note-freq">Play a note</span>
     </div>
     <p id="status-msg" class="status-msg"></p>
     <button id="stop-btn" class="big-btn">Stop</button>

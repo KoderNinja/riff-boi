@@ -32,3 +32,18 @@ What I learned and the problems I solved along the way. I'll use this for my dem
 - **GitHub Pages:** free hosting from my GitHub repo. Phones only allow the mic on secure (https) sites, so I need it for phone testing.
 - **My decision:** add an input picker so I can use my audio interface for more precision. It remembers my choice.
 - **My big question: how precise will it be?** It depends on a clean signal, figuring out where one note ends and the next begins (hardest), playing speed, and tuning. Plan: test a known riff slow/fast/distorted and count right, missed and extra notes.
+
+## Sep 25, 2026 — Build slice 1: hearing notes (`/5-build`)
+- **Building in slices:** small steps I can actually try, each tested and saved before the next. The riskiest part (the mic + Pitchy) went first so problems show up early.
+- **git and commits:** `git init` made my folder a repository; each commit is a saved checkpoint I can go back to.
+- **Local server:** `python3 -m http.server 8000` serves my app at http://localhost:8000. Needed because the mic and JavaScript modules don't work when you just double-click the file.
+- **How it hears notes:** about 60 times a second the app grabs a slice of sound, Pitchy says the pitch and how sure it is, and `notes.js` turns the frequency into a note name (110 Hz = A2). Unclear, quiet or out-of-range sounds are ignored.
+- **Voice filters off:** browsers clean up mic sound for voice calls (echo/noise removal, auto volume), which would mess up a guitar, so I turned them off.
+- **Testing without a guitar:** Claude tested with fake tones; I tested with my real guitar and the notes matched.
+
+## Sep 25, 2026 — Build slice 2: live tab (`/5-build`)
+- **When does a new note start?** The app hears a ringing note ~60 times a second, so it needs rules: a steady pitch after silence, a pitch change, or a volume jump (the pick hitting the string again).
+- **Position rule:** audio gives the note but not the string, so Riff Boy picks the fret closest to my last one.
+- **Fake tones vs a real guitar:** everything passed with clean test tones, but my real guitar (laptop mic, slightly distorted amp) added lots of random notes. Distortion adds harmonics (extra pitches an octave or fifth up) that fooled the detector.
+- **The fix:** notes I didn't pick (hammer-ons/pull-offs) must hold a bit longer, and unpicked octave/fifth jumps are ignored as harmonics. Result: the right notes now.
+- **Debug recorder:** `?debug` saves everything the app heard to a file, so we can replay real playing while tuning instead of guessing.

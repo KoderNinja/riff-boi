@@ -9,7 +9,7 @@ Build mode: learn
 
 ## Slices
 
-- [ ] **1. Tap a button, play a note, and see which note Riff Boy hears**
+- [x] **1. Tap a button, play a note, and see which note Riff Boy hears**
   Becomes usable: A running Riff Boy page (black and red) with a Recording screen. Tap New Riff, allow the mic, play one note, and its name (e.g. "A2") and pitch show on screen live.
   Why now: This is the riskiest part: the mic, the Web Audio API and loading Pitchy from the CDN. If any of it doesn't work the way the spec assumed, we want to know on day one. It also sets up the project (files, local server) as part of making something real.
   PRD ref: `prd.md > Starting a Riff`, `prd.md > Live Note-to-Tab`
@@ -19,7 +19,7 @@ Build mode: learn
   Learner check: Run the server, open http://localhost:8000 in Chrome, tap New Riff, allow the mic, and play a few single notes (open low E, 5th fret A string…). Does the note name on screen match what you played?
   Commit: `Set up Riff Boy and detect live notes from the mic`
 
-- [ ] **2. Play a riff and watch the tab build up live**
+- [x] **2. Play a riff and watch the tab build up live**
   Becomes usable: The core idea works: play single notes and each one appears as a fret number on a six-line tab, left to right in the order played. Held notes stay one note; picking the same note again adds a new one.
   Why now: This is the unique kernel ("I play a riff and the tabs just show up"). It comes right after the audio works, so everything after it is built around a working kernel, not the other way round.
   PRD ref: `prd.md > Live Note-to-Tab`, `prd.md > The Core Journey` (step 3)
@@ -91,3 +91,5 @@ Reflection:
 Activity mode:
 
 ## Revisions
+- Stricter new-note rules in `notes.js` (unpicked pitch changes must hold longer; likely harmonic jumps ignored) — the first real-guitar test (laptop mic + slightly distorted amp, picked and legato playing) added many extra notes that clean test tones never produced.
+- Added a `?debug` recorder (save raw readings as a file) and `tools/replay.mjs` (replay a recording through `notes.js`) — tuning needs evidence from real playing; the spec's file structure didn't include dev tools. Used again in slice 5.

@@ -70,23 +70,47 @@ body {
   background: var(--red-dark);
 }
 
-/* The live note readout on the Recording screen. */
-.note-display {
+.small-btn {
+  padding: 10px 16px;
+  font: inherit;
+  color: var(--muted);
+  background: var(--panel);
+  border: 1px solid var(--muted);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.small-btn[hidden] {
+  display: none;
+}
+
+/* The tab: six lines in a monospace font so the fret numbers line up like real tab.
+   Scrolls sideways when the riff gets long. */
+.tab {
   width: 100%;
+  margin: 0;
+  padding: 20px 16px;
   background: var(--panel);
   border-left: 4px solid var(--red);
-  padding: 32px 16px;
-  text-align: center;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--text);
+  overflow-x: auto;
+}
+
+/* The small "last note heard" readout under the tab. */
+.note-display {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  color: var(--muted);
 }
 
 .note-name {
   font-family: ui-monospace, Menlo, Consolas, monospace;
-  font-size: 4.5rem;
-  color: var(--text);
-}
-
-.note-freq {
-  color: var(--muted);
+  font-size: 1.5rem;
+  color: var(--red);
 }
 
 .status-msg {
