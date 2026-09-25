@@ -1,7 +1,7 @@
 // notes.js — turns Pitchy's readings into guitar notes.
 
-// Tunable limits. Change these if Riff Boy hears too much or too little.
-export const CLARITY_MIN = 0.9;   // how sure Pitchy must be (0 to 1)
+// Tunable limits. Change these if Riff Boi hears too much or too little.
+export const CLARITY_MIN = 0.8;   // how sure Pitchy must be (0 to 1)
 export const VOLUME_MIN = 0.01;   // how loud the sound must be (0 to 1)
 
 // Guitar range in standard tuning: low E (MIDI 40) to the 22nd fret on the high E (MIDI 86).
@@ -25,77 +25,123 @@ export function midiToName(midi) {
 // One reading from the listener → a note, or null if it isn't a clear guitar note.
 export function readNote(freq, clarity, volume) {
   if (clarity < CLARITY_MIN || volume < VOLUME_MIN) return null;
-  const midi = frequencyToMidi(freq);
+  let midi = frequencyToMidi(freq);
+  // Up to an octave below the low E can't come from a guitar: Pitchy heard the
+  // octave below by mistake, so move it up an octave.
+  if (midi >= LOWEST_MIDI - 12 && midi < LOWEST_MIDI) midi += 12;
   if (midi < LOWEST_MIDI || midi > HIGHEST_MIDI) return null;
   return { midi, name: midiToName(midi), freq };
 }
 
 // More tunable numbers, for deciding when a NEW note starts.
 // (One "reading" is one check of the sound, about 1/60 of a second.)
-export const STABLE_READINGS = 3;   // same pitch this many readings in a row = a real (picked) note
-export const LEGATO_READINGS = 6;   // an UNPICKED pitch change (hammer-on, pull-off) must hold this long
-export const QUIET_READINGS = 3;    // this many quiet readings = the note has ended
-export const PICK_JUMP = 1.5;       // volume jumping this many times louder = you picked again
+export const STABLE_READINGS = 3;   // a new note name must be heard this many times (in a short window)
+export const LEGATO_READINGS = 4;   // ...or this many if it wasn't picked (hammer-on, pull-off)
+export const QUIET_READINGS = 4;    // this many quiet readings in a row = the note has ended
+export const GLITCH_READINGS = 2;   // up to this many junk readings don't interrupt a note
+export const PICK_JUMP = 1.8;       // volume this many times louder than just before = you picked
 export const PICK_GAP = 6;          // ignore extra jumps for this many readings after a pick
-export const PICK_WINDOW = 10;      // a pick only counts if a clear pitch shows up this soon after it
+export const PICK_WINDOW = 10;      // a pick only counts if its note shows up this soon after it
+export const FIX_WINDOW = 20;       // how long after a note appears Riff Boi may fix its octave
+export const REPICK_LEVEL = 0.75;  // picking the same note again must be this loud compared to the note's loudest
 
-// Jumps (in semitones) that are probably a harmonic of the ringing note, not a new note:
-// an octave down or up, an octave + a fifth up, two octaves up. Distortion makes these louder.
-const HARMONIC_JUMPS = [-12, 12, 19, 24];
+// Harmonics with a DIFFERENT note name than the note ringing (in semitones above it):
+// octave + fifth, two octaves + major third, two octaves + fifth. Distortion makes them loud.
+// (Octave harmonics have the same name, so the octave fix below handles those.)
+const HARMONIC_JUMPS = [19, 28, 31];
 
-// Makes a note tracker. Feed it every reading; it returns a note only when a NEW one starts:
-// - a clear pitch after quiet,
-// - the pitch changing to a different note (and staying there a few readings;
-//   longer if it wasn't picked, and never for a likely harmonic),
-// - or a volume jump while the pitch stays the same (picking the same note again).
-// A held note stays one note.
+// Makes a note tracker. Feed it every reading. It returns:
+// - a new note { midi, name, t } when one starts,
+// - { fix: { midi, name } } when the note it just wrote was in the wrong octave,
+// - or null.
+//
+// How it works: it follows the note's NAME (F#, C#...) and works out the octave separately,
+// because with distortion Pitchy often hears the octave above for a moment. A guitar note's
+// real pitch is its lowest one, so the lowest octave heard wins. A new note starts when:
+// - a note name is heard after quiet, or changes to a different name, or
+// - the volume jumps while the name stays the same (you picked the same note again).
 export function createNoteTracker() {
-  let current = null;       // MIDI number of the note ringing now (null = nothing)
-  let candidate = null;     // the pitch we're currently hearing, not yet confirmed
-  let stableCount = 0;      // how many readings in a row we've heard the candidate
-  let quietCount = 0;
-  let lastVolume = 0;
-  let sincePick = Infinity; // readings since the last pick (volume jump)
+  let current = null;       // the note ringing now: { midi, name } (null = nothing)
+  let sinceStart = 0;       // readings since the current note started
+  let peak = 0;             // the loudest the current note got
+  let candidate = null;     // a note name we're hearing but haven't confirmed yet (0-11)
+  let candidateCount = 0;   // how many times we've heard it
+  let candidateLow = null;  // the lowest MIDI number heard for it
+  let junk = 0;             // junk readings in a row (unclear, out of range)
+  let quiet = 0;            // quiet readings in a row
+  let volumes = [0, 0, 0];  // the last few volumes, to spot a pick
+  let sincePick = Infinity; // readings since the last pick
   let pickUsed = true;      // has the last pick already started a note?
 
+  function start(midi, t) {
+    current = { midi, name: midiToName(midi) };
+    sinceStart = 0;
+    peak = 0;
+    pickUsed = true; // one pick = one note
+    candidate = null;
+    candidateCount = 0;
+    return { midi, name: current.name, t };
+  }
+
   return function update(freq, clarity, volume, t) {
+    sinceStart++;
+    peak = Math.max(peak, volume); // the loudest this note has been
+
     // Did the volume jump? That's the sound of a pick hitting the string.
-    const jumped = volume > VOLUME_MIN && volume > lastVolume * PICK_JUMP;
-    lastVolume = volume;
-    if (jumped && sincePick >= PICK_GAP) {
+    const before = Math.min(...volumes);
+    volumes = [...volumes.slice(1), volume];
+    if (volume > VOLUME_MIN && volume > before * PICK_JUMP && sincePick >= PICK_GAP) {
       sincePick = 0;
       pickUsed = false;
     } else {
       sincePick++;
     }
+    const picked = !pickUsed && sincePick < PICK_WINDOW;
+
+    // Quiet = the note has ended.
+    quiet = volume < VOLUME_MIN ? quiet + 1 : 0;
+    if (quiet >= QUIET_READINGS) current = null;
 
     const note = readNote(freq, clarity, volume);
     if (!note) {
-      if (volume < VOLUME_MIN && ++quietCount >= QUIET_READINGS) current = null;
-      candidate = null;
-      stableCount = 0;
+      // A few junk readings don't interrupt anything; more than that resets the candidate.
+      if (++junk > GLITCH_READINGS) {
+        candidate = null;
+        candidateCount = 0;
+      }
       return null;
     }
-    quietCount = 0;
+    junk = 0;
+    const name = note.midi % 12;
 
-    stableCount = note.midi === candidate ? stableCount + 1 : 1;
-    candidate = note.midi;
-    if (stableCount < STABLE_READINGS) return null;
-
-    const picked = !pickUsed && sincePick < PICK_WINDOW;
-    const repicked = note.midi === current && picked;
-
-    // A different note without a pick: wait longer, and skip likely harmonics.
-    if (note.midi !== current && current !== null && !picked) {
-      if (stableCount < LEGATO_READINGS) return null;
-      if (HARMONIC_JUMPS.includes(note.midi - current)) return null;
+    // Same note name as the one ringing.
+    if (current && name === current.midi % 12) {
+      candidate = null;
+      candidateCount = 0;
+      // Heard a lower octave soon after the note started? The first guess was a harmonic: fix it.
+      if (note.midi < current.midi && sinceStart <= FIX_WINDOW) {
+        current = { midi: note.midi, name: note.name };
+        return { fix: { midi: note.midi, name: note.name } };
+      }
+      // Picked again? That's a new note with the same name.
+      if (picked && volume >= peak * REPICK_LEVEL) return start(Math.min(note.midi, current.midi), t);
+      return null;
     }
 
-    if (note.midi !== current || repicked) {
-      current = note.midi;
-      pickUsed = true; // one pick = one note
-      return { midi: note.midi, name: note.name, t };
+    // A different note name: count how often we hear it before believing it.
+    if (name === candidate) {
+      candidateCount++;
+      candidateLow = Math.min(candidateLow, note.midi);
+    } else {
+      candidate = name;
+      candidateCount = 1;
+      candidateLow = note.midi;
     }
+    const needed = !current || picked ? STABLE_READINGS : LEGATO_READINGS;
+    if (candidateCount < needed) return null;
+    // Unpicked and exactly a harmonic of the ringing note? Probably not a new note.
+    if (current && !picked && HARMONIC_JUMPS.includes(candidateLow - current.midi)) return null;
+    return start(candidateLow, t);
     return null;
   };
 }

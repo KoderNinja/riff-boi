@@ -3,7 +3,7 @@ doc: prd
 status: approved
 ---
 
-# Riff Boy — Product Requirements
+# Riff Boi — Product Requirements
 
 An app for a guitarist to capture riffs while improvising. You play single notes, the tab appears live, and the riff is saved in the app so it isn't lost.
 Source: `scope.md > The Unique Kernel`, `scope.md > The Core Loop`.
@@ -23,6 +23,7 @@ Success is the moment in `scope.md > What "Working" Looks Like`: **"I play a rif
 - **Recording.** The live tab area (six string lines with fret numbers appearing as you play) and a stop button.
 - **Saving confirmation.** A "Saving..." message showing the riff being saved and where. It shows briefly, then returns home.
 - **Riff view** *(assumption)*: tapping a riff in the list opens it so you can see its tab.
+- **Tuner** *(added during the build)*: a button on the home screen opens a tuner that shows the nearest note and whether you're sharp or flat.
 
 ## Look and Feel
 - **Dark theme**, "kinda metal looking."
@@ -76,6 +77,7 @@ Success is the moment in `scope.md > What "Working" Looks Like`: **"I play a rif
 - Viewing a saved riff
 - "Can't hear the guitar" message
 - Input picker on the home screen (remembers your choice)
+- A built-in guitar tuner *(added during the build)*
 - Dark black-and-red metal look
 
 ## Deferred From the POC
@@ -84,6 +86,7 @@ Success is the moment in `scope.md > What "Working" Looks Like`: **"I play a rif
 
 ## Possible Later Enhancements
 - Renaming, deleting or exporting riffs.
+- **Tuning setting** *(learner idea during the build)*: choose your tuning (e.g. Drop D) and the tabs use it.
 - Releasing it to other guitarists (`scope.md > Later`).
 - "A few other features" the learner mentioned, which aren't defined yet.
 
@@ -94,6 +97,6 @@ Success is the moment in `scope.md > What "Working" Looks Like`: **"I play a rif
 - **Perfect string/fret accuracy.** The simple rule gets the notes right, not necessarily the exact positions.
 
 ## Open Questions
-- ~~Name~~ — resolved: **Riff Boy**.
+- ~~Name~~ — resolved: **Riff Boi** (first "Riff Boy"; renamed by the learner during the build).
 - **Riff titles**: confirmed. Riffs are labeled automatically by date and time.
 - **"Where it's saved"**: confirmed. The confirmation says the riff was saved to your Latest Riffs list.

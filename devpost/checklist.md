@@ -9,15 +9,15 @@ Build mode: learn
 
 ## Slices
 
-- [x] **1. Tap a button, play a note, and see which note Riff Boy hears**
-  Becomes usable: A running Riff Boy page (black and red) with a Recording screen. Tap New Riff, allow the mic, play one note, and its name (e.g. "A2") and pitch show on screen live.
+- [x] **1. Tap a button, play a note, and see which note Riff Boi hears**
+  Becomes usable: A running Riff Boi page (black and red) with a Recording screen. Tap New Riff, allow the mic, play one note, and its name (e.g. "A2") and pitch show on screen live.
   Why now: This is the riskiest part: the mic, the Web Audio API and loading Pitchy from the CDN. If any of it doesn't work the way the spec assumed, we want to know on day one. It also sets up the project (files, local server) as part of making something real.
   PRD ref: `prd.md > Starting a Riff`, `prd.md > Live Note-to-Tab`
   Spec ref: `spec.md > Stack` (verify Pitchy loads early), `spec.md > Audio Listener (audio.js)`, `spec.md > Note Detector (notes.js)` (frequency → note only), `spec.md > File Structure`, `spec.md > Look and Feel`, `spec.md > Where It Runs and How Someone Tries It`
   Build: Create `index.html`, `css/style.css` (color variables, dark mobile-first base), `js/app.js`, `js/audio.js` (default input, AnalyserNode, ~60 readings a second, Pitchy from jsDelivr), and `js/notes.js` (clarity/volume limits, guitar range, frequency → note name and MIDI number). Show the current note on the Recording screen with a Stop button that stops listening.
   Verify (mechanical): Serve with `python3 -m http.server 8000`, load the page in the browser pane and confirm no console errors and that Pitchy imports; run a Node check that known frequencies map to the right notes (110 Hz → A2, 82.4 Hz → E2, 329.6 Hz → E4); feed a test tone into the page in place of the mic and confirm the right note name appears.
   Learner check: Run the server, open http://localhost:8000 in Chrome, tap New Riff, allow the mic, and play a few single notes (open low E, 5th fret A string…). Does the note name on screen match what you played?
-  Commit: `Set up Riff Boy and detect live notes from the mic`
+  Commit: `Set up Riff Boi and detect live notes from the mic`
 
 - [x] **2. Play a riff and watch the tab build up live**
   Becomes usable: The core idea works: play single notes and each one appears as a fret number on a six-line tab, left to right in the order played. Held notes stay one note; picking the same note again adds a new one.
@@ -34,22 +34,32 @@ Build mode: learn
   Why now: Once the kernel works, saving is what makes a captured riff safe, which was your reason for the home list. It depends on the note shape from slice 2.
   PRD ref: `prd.md > The Core Journey`, `prd.md > Stopping and Saving`, `prd.md > Latest Riffs List`, `prd.md > States and Boundaries` (first use, persistence)
   Spec ref: `spec.md > App Shell and Screens`, `spec.md > Latest Riffs Screen`, `spec.md > Saving and Storage (storage.js)`, `spec.md > Saving Confirmation`, `spec.md > Riff View`, `spec.md > Data Model`
-  Build: Create `js/storage.js` (`riffboy.riffs` in localStorage, newest first, date/time label). Add the four screens to `index.html` and screen switching in `app.js`: Latest Riffs list, Recording, Saving confirmation (~1.5 s), Riff View using the same tab drawing as Recording. Pick the heading font with the learner.
+  Build: Create `js/storage.js` (`riffboi.riffs` in localStorage, newest first, date/time label). Add the four screens to `index.html` and screen switching in `app.js`: Latest Riffs list, Recording, Saving confirmation (~1.5 s), Riff View using the same tab drawing as Recording. Pick the heading font with the learner.
   Verify (mechanical): In the browser pane, record a riff from test tones, press Stop, confirm the confirmation text, the riff at the top of the list and the saved JSON in localStorage; reload and confirm it's still there; open it in Riff View; stop with no notes and confirm nothing is saved.
   Learner check: Record two riffs, then close the tab and reopen http://localhost:8000. Are both there, newest on top? Tap one: is its tab the one you played?
   Commit: `Save riffs and show them on the home screen`
 
-- [ ] **4. Pick your audio interface, and hear about it when Riff Boy can't hear you**
+- [ ] **4. Pick your audio interface, and hear about it when Riff Boi can't hear you**
   Becomes usable: A dropdown on the home screen to choose the mic or your audio interface, remembered between visits (falls back to the default if it's unplugged). The Recording screen shows "Can't hear your guitar" if the mic is blocked or no clear note comes in within about 5 seconds, and hides it once a note is caught.
   Why now: These make the core journey reliable with your real setup. They come after the kernel works, and before tuning, so tuning happens through the interface you'll demo with.
   PRD ref: `prd.md > Screens and Layout` (input picker), `prd.md > States and Boundaries` (can't hear, mic permission)
-  Spec ref: `spec.md > Input Picker (audio.js + home screen)`, `spec.md > "Can't Hear Your Guitar" Message`, `spec.md > Important Failure Modes`, `spec.md > Data Model` (`riffboy.inputDeviceId`)
-  Build: Add input listing (`enumerateDevices`) and the picker to the home screen, save the choice in `riffboy.inputDeviceId`, open that device in `audio.js` with fallback to default. Add the "Can't hear your guitar" message for permission denied / input fails / 5 seconds with no note. Show an error if Pitchy fails to load.
+  Spec ref: `spec.md > Input Picker (audio.js + home screen)`, `spec.md > "Can't Hear Your Guitar" Message`, `spec.md > Important Failure Modes`, `spec.md > Data Model` (`riffboi.inputDeviceId`)
+  Build: Add input listing (`enumerateDevices`) and the picker to the home screen, save the choice in `riffboi.inputDeviceId`, open that device in `audio.js` with fallback to default. Add the "Can't hear your guitar" message for permission denied / input fails / 5 seconds with no note. Show an error if Pitchy fails to load.
   Verify (mechanical): In the browser pane, confirm the picker lists inputs and the choice survives a reload; set a saved device id that doesn't exist and confirm it falls back; make getUserMedia fail and confirm the message; start recording with silence and confirm the message shows after about 5 seconds and hides when a test tone starts.
   Learner check: Plug in your interface, pick it in the dropdown, reload the page and check it's still picked, then record a riff through it. Also try tapping New Riff and not playing anything: does the message show up?
   Commit: `Add input picker and can't-hear message`
 
-- [ ] **5. Find out how precise Riff Boy is, and tune it**
+- [ ] **5. Tune your guitar with the built-in tuner**
+  Becomes usable: A Tuner button on the home screen opens a tuner screen: play one string and it shows the nearest note and how sharp or flat you are, with a clear "in tune" state. Uses the input you picked.
+  Why now: An out-of-tune string sits between two notes, which makes Riff Boi flip between them. Tuning up right before the precision test means the test measures Riff Boi, not the guitar. It reuses the listening code from slices 1 and 4.
+  PRD ref: `prd.md > Screens and Layout` (Tuner), `prd.md > What We're Building`
+  Spec ref: `spec.md > Audio Listener (audio.js)`, `spec.md > Note Detector (notes.js)` (frequency → note), `spec.md > Look and Feel`
+  Build: Add a Tuner screen and home-screen button. Show the nearest note and its offset in cents (hundredths of a semitone) from the exact pitch, with an "in tune" state within a few cents. Stop listening when leaving the screen.
+  Verify (mechanical): Node check of the cents math (440 Hz = A4, 0 cents; 446 Hz ≈ +23 cents); in the browser pane, feed in-tune and out-of-tune test tones and confirm the note, the sharp/flat direction and the in-tune state; confirm the mic is released after leaving the screen.
+  Learner check: Tune your guitar with it, then check one string against another tuner you trust. Do they agree?
+  Commit: `Add a guitar tuner`
+
+- [ ] **6. Find out how precise Riff Boi is, and tune it**
   Becomes usable: Detection limits tuned from real testing on your guitar, with the results written down for your demo. Answers your question "how will the precision of the app be?"
   Why now: Tuning only makes sense once the whole journey and your interface work. The results feed straight into your demo and write-up.
   PRD ref: `prd.md > Live Note-to-Tab` (acceptance criteria)
@@ -59,14 +69,14 @@ Build mode: learn
   Learner check: Play the same riff again after tuning. Did the counts improve? Your numbers go in `devpost/learning-log.md` in your own words.
   Commit: `Tune note detection from precision testing`
 
-- [ ] **6. Make it look finished and runnable by judges**
-  Becomes usable: Final metal look pass, "Add to Home Screen" support (manifest + icon), and a README that tells a judge how to run Riff Boy.
+- [ ] **7. Make it look finished and runnable by judges**
+  Becomes usable: Final metal look pass, "Add to Home Screen" support (manifest + icon), and a README that tells a judge how to run Riff Boi.
   Why now: Polish last, once behavior is settled. The README is required for submission and must describe the finished app.
   PRD ref: `prd.md > Look and Feel`, `prd.md > What We're Building`
   Spec ref: `spec.md > Look and Feel`, `spec.md > File Structure` (`manifest.webmanifest`, `icons/`, `README.md`), `spec.md > Where It Runs and How Someone Tries It`
   Build: Styling pass per the spec (big red buttons, heading font, monospace tab), `manifest.webmanifest` and a simple icon, and a README with what it is, how to run it locally, tech used, and a placeholder section for your AI-use disclosure (in your own words).
   Verify (mechanical): Load the page in the browser pane at phone width and desktop width with no console errors or horizontal scrolling; confirm the manifest loads; follow the README run steps exactly from a fresh terminal.
-  Learner check: Open Riff Boy on phone width (or your phone later via GitHub Pages) and run through the whole journey. Does it look like it belongs with technical metal? Follow the README steps yourself: could a judge get it running?
+  Learner check: Open Riff Boi on phone width (or your phone later via GitHub Pages) and run through the whole journey. Does it look like it belongs with technical metal? Follow the README steps yourself: could a judge get it running?
   Commit: `Polish look, add manifest and README`
 
 ## Hands-on Checkpoints
@@ -93,3 +103,7 @@ Activity mode:
 ## Revisions
 - Stricter new-note rules in `notes.js` (unpicked pitch changes must hold longer; likely harmonic jumps ignored) — the first real-guitar test (laptop mic + slightly distorted amp, picked and legato playing) added many extra notes that clean test tones never produced.
 - Added a `?debug` recorder (save raw readings as a file) and `tools/replay.mjs` (replay a recording through `notes.js`) — tuning needs evidence from real playing; the spec's file structure didn't include dev tools. Used again in slice 5.
+- Smarter position rule in `tab.js` (4-fret hand box, string-jump cost, open strings only near the nut, first note on the thickest string at fret ≤ 5) replaces "closest fret to the previous note" — the learner's Crazy Train test put the D on the open D string instead of A string 5th fret. Still a guess; tap-to-edit stays deferred.
+- Rewrote note detection to follow the note's name and pick the lowest octave heard (fixing the last note when the real octave shows up late); fold readings an octave below the low E back up; clarity 0.9 → 0.8; a same-note re-pick must reach 75% of the note's loudest volume; non-octave harmonics (+19, +28, +31) ignored when unpicked — the learner's Crazy Train recording (laptop mic, slightly distorted amp) showed octave errors, notes just under the clarity limit, and ~6 Hz volume pulsing that looked like re-picks. Score on that recording: 8 → 26 of 31 notes correct. Added `tools/score.mjs` and `tools/check.mjs` so every change is measured; the early precision work from slice 6 partly moved here.
+- Renamed the app Riff Boy → Riff Boi (learner decision); localStorage keys are now `riffboi.*`.
+- Added slice 5 (built-in tuner) at the learner's request; placed before precision testing because an out-of-tune guitar causes note flipping. The learner's tuning-setting idea (e.g. Drop D) went to `prd.md > Possible Later Enhancements`.

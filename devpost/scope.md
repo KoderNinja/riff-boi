@@ -3,7 +3,7 @@ doc: scope
 status: approved
 ---
 
-# Riff Boy
+# Riff Boi
 
 A guitar app that listens while you play and writes out the tablature in real time.
 

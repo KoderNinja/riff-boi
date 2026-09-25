@@ -1,8 +1,8 @@
-// app.js — starts Riff Boy, switches screens and wires up the buttons.
+// app.js — starts Riff Boi, switches screens and wires up the buttons.
 
 import { startListening, stopListening } from './audio.js';
 import { createNoteTracker } from './notes.js';
-import { choosePosition, drawTab } from './tab.js';
+import { placeNotes, drawTab } from './tab.js';
 
 const screens = {
   home: document.getElementById('screen-home'),
@@ -18,7 +18,7 @@ let riffNotes = [];
 let startTime = 0;
 let trackNote = null;
 
-// Debug recorder: open Riff Boy as http://localhost:8000/?debug to record every raw
+// Debug recorder: open Riff Boi as http://localhost:8000/?debug to record every raw
 // reading, then save them as a file. Lets us replay real playing while tuning notes.js.
 const DEBUG = new URLSearchParams(location.search).has('debug');
 const saveReadingsBtn = document.getElementById('save-readings-btn');
@@ -32,19 +32,22 @@ function showScreen(name) {
 }
 
 // Called for every reading from the mic (~60 times a second).
-// When a new note starts, pick its string + fret and redraw the tab.
+// When a new note starts (or the last one's octave gets fixed), redraw the tab.
 function handleReading(freq, clarity, volume) {
   const t = (performance.now() - startTime) / 1000; // seconds since New Riff
   if (DEBUG) readings.push([round(freq, 2), round(clarity, 3), round(volume, 4), round(t, 3)]);
-  const note = trackNote(freq, clarity, volume, t);
-  if (!note) return;
+  const result = trackNote(freq, clarity, volume, t);
+  if (!result) return;
 
-  const previous = riffNotes[riffNotes.length - 1];
-  const spot = choosePosition(note.midi, previous);
-  riffNotes.push({ midi: note.midi, name: note.name, string: spot.string, fret: spot.fret, t: Number(t.toFixed(2)) });
-
+  if (result.fix) {
+    // The last note was really an octave lower: correct it.
+    Object.assign(riffNotes[riffNotes.length - 1], result.fix);
+  } else {
+    riffNotes.push({ midi: result.midi, name: result.name, t: round(t, 2) });
+  }
+  placeNotes(riffNotes); // choose string + fret for every note
   drawTab(liveTab, riffNotes);
-  noteName.textContent = note.name;
+  noteName.textContent = riffNotes[riffNotes.length - 1].name;
   noteFreq.textContent = `${riffNotes.length} note${riffNotes.length === 1 ? '' : 's'}`;
 }
 
@@ -52,12 +55,12 @@ function round(x, digits) {
   return Number(x.toFixed(digits));
 }
 
-// Save the readings (plus the notes Riff Boy wrote) as a .json file in Downloads.
+// Save the readings (plus the notes Riff Boi wrote) as a .json file in Downloads.
 saveReadingsBtn.addEventListener('click', () => {
   const data = JSON.stringify({ notes: riffNotes, readings });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
-  link.download = 'riffboy-readings.json';
+  link.download = 'riffboi-readings.json';
   link.click();
 });
 

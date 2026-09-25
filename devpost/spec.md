@@ -3,17 +3,17 @@ doc: spec
 status: approved
 ---
 
-# Riff Boy — Technical Spec
+# Riff Boi — Technical Spec
 
 ## How This Works, In Plain Language
-Riff Boy is a **web app**: a set of files that a browser (like Chrome) opens and runs. There's no server and no accounts. Everything happens on your own device.
+Riff Boi is a **web app**: a set of files that a browser (like Chrome) opens and runs. There's no server and no accounts. Everything happens on your own device.
 
 It's built from the three basic web languages:
 - **HTML** is the structure: the riff list, the buttons, the tab area.
 - **CSS** is the look: black and red, the metal feel.
 - **JavaScript** is the behavior: listening, finding notes, drawing tab, saving.
 
-When you tap **New Riff**, the browser's **Web Audio API** (its built-in sound toolkit) starts listening to your chosen input: the laptop mic, or your audio interface. Many times a second, a small free library called **Pitchy** looks at the sound and answers two questions: *what note is this* and *how sure am I* (its "clarity" score). When a new clear note starts, Riff Boy works out a string and fret for it, using a simple rule that stays close to the previous note, and adds it to the tab on screen.
+When you tap **New Riff**, the browser's **Web Audio API** (its built-in sound toolkit) starts listening to your chosen input: the laptop mic, or your audio interface. Many times a second, a small free library called **Pitchy** looks at the sound and answers two questions: *what note is this* and *how sure am I* (its "clarity" score). When a new clear note starts, Riff Boi works out a string and fret for it, using a simple rule that stays close to the previous note, and adds it to the tab on screen.
 
 When you tap **Stop**, the riff is saved in **localStorage**, a notebook the browser keeps for this one website. That's why your riffs are still there when you come back. Your choice of audio input is saved there too.
 
@@ -22,7 +22,7 @@ When you tap **Stop**, the riff is saved in **localStorage**, a notebook the bro
 ## The Core Journey Through the System
 PRD ref: `prd.md > The Core Journey`.
 
-1. **You open Riff Boy** → the browser loads `index.html`, then `app.js` reads your saved riffs and input choice from localStorage → you see **Latest Riffs** (newest first), the **input picker** and the **New Riff** button.
+1. **You open Riff Boi** → the browser loads `index.html`, then `app.js` reads your saved riffs and input choice from localStorage → you see **Latest Riffs** (newest first), the **input picker** and the **New Riff** button.
 2. **You tap New Riff** → `audio.js` asks the browser for the chosen input (the first time, the browser asks your permission) → the **Recording** screen shows the empty six-line tab and a **Stop** button.
 3. **You play a note** → Web Audio gives `audio.js` a small slice of sound many times a second → Pitchy returns a frequency and a clarity score → `notes.js` turns the frequency into a note name and decides whether a *new* note just started → `tab.js` picks a string and fret and draws the number on the tab.
 4. **You tap Stop** → listening stops → `storage.js` saves the riff (date/time label + list of notes) into localStorage → the **Saving** confirmation shows the label, the note count and "Saved to Latest Riffs."
@@ -78,7 +78,7 @@ From `prd.md > Look and Feel`: dark, "kinda metal looking," black and red.
   - darker red for pressed states: `#8e0d14`
   - main text: off-white `#ececec`
   - muted text: grey `#8a8a8a`
-- **Type:** a heavy, sharp metal-style display font **only for the "Riff Boy" logo and screen titles**, e.g. a Google Font like *Metal Mania* or *New Rocker*, picked by the learner during the build. A clean, bold sans-serif (e.g. *Oswald* or system font) for everything else. **The tab uses a monospace font** so fret numbers line up like real tab.
+- **Type:** a heavy, sharp metal-style display font **only for the "Riff Boi" logo and screen titles**, e.g. a Google Font like *Metal Mania* or *New Rocker*, picked by the learner during the build. A clean, bold sans-serif (e.g. *Oswald* or system font) for everything else. **The tab uses a monospace font** so fret numbers line up like real tab.
 - **Layout:** mobile-first. One column, big thumb-sized buttons, and the New Riff and Stop buttons as the biggest red things on screen.
 - **Tone of copy:** short and punchy ("New Riff", "Can't hear your guitar").
 - **Home-screen icon:** a small `manifest.webmanifest` + icon so "Add to Home Screen" on a phone opens it full-screen like an app. This is a polish step, done last.
@@ -139,10 +139,14 @@ Shown on the Recording screen when:
 It disappears as soon as a note is caught.
 PRD ref: `prd.md > States and Boundaries`.
 
+### Tuner *(added during the build)*
+A screen opened from the home screen. It uses the same listener (`audio.js`) and frequency → note math (`notes.js`), and shows the nearest note plus how far off it is in cents (hundredths of a semitone), with an "in tune" state within a few cents.
+PRD ref: `prd.md > Screens and Layout` (Tuner).
+
 ## Data Model
 Everything lives in the browser's localStorage, as text in JSON format (a simple way of writing data as text).
 
-**`riffboy.riffs`**: the list of saved riffs, newest first:
+**`riffboi.riffs`**: the list of saved riffs, newest first:
 ```json
 [
   {
@@ -160,7 +164,7 @@ Everything lives in the browser's localStorage, as text in JSON format (a simple
 - `string` counts 1–6 from high e to low E, the same as the lines on the tab.
 - `t` is seconds since you tapped New Riff. It's saved now and kept for later (e.g. rhythm).
 
-**`riffboy.inputDeviceId`**: which audio input you picked.
+**`riffboi.inputDeviceId`**: which audio input you picked.
 
 | Data | Where it lives | How it changes | When you leave and come back |
 |---|---|---|---|
@@ -182,7 +186,7 @@ beginners-paradise/          # the project folder = the GitHub repo
 │   └── storage.js           # save/load riffs and the chosen input (localStorage)
 ├── manifest.webmanifest     # (polish) home-screen app name, colors, icon
 ├── icons/                   # (polish) app icon for "Add to Home Screen"
-├── README.md                # what Riff Boy is, how to run it, tech used, AI disclosure
+├── README.md                # what Riff Boi is, how to run it, tech used, AI disclosure
 ├── .gitignore               # keeps learner-profile.md and .env files out of git
 ├── CLAUDE.md                # instructions for Claude in this project
 └── devpost/                 # planning docs + learning log
@@ -206,7 +210,7 @@ beginners-paradise/          # the project folder = the GitHub repo
 ## What Was Simplified and Why
 - **One web app** instead of a native phone app: mobile-first design + GitHub Pages + "Add to Home Screen" gets close to the app feel. A true app would need Xcode or React Native setup and app store steps.
 - **localStorage** instead of a database or cloud sync: single user, one device, no accounts. Cloud saving would need a server, logins and more.
-- **Pitchy** instead of writing pitch detection from scratch: the math is a project on its own. We still write the note-start logic, which is the Riff Boy-specific part.
+- **Pitchy** instead of writing pitch detection from scratch: the math is a project on its own. We still write the note-start logic, which is the Riff Boi-specific part.
 - **Simple position rule** instead of editing positions or using a camera (learner decisions in `prd.md > Product Decisions` and `scope.md > Explicitly Cut`).
 - **Standard tuning only**: drop tunings would need a tuning setting (later).
 - **No rhythm in the tab**: note order only. Note times are saved so rhythm could be added later.

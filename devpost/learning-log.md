@@ -47,3 +47,13 @@ What I learned and the problems I solved along the way. I'll use this for my dem
 - **Fake tones vs a real guitar:** everything passed with clean test tones, but my real guitar (laptop mic, slightly distorted amp) added lots of random notes. Distortion adds harmonics (extra pitches an octave or fifth up) that fooled the detector.
 - **The fix:** notes I didn't pick (hammer-ons/pull-offs) must hold a bit longer, and unpicked octave/fifth jumps are ignored as harmonics. Result: the right notes now.
 - **Debug recorder:** `?debug` saves everything the app heard to a file, so we can replay real playing while tuning instead of guessing.
+- **Renamed:** Riff Boy → **Riff Boi** during the build.
+
+## Sep 25, 2026 — Making note detection accurate with real data
+- **Evidence over guessing:** I recorded myself playing the Crazy Train riff with `?debug`, and we replayed that recording through the code after every change, scoring it against the notes I really played. Score went from **8 to 26 of 31 notes correct**.
+- **What was wrong:** with a laptop mic and distortion, the detector often heard the **octave above** the real note; some real notes were just under the "clarity" limit; and my amp/room made the volume **pulse about 6 times a second**, which looked like extra picks.
+- **Fixes:** follow the note's *name* first and pick the lowest octave heard (a guitar note's real pitch is its lowest); accept slightly less clear readings; a repeated note only counts if it's nearly as loud as the note's first attack.
+- **Tuning numbers:** I tested several settings side by side and kept the one with the fewest total mistakes, not just the most correct notes.
+- **Checks:** `node tools/check.mjs` re-runs all the logic checks in one command, so a fix can't secretly break something that worked before.
+- **Strings are still a guess:** audio can't tell which string you played. The rule now imagines a 4-fret hand box and avoids jumping strings, which fixed my Crazy Train opening.
+- **New ideas:** a built-in tuner (added to the plan) and a tuning setting like Drop D (saved for later).
