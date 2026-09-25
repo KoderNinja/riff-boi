@@ -1,7 +1,7 @@
 // app.js — starts Riff Boi, switches screens and wires up the buttons.
 
 import { startListening, stopListening } from './audio.js';
-import { createNoteTracker } from './notes.js';
+import { createNoteTracker, cleanUpRiff } from './notes.js';
 import { placeNotes, drawTab } from './tab.js';
 
 const screens = {
@@ -43,12 +43,14 @@ function handleReading(freq, clarity, volume) {
     // The last note was really an octave lower: correct it.
     Object.assign(riffNotes[riffNotes.length - 1], result.fix);
   } else {
-    riffNotes.push({ midi: result.midi, name: result.name, t: round(t, 2) });
+    result.t = round(result.t, 2);
+    riffNotes.push(result); // the tracker keeps updating this note's peak loudness
   }
-  placeNotes(riffNotes); // choose string + fret for every note
-  drawTab(liveTab, riffNotes);
-  noteName.textContent = riffNotes[riffNotes.length - 1].name;
-  noteFreq.textContent = `${riffNotes.length} note${riffNotes.length === 1 ? '' : 's'}`;
+  const shown = cleanUpRiff(riffNotes); // drop ghost notes, fix octave glitches
+  placeNotes(shown); // choose string + fret for every note
+  drawTab(liveTab, shown);
+  noteName.textContent = shown.length ? shown[shown.length - 1].name : '–';
+  noteFreq.textContent = `${shown.length} note${shown.length === 1 ? '' : 's'}`;
 }
 
 function round(x, digits) {
@@ -57,7 +59,7 @@ function round(x, digits) {
 
 // Save the readings (plus the notes Riff Boi wrote) as a .json file in Downloads.
 saveReadingsBtn.addEventListener('click', () => {
-  const data = JSON.stringify({ notes: riffNotes, readings });
+  const data = JSON.stringify({ notes: cleanUpRiff(riffNotes), readings });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
   link.download = 'riffboi-readings.json';

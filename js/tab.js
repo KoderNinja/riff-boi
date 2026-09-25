@@ -11,7 +11,7 @@ const BOX_SIZE = 4;        // your hand covers about 4 frets without moving
 const MOVE_COST = 2;       // cost per fret of moving your hand outside that box
 const STRING_COST = 1;     // cost per string you jump across
 const OPEN_POSITION = 3;   // hand this close to the nut = open strings are easy
-const FIRST_NOTE_MAX = 5;  // first note: thickest string that plays it at this fret or lower
+const WALK_COST = 0.5;     // walking up/down one string a fret at a time: keeping going is cheap
 
 // Every string/fret spot where this note can be played.
 export function positionsFor(midi) {
@@ -29,11 +29,18 @@ export function positionsFor(midi) {
 // The rule: imagine your hand covers a box of 4 frets. Each possible spot for a note
 // gets a "cost": moving your hand outside the box, and jumping across strings, both
 // cost effort. The cheapest spot wins; on a tie, the thicker string.
+// One exception: if you just moved one fret along a string, taking one more step the
+// same way on that string is cheap — you're probably walking up (or down) that string.
 export function createPositionPicker() {
   let boxLow = null;        // lowest fret of the hand's box (null = no note yet)
   let lastString = null;
+  let lastFret = null;
+  let lastStep = 0;         // fret change of the last move, if it stayed on the same string
 
   function cost(spot) {
+    const walking = Math.abs(lastStep) === 1 && spot.string === lastString && spot.fret - lastFret === lastStep;
+    if (walking) return WALK_COST;
+
     let move = 0;
     const openIsEasy = spot.fret === 0 && boxLow <= OPEN_POSITION;
     if (!openIsEasy) {
@@ -43,10 +50,11 @@ export function createPositionPicker() {
     return move * MOVE_COST + Math.abs(spot.string - lastString) * STRING_COST;
   }
 
+  // First note: the lowest fret, not counting open strings (unless open is the only way).
   function firstSpot(spots) {
-    const low = spots.filter((s) => s.fret <= FIRST_NOTE_MAX);
-    if (low.length > 0) return low.reduce((a, b) => (b.string > a.string ? b : a));
-    return spots.reduce((a, b) => (b.fret < a.fret ? b : a));
+    const fretted = spots.filter((s) => s.fret > 0);
+    if (fretted.length === 0) return spots[0];
+    return fretted.reduce((a, b) => (b.fret < a.fret ? b : a));
   }
 
   // Slide the box just enough to include the new fret. Open strings don't move your hand.
@@ -71,7 +79,9 @@ export function createPositionPicker() {
       });
       moveBox(spot.fret);
     }
+    lastStep = spot.string === lastString ? spot.fret - lastFret : 0;
     lastString = spot.string;
+    lastFret = spot.fret;
     return spot;
   };
 }

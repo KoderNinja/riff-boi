@@ -44,14 +44,20 @@ export const PICK_GAP = 6;          // ignore extra jumps for this many readings
 export const PICK_WINDOW = 10;      // a pick only counts if its note shows up this soon after it
 export const FIX_WINDOW = 20;       // how long after a note appears Riff Boi may fix its octave
 export const REPICK_LEVEL = 0.75;  // picking the same note again must be this loud compared to the note's loudest
+export const REPICK_HOLD = 7;      // ...and then hold its pitch this many readings
 
-// Harmonics with a DIFFERENT note name than the note ringing (in semitones above it):
-// octave + fifth, two octaves + major third, two octaves + fifth. Distortion makes them loud.
-// (Octave harmonics have the same name, so the octave fix below handles those.)
-const HARMONIC_JUMPS = [19, 28, 31];
+// Is this pitch probably a harmonic of the ringing note, not a new note?
+// Distortion and strong picking make a note's overtones loud. The ones with a DIFFERENT
+// note name are the fifth (in any octave above, e.g. C over F) and two octaves + a major
+// third. (Octave overtones have the same name, so the octave fix below handles those.)
+function isLikelyHarmonic(midi, ringingMidi) {
+  const jump = midi - ringingMidi;
+  return jump > 0 && (jump % 12 === 7 || jump === 28);
+}
 
 // Makes a note tracker. Feed it every reading. It returns:
-// - a new note { midi, name, t } when one starts,
+// - a new note { midi, name, t, peak } when one starts (peak = how loud it got while its
+//   pitch was heard; it keeps growing while the note rings: the tracker updates that object),
 // - { fix: { midi, name } } when the note it just wrote was in the wrong octave,
 // - or null.
 //
@@ -61,31 +67,30 @@ const HARMONIC_JUMPS = [19, 28, 31];
 // - a note name is heard after quiet, or changes to a different name, or
 // - the volume jumps while the name stays the same (you picked the same note again).
 export function createNoteTracker() {
-  let current = null;       // the note ringing now: { midi, name } (null = nothing)
+  let current = null;       // the note ringing now: { midi, name, t, peak } (null = nothing)
   let sinceStart = 0;       // readings since the current note started
-  let peak = 0;             // the loudest the current note got
   let candidate = null;     // a note name we're hearing but haven't confirmed yet (0-11)
   let candidateCount = 0;   // how many times we've heard it
   let candidateLow = null;  // the lowest MIDI number heard for it
+  let repickCount = 0;      // readings of the same note since a re-pick (0 = no re-pick)
   let junk = 0;             // junk readings in a row (unclear, out of range)
   let quiet = 0;            // quiet readings in a row
   let volumes = [0, 0, 0];  // the last few volumes, to spot a pick
   let sincePick = Infinity; // readings since the last pick
   let pickUsed = true;      // has the last pick already started a note?
 
-  function start(midi, t) {
-    current = { midi, name: midiToName(midi) };
+  function start(midi, t, volume) {
+    current = { midi, name: midiToName(midi), t, peak: volume };
     sinceStart = 0;
-    peak = 0;
     pickUsed = true; // one pick = one note
     candidate = null;
     candidateCount = 0;
-    return { midi, name: current.name, t };
+    repickCount = 0;
+    return current;
   }
 
   return function update(freq, clarity, volume, t) {
     sinceStart++;
-    peak = Math.max(peak, volume); // the loudest this note has been
 
     // Did the volume jump? That's the sound of a pick hitting the string.
     const before = Math.min(...volumes);
@@ -100,7 +105,10 @@ export function createNoteTracker() {
 
     // Quiet = the note has ended.
     quiet = volume < VOLUME_MIN ? quiet + 1 : 0;
-    if (quiet >= QUIET_READINGS) current = null;
+    if (quiet >= QUIET_READINGS) {
+      current = null;
+      repickCount = 0;
+    }
 
     const note = readNote(freq, clarity, volume);
     if (!note) {
@@ -118,17 +126,23 @@ export function createNoteTracker() {
     if (current && name === current.midi % 12) {
       candidate = null;
       candidateCount = 0;
+      current.peak = Math.max(current.peak, volume); // the loudest this note has been
       // Heard a lower octave soon after the note started? The first guess was a harmonic: fix it.
       if (note.midi < current.midi && sinceStart <= FIX_WINDOW) {
-        current = { midi: note.midi, name: note.name };
+        current.midi = note.midi;
+        current.name = note.name;
         return { fix: { midi: note.midi, name: note.name } };
       }
-      // Picked again? That's a new note with the same name.
-      if (picked && volume >= peak * REPICK_LEVEL) return start(Math.min(note.midi, current.midi), t);
+      // Picked again, as loud as the note's attack? Wait until the pitch holds (it might be
+      // the pick of the NEXT note, heard a moment before the new fret is pressed down).
+      if (repickCount === 0 && picked && volume >= current.peak * REPICK_LEVEL) repickCount = 1;
+      else if (repickCount > 0) repickCount++;
+      if (repickCount >= REPICK_HOLD) return start(Math.min(note.midi, current.midi), t, volume);
       return null;
     }
 
     // A different note name: count how often we hear it before believing it.
+    repickCount = 0;
     if (name === candidate) {
       candidateCount++;
       candidateLow = Math.min(candidateLow, note.midi);
@@ -140,8 +154,41 @@ export function createNoteTracker() {
     const needed = !current || picked ? STABLE_READINGS : LEGATO_READINGS;
     if (candidateCount < needed) return null;
     // Unpicked and exactly a harmonic of the ringing note? Probably not a new note.
-    if (current && !picked && HARMONIC_JUMPS.includes(candidateLow - current.midi)) return null;
-    return start(candidateLow, t);
-    return null;
+    if (current && !picked && isLikelyHarmonic(candidateLow, current.midi)) return null;
+    return start(candidateLow, t, volume);
   };
+}
+
+// Clean-up rules that need to see the whole riff so far (the tab redraws with them live).
+export const GHOST_LEVEL = 0.35;   // a note this much quieter than the riff's typical note is noise
+
+// Returns the riff's notes with two kinds of mistakes cleaned up:
+// 1. Ghost notes: much quieter than your other notes (background noise, a finger touching
+//    a string before you start). Needs at least 3 notes to know what "typical" is.
+// 2. Octave glitches: a note that jumps an octave away from both neighbours, when an
+//    octave lower it would sit right between them (F#3 G4 G#3 → F#3 G3 G#3).
+//    Real octave riffs like A2 A3 A2 are left alone: there the lower octave EQUALS a
+//    neighbour instead of sitting between them.
+export function cleanUpRiff(notes) {
+  let kept = notes;
+  if (notes.length >= 3) {
+    const typical = median(notes.map((n) => n.peak));
+    kept = notes.filter((n) => n.peak >= typical * GHOST_LEVEL);
+  }
+  return kept.map((note, i) => {
+    const prev = kept[i - 1];
+    const next = kept[i + 1];
+    const down = note.midi - 12;
+    const between = (other) => other.midi !== down && Math.abs(other.midi - down) <= 2;
+    if (prev && next && down >= LOWEST_MIDI && between(prev) && between(next)) {
+      return { ...note, midi: down, name: midiToName(down) };
+    }
+    return note;
+  });
+}
+
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }

@@ -57,3 +57,10 @@ What I learned and the problems I solved along the way. I'll use this for my dem
 - **Checks:** `node tools/check.mjs` re-runs all the logic checks in one command, so a fix can't secretly break something that worked before.
 - **Strings are still a guess:** audio can't tell which string you played. The rule now imagines a 4-fret hand box and avoids jumping strings, which fixed my Crazy Train opening.
 - **New ideas:** a built-in tuner (added to the plan) and a tuning setting like Drop D (saved for later).
+
+## Sep 25, 2026 — My own test set (my idea!)
+- **Labeled test data:** I recorded myself playing frets 1–12 on every string and wrote down exactly what I played (the "ground truth"). Every change to Riff Boi now gets a score against my answers, for notes AND strings.
+- **Scoreboard:** `node tools/score.mjs` scores every recording at once. Result: **97 of 103 notes and 72 of 72 strings right**.
+- **What the data showed:** one small mistake snowballs — a stray note or one wrong octave pulled whole runs onto the wrong string. Fixing the first mistake fixed the whole run.
+- **Background noise:** quiet sounds before I start playing showed up as notes. Riff Boi now drops notes much quieter (under 35%) than my typical note. I picked 35% by measuring: noise was 14–22%, my real notes were 56% or louder.
+- **Overfitting:** if you tune on the same recordings you test on, the score can look better than it really is. The fair test is a new riff that wasn't used for tuning.
