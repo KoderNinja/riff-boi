@@ -81,7 +81,7 @@ Build mode: learn
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — after slice 2 (live tab from your real guitar)
+- [x] Early usable behavior explored — after slice 2 (live tab from your real guitar): random notes and wrong strings reported → fixed with recordings + scoring; learner: "a lot better"
 - [ ] Final kick-the-tires exploration and feedback completed
 
 ## Final Review
