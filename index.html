@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Riff Boy</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Each <section> is one screen. app.js shows one at a time. -->
+
+  <!-- Home screen (the Latest Riffs list comes in slice 3) -->
+  <section id="screen-home" class="screen">
+    <h1 class="logo">Riff Boy</h1>
+    <button id="new-riff-btn" class="big-btn">New Riff</button>
+  </section>
+
+  <!-- Recording screen -->
+  <section id="screen-recording" class="screen" hidden>
+    <h2 class="screen-title">Listening…</h2>
+    <div class="note-display">
+      <div id="note-name" class="note-name">–</div>
+      <div id="note-freq" class="note-freq">Play a note</div>
+    </div>
+    <p id="status-msg" class="status-msg"></p>
+    <button id="stop-btn" class="big-btn">Stop</button>
+  </section>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

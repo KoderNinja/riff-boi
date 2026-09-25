@@ -1,0 +1,13 @@
+# Personal learning context — keep out of commits
+/devpost/learner-profile.md
+
+# Local secrets (API keys etc.) — never commit
+.env
+.env.*
+!.env.example
+
+# macOS folder junk
+.DS_Store
+
+# Local Claude Code tool settings
+.claude/
