@@ -80,7 +80,7 @@ Ranked by how much each one helps Riff Boi before the deadline, for how much wor
 2. [x] Play a riff back so I can hear it. Size: small to medium. Done: a Play button on saved riffs and in New Tab, with a plucked-string sound (my pick). Each note turns red as it plays.
 3. [x] Upload a recording (like an mp3) and get its tab, not in real time (my idea). Size: medium. Done: Upload a recording and Try a sample (my pentatonic scale) under New Riff. The sample gives the same tab as the scoreboard.
 4. [x] Tap a note to move it to another string. Size: small to medium. Done: tap a note on a saved riff, then pick another string (built while I was away, so check it).
-5. Copy a riff as text tab, part of the export idea. Size: small. The text tab code already exists.
+5. [x] Copy a riff as text tab, part of the export idea. Size: small. Done: a Copy button on saved riffs, with bar lines (built while I was away, so check it).
 6. A key and scale finder that shows what key or scale a riff is in, like E minor pentatonic. Size: small to medium. It would be fun to show in the demo.
 7. A tuning setting like Drop D (my idea). Size: medium. Drop D is very common in metal.
 8. Mark the notes Riff Boi isn't sure about (dim them in the tab), so I know which ones to double-check. Size: medium. It goes with the accuracy work.

@@ -69,6 +69,7 @@ The sound says which note, not which string. The same note can be played in up t
 - `placeNotes` tries every place the first note could be, with every finger, and keeps the version of the whole riff with the least hand movement. That's how a pentatonic box at the 6th fret stays at the 6th fret.
 - `tabToken` writes a note as tab text: `7`, `7b9`, `7b9r7` or `7pb9r7`.
 - `otherSpots` lists the other strings a note can be played on, for moving a note on a saved riff.
+- `tabText` writes the tab as six lines of text with bar lines, for Copy (`barStarts` in `rhythm.js` says where the bars start).
 
 ## `js/rhythm.js` and `js/tabsvg.js`: the page of tab
 
@@ -105,7 +106,7 @@ Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs`
 
 ## `tools/`: the tests
 
-- `check.mjs`: 153 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
+- `check.mjs`: 155 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
 - `score.mjs`: the scoreboard. It replays my 8 real recordings and compares them to what I really played (the `.txt` answer files): 110 of 115 notes, and 83 of 83 on the right string.
 - `replay.mjs`: replays one `?debug` recording through the current code, to compare before and after a change.
 

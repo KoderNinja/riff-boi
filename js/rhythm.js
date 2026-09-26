@@ -70,6 +70,13 @@ export function rhythmOf(notes, bpm, endTime = null) {
   return starts.map((beat, i) => ({ beat, value: valueFor((i + 1 < starts.length ? starts[i + 1] : end) - beat) }));
 }
 
+// Which notes start a new bar (their index), for bar lines in text tab.
+export function barStarts(notes, bpm, endTime, meter) {
+  const time = meterOf(meter);
+  const beats = rhythmOf(notes, bpm, endTime);
+  return beats.flatMap(({ beat }, i) => (i > 0 && barOf(beat, time) > barOf(beats[i - 1].beat, time) ? [i] : []));
+}
+
 // The longest note value that fits in `beats`.
 export function valueFor(beats) {
   return VALUES.find((v) => v.beats <= beats + 1e-9) ?? VALUES[VALUES.length - 1];

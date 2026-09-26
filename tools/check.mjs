@@ -4,9 +4,9 @@
 
 import { readFileSync, readdirSync } from 'node:fs';
 import { readNote, createNoteTracker, cleanUpRiff, tuningOf, stillRinging, RINGING_READINGS, notesFromReadings } from '../js/notes.js';
-import { placeNotes, positionsFor, drawTab, tabToken, otherSpots } from '../js/tab.js';
+import { placeNotes, positionsFor, drawTab, tabToken, otherSpots, tabText } from '../js/tab.js';
 import { riffConfidence } from '../js/confidence.js';
-import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS } from '../js/rhythm.js';
+import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS, barStarts } from '../js/rhythm.js';
 import { tabSvg } from '../js/tabsvg.js';
 import { openInput, listInputs } from '../js/audio.js';
 import { saveRiff, loadRiffs, updateRiff, deleteRiff, riffTiming } from '../js/storage.js';
@@ -619,6 +619,24 @@ check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().m
   check('move a note: C3 on the A string can also go on the low E (fret 8)', spots({ midi: 48, string: 5, fret: 3 }) === '6/8', spots({ midi: 48, string: 5, fret: 3 }));
   check('move a note: G3 on the G string can go on the D, A or low E', spots({ midi: 55, string: 3, fret: 0 }) === '4/5 5/10 6/15', spots({ midi: 55, string: 3, fret: 0 }));
   check('move a note: the open low E can only be played there', spots({ midi: 40, string: 6, fret: 0 }) === '');
+}
+
+// --- Copy as text tab ---
+{
+  const notes = [{ string: 5, fret: 5 }, { string: 5, fret: 7 }, { string: 4, fret: 7, bend: 2, release: true }, { string: 6, fret: 0 }];
+  const text = tabText(notes, [2]);
+  const want = [
+    'e|-----|---------|',
+    'B|-----|---------|',
+    'G|-----|---------|',
+    'D|-----|-7b9r7---|',
+    'A|-5-7-|---------|',
+    'E|-----|-------0-|',
+  ].join('\n');
+  check('copy: text tab has every note in its column, with a bar line where a bar starts', text === want, `\n${text}`);
+  const quarters = Array.from({ length: 7 }, (_, i) => ({ t: i * 0.5 })); // 120 BPM
+  check('copy: bar lines go every 4 quarter notes in 4/4, every 3 in 3/4',
+    barStarts(quarters, 120, 3.5, '4/4').join(' ') === '4' && barStarts(quarters, 120, 3.5, '3/4').join(' ') === '3 6', `${barStarts(quarters, 120, 3.5, '4/4')} / ${barStarts(quarters, 120, 3.5, '3/4')}`);
 }
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');

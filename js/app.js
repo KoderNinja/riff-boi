@@ -2,9 +2,9 @@
 
 import { startListening, stopListening, listInputs, onInputsChange, soundInfo } from './audio.js';
 import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS } from './notes.js';
-import { placeNotes, otherSpots, STRING_NAMES } from './tab.js';
+import { placeNotes, otherSpots, STRING_NAMES, tabText } from './tab.js';
 import { tabSvg } from './tabsvg.js';
-import { METERS, detectTempo } from './rhythm.js';
+import { METERS, detectTempo, barStarts } from './rhythm.js';
 import { loadRiffs, saveRiff, updateRiff, deleteRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
 import { riffConfidence } from './confidence.js';
 import { writtenRiff, retime, EDITOR_MAX_FRET } from './editor.js';
@@ -478,6 +478,52 @@ stopBtn.addEventListener('click', async () => {
   if (detected !== null) setBpm(bpm); // the next riff's live tab starts at this tempo
   await wait(auto ? 2500 : 1500); // a little longer, to read the tempo
   showHome();
+});
+
+// --- Copy a riff as text tab ---
+
+// The riff as text, to paste anywhere: its name (with the tempo and time signature when it has
+// rhythm), then six lines of tab with bar lines.
+function riffAsText(riff) {
+  const timing = riffTiming(riff, settings.bpm);
+  const newBar = timing.timing ? barStarts(riff.notes, timing.bpm, timing.endTime, timing.meter) : [];
+  const about = timing.timing ? ` (${Math.round(timing.bpm)} BPM, ${timing.meter})` : '';
+  return `${riffTitle(riff)}${about}\n${tabText(riff.notes, newBar)}\n`;
+}
+
+// Copy text to the clipboard. The newer way first; some browsers (like the ones inside apps)
+// block it, so then the older way: select the text in a hidden box and copy that.
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    console.error(err);
+    const box = document.createElement('textarea');
+    box.value = text;
+    box.setAttribute('readonly', ''); // no keyboard popping up on phones
+    box.style.position = 'fixed';
+    box.style.opacity = '0';
+    document.body.append(box);
+    box.select();
+    let copied = false;
+    try {
+      copied = document.execCommand('copy');
+    } catch (fallbackErr) {
+      console.error(fallbackErr);
+    }
+    box.remove();
+    return copied;
+  }
+}
+
+let copiedTimer = 0;
+$('riff-copy-btn').addEventListener('click', async () => {
+  const button = $('riff-copy-btn');
+  button.textContent = (await copyText(riffAsText(shownRiff))) ? 'Copied' : "Couldn't copy";
+  button.focus(); // the hidden box took the focus
+  clearTimeout(copiedTimer);
+  copiedTimer = setTimeout(() => (button.textContent = 'Copy'), 2000);
 });
 
 // --- Move a note to another string ---

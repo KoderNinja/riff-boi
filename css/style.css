@@ -784,6 +784,10 @@ body {
   min-width: 80px; /* the same width when it says Stop */
 }
 
+.copy-btn {
+  min-width: 80px;
+}
+
 .riff-tempo[hidden] {
   display: none; /* display: flex above would beat the hidden attribute */
 }

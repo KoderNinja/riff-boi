@@ -182,3 +182,7 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 ## Sep 26, 2026: Moving a note to another string
 - The sound says which note, not which string, so Riff Boi guesses the string. Now I can tap a note on a saved riff and pick another string for it, and the riff saves my choice.
 - The tab is one picture for screen readers, so the notes inside it aren't real buttons. The strings to pick from are real buttons under the tab, and a note can also be reached with Tab and Enter. After moving, the keyboard focus goes back to the note so you don't lose your place.
+
+## Sep 26, 2026: Copy as text tab
+- Copy puts the riff on the clipboard as plain text tab, with bar lines where each bar starts, so I can paste it into a message or a forum.
+- Browsers only let a page copy right after a real tap, and some block the newer way to copy completely (the test browser did, even on a real click). So Riff Boi tries the newer way, then the older one: put the text in a hidden box, select it and copy. Testing on the strictest browser found this.

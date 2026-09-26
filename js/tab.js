@@ -140,18 +140,25 @@ export function tabToken(note) {
   return `${fret}${note.prebend ? 'pb' : 'b'}${note.fret + note.bend}${note.release ? `r${fret}` : ''}`;
 }
 
-// Draw notes as six lines of tab text inside the given element, e.g.
-//   e|-------------
-//   A|-5-7-7b9r7---
-// Each note gets its own column, left to right in the order played.
-export function drawTab(element, notes) {
+// Notes as six lines of tab text, e.g.
+//   e|-------------|
+//   A|-5-7-7b9r7---|
+// Each note gets its own column, left to right in the order played. `newBar` lists the notes
+// that start a new bar, to put a bar line before them.
+export function tabText(notes, newBar = []) {
   const lines = STRING_LABELS.map((label) => label + '|-');
-  for (const note of notes) {
+  notes.forEach((note, i) => {
+    if (i > 0 && newBar.includes(i)) for (let s = 0; s < 6; s++) lines[s] += '|-';
     const token = tabToken(note);
     for (let s = 1; s <= 6; s++) {
       lines[s - 1] += (s === note.string ? token : '-'.repeat(token.length)) + '-';
     }
-  }
-  element.textContent = lines.map((line) => line + '--').join('\n');
+  });
+  return lines.map((line) => line + '|').join('\n');
+}
+
+// The same, inside the given element (the checks use it).
+export function drawTab(element, notes) {
+  element.textContent = tabText(notes);
   element.scrollLeft = element.scrollWidth; // keep the newest notes in view
 }
