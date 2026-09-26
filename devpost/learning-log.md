@@ -74,7 +74,8 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - Scoreboard now: 110/115 notes (96%), 0 wrong notes, 83/83 strings.
 
 ## Sep 25, 2026: Putting Riff Boi on GitHub
-- I made my first public repo, since the hackathon needs one: https://github.com/KoderNinja/riff-boi
+- I made my first public repo, since the hackathon needs one. It's now at https://github.com/riff-boi/riff-boi
+- Then I made a free GitHub organization called `riff-boi` and moved the repo into it, so Matt can deploy it on Vercel. Vercel's free plan only deploys repos you own, or public repos in an org you belong to. GitHub forwards the old address to the new one.
 - My 8 commits went up exactly as they were, with their original dates, which shows the work happened during the hackathon.
 - My learner profile, `.claude/` and `.DS_Store` never left my Mac, because of `.gitignore`.
 - A remote is the copy of my repo on GitHub, and pushing sends my new commits there. Claude now builds in a cloud session and pushes each checked step, and I test it with my guitar on the live link.

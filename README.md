@@ -18,7 +18,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 You'll need Chrome (other modern browsers should work too), Python 3 for a small local server (Macs usually have it already), a mic or an audio interface, and internet the first time the page loads, because it downloads the pitch detection library.
 
 ```
-git clone https://github.com/KoderNinja/riff-boi.git
+git clone https://github.com/riff-boi/riff-boi.git
 cd riff-boi
 python3 -m http.server 8000
 ```
