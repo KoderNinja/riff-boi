@@ -3,7 +3,7 @@
 // curved arrows, and the rhythm underneath (stems, and beams joining eighths and sixteenths).
 // The picture is SVG (shapes described as text), so it stays sharp at any size.
 
-import { rhythmOf, BEATS_PER_BAR } from './rhythm.js';
+import { rhythmOf, meterOf, barOf, groupOf } from './rhythm.js';
 import { tabToken } from './tab.js';
 
 const LEFT = 6;               // where the staff starts
@@ -24,19 +24,21 @@ const stringY = (string) => TOP + (string - 1) * LINE_GAP; // string 1 (high e) 
 
 // notes: the riff's notes in order (string, fret, t, and bend info).
 // Options: bpm (beats per minute), endTime (seconds, sets the last note's length),
+// meter (the time signature, like '4/4' or '7/8'),
 // timing (false = rhythm switched off: notes evenly spaced, no bars, tempo or stems),
 // rhythm (draw stems and beams), bendArrows (bends as arrows; false = text like 7b9r7),
 // highlightLast (the newest note in red, while recording).
 // Returns the picture as SVG text.
-export function tabSvg(notes, { bpm = 120, endTime = null, timing = true, rhythm = true, bendArrows = true, highlightLast = false } = {}) {
+export function tabSvg(notes, { bpm = 120, endTime = null, meter = '4/4', timing = true, rhythm = true, bendArrows = true, highlightLast = false } = {}) {
+  const time = meterOf(meter);
   // With rhythm off, pretend every note is a quarter note in one long bar: evenly spaced.
-  const beats = timing ? rhythmOf(notes, bpm, endTime) : notes.map((_, i) => ({ beat: 0, value: { beats: 0, name: 'none' } }));
+  const beats = timing ? rhythmOf(notes, bpm, endTime) : notes.map(() => ({ beat: 0, value: { beats: 0, name: 'none' } }));
   if (!timing) rhythm = false;
   const start = timing ? START : 36; // no 4/4 to make room for when rhythm is off
   const labels = notes.map((note) => (bendArrows ? String(note.fret) : tabToken(note)));
   const widths = labels.map((label) => label.length * DIGIT + 4);
 
-  // Across the page: each note's x, and the bar lines (every 4 beats) in between.
+  // Across the page: each note's x, and the bar lines (one every bar) in between.
   const xs = [];
   const bars = [];
   notes.forEach((note, i) => {
@@ -47,10 +49,10 @@ export function tabSvg(notes, { bpm = 120, endTime = null, timing = true, rhythm
     const prev = xs[i - 1];
     const room = (widths[i - 1] + widths[i]) / 2 + 10 + (notes[i - 1].bend && bendArrows ? BEND_ROOM : 0);
     let gap = Math.max(MIN_GAP, room, (beats[i].beat - beats[i - 1].beat) * BEAT_WIDTH);
-    const newBars = Math.floor(beats[i].beat / BEATS_PER_BAR) - Math.floor(beats[i - 1].beat / BEATS_PER_BAR);
+    const newBars = barOf(beats[i].beat, time) - barOf(beats[i - 1].beat, time);
     if (newBars > 0) {
       gap += 2 * BAR_PAD;
-      bars.push({ x: prev + gap - BAR_PAD - widths[i] / 2 - 6, measure: Math.floor(beats[i].beat / BEATS_PER_BAR) + 1 });
+      bars.push({ x: prev + gap - BAR_PAD - widths[i] / 2 - 6, measure: barOf(beats[i].beat, time) + 1 });
     }
     xs.push(prev + gap);
   });
@@ -60,13 +62,13 @@ export function tabSvg(notes, { bpm = 120, endTime = null, timing = true, rhythm
   const height = rhythm ? STEM_TOP + STEM_LENGTH + 10 : TOP + STAFF + 14;
 
   const parts = [];
-  // The staff: six string lines, a line at each end, "TAB" and the 4/4 time signature.
+  // The staff: six string lines, a line at each end, "TAB" and the time signature.
   for (let s = 1; s <= 6; s++) parts.push(`<line class="t-line" x1="${LEFT}" y1="${stringY(s)}" x2="${end}" y2="${stringY(s)}"/>`);
   parts.push(`<line class="t-bar" x1="${LEFT}" y1="${TOP}" x2="${LEFT}" y2="${TOP + STAFF}"/>`);
   parts.push(`<line class="t-bar" x1="${end}" y1="${TOP}" x2="${end}" y2="${TOP + STAFF}"/>`);
   ['T', 'A', 'B'].forEach((letter, i) => parts.push(`<text class="t-clef" x="${LEFT + 14}" y="${TOP + 21 + i * 20}">${letter}</text>`));
   if (timing) {
-    parts.push(`<text class="t-time" x="${LEFT + 42}" y="${TOP + 32}">4</text><text class="t-time" x="${LEFT + 42}" y="${TOP + 70}">4</text>`);
+    parts.push(`<text class="t-time" x="${LEFT + 42}" y="${TOP + 32}">${time.top}</text><text class="t-time" x="${LEFT + 42}" y="${TOP + 70}">${time.bottom}</text>`);
     parts.push(`<text class="t-tempo" x="${LEFT}" y="16">♩ = ${Math.round(bpm)}</text>`);
     parts.push(`<text class="t-measure" x="${LEFT + 2}" y="${TOP - 8}">1</text>`);
   }
@@ -84,9 +86,9 @@ export function tabSvg(notes, { bpm = 120, endTime = null, timing = true, rhythm
     if (note.bend && bendArrows) parts.push(bendArrow(note, xs[i], widths[i], y));
   });
 
-  if (rhythm) parts.push(rhythmMarks(beats, xs));
+  if (rhythm) parts.push(rhythmMarks(beats, xs, time));
 
-  const label = `Tab of ${notes.length} note${notes.length === 1 ? '' : 's'}` + (timing ? ` at ${Math.round(bpm)} BPM` : '');
+  const label = `Tab of ${notes.length} note${notes.length === 1 ? '' : 's'}` + (timing ? ` at ${Math.round(bpm)} BPM in ${time.top}/${time.bottom}` : '');
   return `<svg class="tab-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${end + 4} ${height}" width="${end + 4}" height="${height}" role="img" aria-label="${label}">${parts.join('')}</svg>`;
 }
 
@@ -121,9 +123,10 @@ function arrowHead(x, y, direction) {
 }
 
 // Rhythm under the tab: no stem for a whole note, a short stem for a half note, a full stem
-// for the rest. Eighths and sixteenths in the same beat are joined by beams (one for eighths,
-// two for sixteenths); a lone one gets flags instead. A dot means half as long again.
-function rhythmMarks(beats, xs) {
+// for the rest. Eighths and sixteenths in the same beam group are joined by beams (one for
+// eighths, two for sixteenths); a lone one gets flags instead. A dot means half as long again.
+// The beam groups come from the time signature: a beat in 4/4, threes in 6/8, 2+2+3 in 7/8.
+function rhythmMarks(beats, xs, time) {
   const marks = [];
   const bottom = STEM_TOP + STEM_LENGTH;
   const short = (v) => v.name === 'eighth' || v.name === 'sixteenth';
@@ -133,7 +136,7 @@ function rhythmMarks(beats, xs) {
     marks.push(`<line class="t-stem" x1="${xs[i]}" y1="${STEM_TOP}" x2="${xs[i]}" y2="${stemEnd}"/>`);
     if (value.dotted) marks.push(`<circle class="t-dot" cx="${xs[i] + 5}" cy="${stemEnd - 3}" r="1.8"/>`);
   });
-  // Group eighths and sixteenths that sit in the same beat, next to each other.
+  // Group eighths and sixteenths that sit in the same beam group, next to each other.
   let i = 0;
   while (i < beats.length) {
     if (!short(beats[i].value)) {
@@ -141,7 +144,7 @@ function rhythmMarks(beats, xs) {
       continue;
     }
     let j = i;
-    while (j + 1 < beats.length && short(beats[j + 1].value) && Math.floor(beats[j + 1].beat) === Math.floor(beats[i].beat)) j++;
+    while (j + 1 < beats.length && short(beats[j + 1].value) && groupOf(beats[j + 1].beat, time) === groupOf(beats[i].beat, time)) j++;
     if (j === i) {
       // A lone eighth (one flag) or sixteenth (two flags).
       const flags = beats[i].value.name === 'sixteenth' ? 2 : 1;

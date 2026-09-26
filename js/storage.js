@@ -13,9 +13,10 @@ export function loadRiffs() {
   }
 }
 
-// Settings: the tempo (BPM) and whether the tab shows rhythm. Remembered between visits.
+// Settings: the tempo (BPM), whether Riff Boi works the tempo out by itself (Auto), the time
+// signature, and whether the tab shows rhythm. Remembered between visits.
 const SETTINGS_KEY = 'riffboi.settings';
-export const DEFAULT_SETTINGS = { bpm: 120, rhythm: true };
+export const DEFAULT_SETTINGS = { bpm: 120, autoTempo: false, meter: '4/4', rhythm: true };
 
 export function loadSettings() {
   try {
@@ -55,8 +56,9 @@ export function saveInputId(deviceId) {
 
 // Save a new riff at the top of the list and return it.
 // `confidence` is how sure Riff Boi was about it (see confidence.js), or null.
-// `timing` is { bpm, endTime }: the tempo it was played at, and when you tapped Stop
-// (seconds), so its note values can be drawn again later.
+// `timing` is { bpm, endTime, meter, autoTempo }: the tempo it was played at, when its last
+// note ended (seconds), its time signature, and whether Riff Boi worked the tempo out by
+// itself, so its note values can be drawn again later.
 // Throws if the browser won't let us save (the app shows a message).
 export function saveRiff(notes, confidence = null, timing = {}) {
   const now = new Date();
@@ -70,8 +72,21 @@ export function saveRiff(notes, confidence = null, timing = {}) {
     confidence: confidence && roundNumbers(confidence),
     bpm: timing.bpm,
     endTime: timing.endTime === undefined ? undefined : Math.round(timing.endTime * 100) / 100,
+    meter: timing.meter,
+    autoTempo: timing.autoTempo || undefined, // only saved when it's true
   };
   localStorage.setItem(RIFFS_KEY, JSON.stringify([riff, ...loadRiffs()]));
+  return riff;
+}
+
+// Change a saved riff (like typing a new tempo for it) and return the changed riff, or null
+// if it's not there any more. Throws if the browser won't let us save.
+export function updateRiff(id, changes) {
+  const riffs = loadRiffs();
+  const riff = riffs.find((r) => r.id === id);
+  if (!riff) return null;
+  Object.assign(riff, changes);
+  localStorage.setItem(RIFFS_KEY, JSON.stringify(riffs));
   return riff;
 }
 

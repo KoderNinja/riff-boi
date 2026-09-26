@@ -25,7 +25,8 @@
       <button id="tuner-btn" class="secondary-btn tuner-btn">Tuner</button>
     </header>
     <button id="new-riff-btn" class="record-btn"><span class="record-dot" aria-hidden="true"></span>New Riff</button>
-    <!-- Settings for the tab: the tempo you play at (for note values) and rhythm on/off -->
+    <!-- Settings for the tab: the tempo you play at (for note values), or Auto (Riff Boi works it
+         out from your notes when you tap Stop), the time signature, and rhythm on/off -->
     <div class="settings-row">
       <div class="tempo">
         <span class="setting-label">Tempo</span>
@@ -34,6 +35,8 @@
         <span class="setting-unit">BPM</span>
         <button id="bpm-up" class="step-btn" aria-label="Faster">+</button>
       </div>
+      <label class="rhythm-switch" title="Work out the tempo from my notes when I tap Stop"><input id="auto-tempo-input" type="checkbox" aria-label="Auto tempo: work it out from my notes when I tap Stop"> <span class="setting-label">Auto</span></label>
+      <label class="meter-picker"><span class="setting-label">Time</span> <select id="meter-select" class="input-select" aria-label="Time signature"></select></label>
       <label class="rhythm-switch"><input id="rhythm-input" type="checkbox" checked> <span class="setting-label">Rhythm</span></label>
     </div>
     <!-- Which input Riff Boi listens to: the mic or your audio interface (remembered between visits) -->
@@ -105,6 +108,13 @@
     <button id="back-btn" class="back-btn">← Latest Riffs</button>
     <h2 id="riff-title" class="screen-title"></h2>
     <div id="riff-tab" class="tab"></div>
+    <!-- This riff's tempo: type a new one to fix it (like an Auto guess that came out double or half speed) -->
+    <label id="riff-tempo" class="riff-tempo">
+      <span class="setting-label">Tempo</span>
+      <input id="riff-bpm-input" class="bpm-input" type="number" inputmode="numeric" min="40" max="240" step="1" aria-label="This riff's tempo in beats per minute">
+      <span class="setting-unit">BPM</span>
+      <span id="riff-auto-tag" class="muted">auto</span>
+    </label>
     <!-- Same confidence bar, for the saved riff (hidden for riffs saved before it existed) -->
     <div id="riff-confidence" class="confidence" hidden>
       <div class="confidence-label"><span>Confidence</span><span class="confidence-pct">–</span></div>
