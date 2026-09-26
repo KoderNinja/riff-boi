@@ -8,13 +8,14 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 
 ## Next up
 
-Where we left off (Sep 26, 2026, morning):
-- The cloud session's commits are on GitHub now (I brought them to my Mac from the zip and pushed), so riffboi.com has the iPhone fix. My Mac's bar line fix went on top of them.
-- Done and on riffboi.com: the Rhythm switch fix (it only changes the riff I'm recording now).
-- Done, but only on my Mac until I test them: the time signature, Auto tempo and New Tab (on the `tab-editor` branch). Once I say they work, Claude puts them on `main` and pushes.
-- Also done: the GitHub About box (live now), a quick codebase check, and README updates for the new features (on the branch too).
-- My ideas are ranked at the bottom of this list. Next for Claude: build them in that order, asking me about each design first. After that, accuracy and ways to tell which string I played (my requests).
-- My part: test on my iPhone and with my guitar, including the time signature, Auto tempo and New Tab.
+Where we left off (Sep 26, 2026, early afternoon):
+- On GitHub and riffboi.com: the cloud session's work, my bar line fix and the Rhythm switch fix.
+- Only on my Mac, on the `ideas` branch (I asked Claude not to push until I'm back): the time signature, Auto detect tempo, New Tab, Rename and Delete, Play, Upload a recording and Try a sample, moving a note to another string, Copy, the key and scale finder, Share, Practice (speed, loop, click), and clearer switch labels. 163 checks pass and the scoreboard is unchanged (110/115, 83/83).
+- My part first: test those at http://localhost:8000 (Cmd+Shift+R first). When they work, Claude fast-forwards `main` to `ideas` and pushes, and riffboi.com updates.
+- Claude built ideas 4, 5, 6, 10 and 14 while I was away, using its recommended choices. They're listed in `checklist.md` so I can change any of them.
+- Skipped for now, to do with me: ideas 7 to 9 (Drop D, dimming unsure notes, hammer-ons/pull-offs/slides) change how notes are heard, so they need my decisions and my guitar. 11 to 13 and 16 need decisions too.
+- Next with Claude: accuracy, and ways to tell which string I played (my request).
+- Still mine: test on my iPhone and with my guitar, the Devpost description and AI part (my words), screenshots, the demo video, and submitting.
 
 ## Before the deadline
 
