@@ -12,7 +12,7 @@ Where we left off (Sep 26, 2026, morning):
 - The cloud session's commits are on GitHub now (I brought them to my Mac from the zip and pushed), so riffboi.com has the iPhone fix. My Mac's bar line fix went on top of them.
 - The Rhythm switch fix is done: it only changes the riff I'm recording now.
 - The time signature and Auto tempo are done too (merged from the `time-signature` branch).
-- Claude's part, in priority order: the GitHub About box, README and codebase check are done. Next is the manual tab editor (designed: a New Tab button on the home screen, tap a string then set the fret, a note value for each note). Then rank my ideas list by priority, then work on accuracy and on ways to tell which string I played (my requests).
+- Claude's part, in priority order: the GitHub About box, README and codebase check are done. The manual tab editor is built too (New Tab), on the `tab-editor` branch until I test it. Next: rank my ideas list by priority, then work on accuracy and on ways to tell which string I played (my requests).
 - My part: test on my iPhone and with my guitar, including the time signature and Auto tempo.
 
 ## Before the deadline
@@ -48,7 +48,7 @@ In order of priority. "Me" is stuff only I can do, "Claude" is building with Cla
 ### 3. If there's time
 - [x] Claude: change the time signature (like 3/4, 6/8 or 7/8), not just 4/4
 - [x] Claude: tempo detection (my idea). A choice to let Riff Boi work out the tempo from how I play, instead of setting the BPM myself (the Auto switch)
-- [ ] Claude: start a manual tab editor, to write my own tabs from scratch (my request: start it after the tasks above)
+- [x] Claude: start a manual tab editor, to write my own tabs from scratch (my request). New Tab on the home screen: pick a string, a fret and a note value, then Add note. Later: bends, rests, editing a note in the middle, and editing recorded riffs
 - [ ] Claude: rank my ideas list below by priority (my request)
 - [ ] Me + Claude: better accuracy, and ways to tell which string I played (my request, after everything else)
 

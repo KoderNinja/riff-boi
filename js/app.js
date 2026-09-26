@@ -7,6 +7,7 @@ import { tabSvg } from './tabsvg.js';
 import { METERS, detectTempo } from './rhythm.js';
 import { loadRiffs, saveRiff, updateRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
 import { riffConfidence } from './confidence.js';
+import { writtenRiff, retime, EDITOR_MAX_FRET } from './editor.js';
 
 const screens = {
   home: document.getElementById('screen-home'),
@@ -14,6 +15,7 @@ const screens = {
   saving: document.getElementById('screen-saving'),
   tuner: document.getElementById('screen-tuner'),
   riff: document.getElementById('screen-riff'),
+  editor: document.getElementById('screen-editor'),
 };
 const $ = (id) => document.getElementById(id);
 const liveTab = $('live-tab');
@@ -182,7 +184,7 @@ function showHome() {
     const meta = document.createElement('span');
     meta.className = 'riff-meta';
     const confidence = riff.confidence ? ` · ${Math.round(riff.confidence.score * 100)}%` : '';
-    meta.textContent = noteCount(riff.notes.length) + confidence;
+    meta.textContent = noteCount(riff.notes.length) + confidence + (riff.written ? ' · written' : '');
     top.append(label, meta);
     const preview = document.createElement('span');
     preview.className = 'mini-tab';
@@ -231,11 +233,13 @@ function drawRiff(riff) {
 // Type a new tempo to fix a riff's tempo (like an Auto guess that came out double or half speed).
 $('riff-bpm-input').addEventListener('change', (event) => {
   const bpm = clampBpm(Number(event.target.value), riffTiming(shownRiff, settings.bpm).bpm);
+  // A written tab keeps its note values (see retime). A recorded riff keeps its times.
+  const changes = { ...(shownRiff.written ? retime(shownRiff, bpm) : { bpm }), autoTempo: false };
   try {
-    shownRiff = updateRiff(shownRiff.id, { bpm, autoTempo: false }) ?? { ...shownRiff, bpm, autoTempo: false };
+    shownRiff = updateRiff(shownRiff.id, changes) ?? { ...shownRiff, ...changes };
   } catch (err) {
     console.error(err); // the browser blocked saving: the tab still changes, but won't be remembered
-    shownRiff = { ...shownRiff, bpm, autoTempo: false };
+    shownRiff = { ...shownRiff, ...changes };
   }
   drawRiff(shownRiff);
 });
@@ -386,6 +390,96 @@ stopBtn.addEventListener('click', async () => {
   $('saving-where').textContent = 'Saved to Latest Riffs';
   if (detected !== null) setBpm(bpm); // the next riff's live tab starts at this tempo
   await wait(auto ? 2500 : 1500); // a little longer, to read the tempo
+  showHome();
+});
+
+// --- New Tab: write a tab by hand ---
+
+const editor = { written: [], string: 6, beats: 1 }; // the notes so far, and what's picked
+
+// Show one choice as picked in a row of buttons (string or note value).
+function pick(row, button) {
+  for (const b of $(row).querySelectorAll('.choice-btn')) b.setAttribute('aria-pressed', String(b === button));
+}
+
+function setFret(fret) {
+  $('fret-input').value = Math.min(EDITOR_MAX_FRET, Math.max(0, Math.round(fret) || 0));
+}
+
+function drawEditor() {
+  const { notes, endTime } = writtenRiff(editor.written, settings.bpm);
+  $('editor-tab').innerHTML = tabSvg(notes, { bpm: settings.bpm, endTime, meter: settings.meter, highlightLast: true });
+  $('editor-tab').scrollLeft = $('editor-tab').scrollWidth; // keep the newest notes in view
+  $('undo-note-btn').disabled = $('save-tab-btn').disabled = editor.written.length === 0;
+  $('editor-hint').textContent = editor.written.length
+    ? noteCount(editor.written.length)
+    : `Pick a string, a fret and how long the note lasts, then Add note. ${settings.meter} at ${settings.bpm} BPM, from the home screen.`;
+}
+
+$('new-tab-btn').addEventListener('click', () => {
+  // Start fresh: no notes, the low E, fret 0, a quarter note, not dotted.
+  editor.written = [];
+  editor.string = 6;
+  editor.beats = 1;
+  pick('string-picker', $('string-picker').querySelector('[data-string="6"]'));
+  pick('value-picker', $('value-picker').querySelector('[data-beats="1"]'));
+  setFret(0);
+  $('dotted-input').checked = false;
+  $('dotted-input').disabled = false;
+  drawEditor();
+  showScreen('editor');
+});
+
+$('string-picker').addEventListener('click', (event) => {
+  const button = event.target.closest('.choice-btn');
+  if (!button) return;
+  editor.string = Number(button.dataset.string);
+  pick('string-picker', button);
+});
+
+$('value-picker').addEventListener('click', (event) => {
+  const button = event.target.closest('.choice-btn');
+  if (!button) return;
+  editor.beats = Number(button.dataset.beats);
+  pick('value-picker', button);
+  // There's no dotted whole note or dotted sixteenth in the tab, so Dotted is off for those.
+  const noDot = editor.beats === 4 || editor.beats === 0.25;
+  $('dotted-input').disabled = noDot;
+  if (noDot) $('dotted-input').checked = false;
+});
+
+$('fret-down').addEventListener('click', () => setFret(Number($('fret-input').value) - 1));
+$('fret-up').addEventListener('click', () => setFret(Number($('fret-input').value) + 1));
+$('fret-input').addEventListener('change', (event) => setFret(Number(event.target.value)));
+
+$('add-note-btn').addEventListener('click', () => {
+  setFret(Number($('fret-input').value));
+  const beats = editor.beats * ($('dotted-input').checked ? 1.5 : 1);
+  editor.written.push({ string: editor.string, fret: Number($('fret-input').value), beats });
+  drawEditor();
+});
+
+$('undo-note-btn').addEventListener('click', () => {
+  editor.written.pop();
+  drawEditor();
+});
+
+$('save-tab-btn').addEventListener('click', () => {
+  const { notes, endTime } = writtenRiff(editor.written, settings.bpm);
+  try {
+    saveRiff(notes, null, { bpm: settings.bpm, endTime, rhythm: true, meter: settings.meter, written: true });
+  } catch (err) {
+    console.error(err);
+    $('editor-hint').textContent = "Couldn't save. Your browser blocked saving (private window?)";
+    return;
+  }
+  editor.written = [];
+  showHome();
+});
+
+$('editor-back-btn').addEventListener('click', () => {
+  if (editor.written.length && !confirm('Throw away this tab?')) return;
+  editor.written = [];
   showHome();
 });
 

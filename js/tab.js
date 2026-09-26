@@ -2,7 +2,7 @@
 
 // Standard tuning, as MIDI numbers. String 1 is the high e, string 6 is the low E,
 // the same order as the lines on a tab (high e on top).
-const TUNING = [64, 59, 55, 50, 45, 40];
+export const TUNING = [64, 59, 55, 50, 45, 40];
 const STRING_LABELS = ['e', 'B', 'G', 'D', 'A', 'E'];
 export const MAX_FRET = 22;
 

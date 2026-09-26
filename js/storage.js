@@ -56,9 +56,10 @@ export function saveInputId(deviceId) {
 
 // Save a new riff at the top of the list and return it.
 // `confidence` is how sure Riff Boi was about it (see confidence.js), or null.
-// `timing` is { bpm, endTime, rhythm, meter, autoTempo }: the tempo it was played at, when its
-// last note ended (seconds), whether rhythm was on, its time signature, and whether Riff Boi
-// worked the tempo out by itself, so its tab can be drawn the same way later.
+// `timing` is { bpm, endTime, rhythm, meter, autoTempo, written }: the tempo it was played at,
+// when its last note ended (seconds), whether rhythm was on, its time signature, whether Riff Boi
+// worked the tempo out by itself, and whether it was written by hand (New Tab), so its tab can be
+// drawn the same way later.
 // Throws if the browser won't let us save (the app shows a message).
 export function saveRiff(notes, confidence = null, timing = {}) {
   const now = new Date();
@@ -75,6 +76,7 @@ export function saveRiff(notes, confidence = null, timing = {}) {
     rhythm: timing.rhythm,
     meter: timing.meter,
     autoTempo: timing.autoTempo || undefined, // only saved when it's true
+    written: timing.written || undefined, // the same
   };
   localStorage.setItem(RIFFS_KEY, JSON.stringify([riff, ...loadRiffs()]));
   return riff;

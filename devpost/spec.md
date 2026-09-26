@@ -174,6 +174,12 @@ The tab is drawn as a picture (SVG) like a Songsterr tab, the learner's pick fro
 - The newest note is red while recording. The old text tab (`drawTab`) stays for the checks and a future "copy as text".
 PRD ref: `prd.md > What We're Building` (note values).
 
+### New Tab (`editor.js` + `app.js`) *(added after the build, learner request)*
+Write a tab by hand. A "New Tab" button on the home screen (top left, across from Tuner) opens the editor. Tap one of 6 string buttons (e B G D A E, high e first like the tab), set the fret (0 to 24) with − / + or by typing, pick how long the note lasts (whole, half, quarter, 8th or 16th, and Dotted, which isn't offered for whole or 16th), then Add note. Undo takes the last note off. It uses the tempo and time signature from the home screen, and the tab is drawn as you go, newest note in red.
+- `writtenRiff` turns the notes into the same kind of riff Riff Boi saves when it hears you: each note starts where the one before it ended, in seconds at that tempo, so it's drawn, saved and listed the same way (the card says "written"). No confidence score, rhythm always on.
+- Changing a written tab's tempo on the Riff View keeps its note values (`retime` moves the notes closer together or further apart). A recorded riff keeps its times instead.
+- Not in this first version: bends and other techniques, rests, chords, editing a note in the middle, or editing recorded riffs. Leaving with notes asks "Throw away this tab?"
+
 ## Data Model
 Everything lives in the browser's localStorage, as text in JSON format (a simple way of writing data as text).
 
@@ -199,6 +205,7 @@ Everything lives in the browser's localStorage, as text in JSON format (a simple
 - `bpm` is the tempo the riff was played at, and `endTime` is when the last note ended (seconds since New Riff), so the note values can be drawn again. Riffs from before this don't have them: they use today's tempo, and the last note counts as a quarter note.
 - `rhythm` is whether the Rhythm switch was on when the riff was recorded. Riffs from before this don't have it and are drawn with rhythm on.
 - `meter` is the time signature, like `"7/8"`. Riffs from before this don't have it and are 4/4.
+- `written: true` means it was written by hand in New Tab (only saved when true).
 - `autoTempo: true` means Riff Boi worked out `bpm` itself. It's only saved when true, and typing a new tempo sets it to `false`.
 - `confidence` is how sure Riff Boi was about the riff (the score and each part from 0 to 1, rounded to 2 decimals) plus the hint, or `null` if there was nothing to judge. Riffs saved before the confidence bar don't have it.
 
@@ -226,6 +233,7 @@ beginners-paradise/          # the project folder = the GitHub repo
 │   ├── confidence.js        # how sure Riff Boi is about a riff (the confidence bar)
 │   ├── rhythm.js            # note starts → beats and note values at your tempo
 │   ├── tabsvg.js            # draws the tab picture (Songsterr style)
+│   ├── editor.js            # New Tab: turns a tab written by hand into a riff
 │   └── storage.js           # save/load riffs and the chosen input (localStorage)
 ├── manifest.webmanifest     # (polish) home-screen app name, colors, icon
 ├── icons/                   # (polish) app icon for "Add to Home Screen"

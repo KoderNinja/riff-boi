@@ -154,3 +154,9 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - The sound can't tell a riff at 180 from the same riff at 90 with notes twice as short. So Auto picks a tempo from 80 up to 160, and if it's wrong, I type the right one on the saved riff. With under 4 notes or no steady beat, it says it can't tell instead of guessing.
 - Mutation testing found a hole in the checks: I changed the tempo range and nothing failed, because none of the test riffs were between 140 and 160. A new riff at 150 now catches it. 129 checks.
 - The browser kept an old copy of one file after switching branches, so the page mixed new and old code and broke ("does not provide an export named barOf"). A browser reuses saved copies of files to be fast, so after big changes, reload without the saved copies.
+
+## Sep 26, 2026: Writing a tab by hand (New Tab)
+- I picked the design: a New Tab button, tap a string, set the fret, pick a note value, Add note.
+- The trick was making a written tab the same kind of thing as a recorded riff. A recorded riff keeps when each note started, in seconds. So the editor works out those seconds from the note values and the tempo, and then the tab picture, saving and the Latest Riffs list all work without changes.
+- Changing the tempo means different things for the two kinds. For a recorded riff, the seconds are the truth (that's how I played it), so a new tempo changes the note values. For a written tab, the note values are the truth, so the notes move closer together or further apart instead.
+- Testing it in the browser found a small problem the checks couldn't: Dotted stayed on from my last tab. Now New Tab starts fresh each time.

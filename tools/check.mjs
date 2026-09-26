@@ -10,6 +10,7 @@ import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS } from '../js/rh
 import { tabSvg } from '../js/tabsvg.js';
 import { openInput, listInputs } from '../js/audio.js';
 import { saveRiff, loadRiffs, updateRiff, riffTiming } from '../js/storage.js';
+import { writtenRiff, retime } from '../js/editor.js';
 
 let allOk = true;
 function check(label, ok, detail = '') {
@@ -490,6 +491,28 @@ const reloaded = loadRiffs().find((riff) => riff.id === saved.id);
 check('saved riff: typing a new tempo saves it, and it\'s not "auto" any more',
   fixed?.bpm === 180 && reloaded.bpm === 180 && reloaded.autoTempo === false && reloaded.meter === '7/8' && loadRiffs()[0].bpm === 90, JSON.stringify(reloaded));
 check('saved riff: changing a riff that isn\'t there does nothing', updateRiff('gone', { bpm: 100 }) === null && loadRiffs().length === 4);
+
+// --- New Tab: a tab written by hand ---
+{
+  const { notes, endTime } = writtenRiff([
+    { string: 6, fret: 0, beats: 1 }, { string: 6, fret: 3, beats: 0.5 }, { string: 5, fret: 2, beats: 0.5 }, { string: 5, fret: 5, beats: 2 },
+  ], 120);
+  check('new tab: each note gets its pitch from the string and fret', notes.map((n) => n.name).join(' ') === 'E2 G2 B2 D3', notes.map((n) => n.name).join(' '));
+  check('new tab: each note starts where the one before it ended', notes.map((n) => n.t).join(' ') === '0 0.5 0.75 1' && endTime === 2, `${notes.map((n) => n.t).join(' ')} end ${endTime}`);
+  check('new tab: it\'s drawn with the note values that were picked', valueNames(rhythmOf(notes, 120, endTime)) === 'quarter, eighth, eighth, half', valueNames(rhythmOf(notes, 120, endTime)));
+  // An awkward tempo, dotted notes and fret 24, saved (which rounds the end time) and loaded back.
+  const odd = writtenRiff([
+    { string: 3, fret: 2, beats: 1.5 }, { string: 3, fret: 4, beats: 0.5 }, { string: 2, fret: 3, beats: 0.75 }, { string: 2, fret: 5, beats: 0.25 }, { string: 1, fret: 24, beats: 1 },
+  ], 137);
+  saveRiff(odd.notes, null, { bpm: 137, endTime: odd.endTime, rhythm: true, meter: '4/4', written: true });
+  const back = loadRiffs()[0];
+  const want = 'dotted quarter, eighth, dotted eighth, sixteenth, quarter';
+  check('new tab: dotted notes at 137 BPM come back the same after saving',
+    valueNames(rhythmOf(back.notes, back.bpm, back.endTime)) === want && back.written === true && back.notes[4].name === 'E6', valueNames(rhythmOf(back.notes, back.bpm, back.endTime)));
+  const faster = retime(back, 180);
+  check('new tab: a new tempo keeps its note values (the notes move closer together)',
+    valueNames(rhythmOf(faster.notes, 180, faster.endTime)) === want && faster.notes[1].t < back.notes[1].t, valueNames(rhythmOf(faster.notes, 180, faster.endTime)));
+}
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');
 process.exit(allOk ? 0 : 1);

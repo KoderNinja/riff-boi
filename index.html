@@ -22,6 +22,7 @@
   <section id="screen-home" class="screen">
     <header class="home-top">
       <h1 class="logo">Riff Boi</h1>
+      <button id="new-tab-btn" class="secondary-btn new-tab-btn">New Tab</button>
       <button id="tuner-btn" class="secondary-btn tuner-btn">Tuner</button>
     </header>
     <button id="new-riff-btn" class="record-btn"><span class="record-dot" aria-hidden="true"></span>New Riff</button>
@@ -122,6 +123,46 @@
       <p class="confidence-hint"></p>
     </div>
     <p id="riff-count" class="muted"></p>
+  </section>
+
+  <!-- New Tab: write a tab by hand, one note at a time, at the tempo and time signature set on the home screen -->
+  <section id="screen-editor" class="screen" hidden>
+    <button id="editor-back-btn" class="back-btn">← Latest Riffs</button>
+    <h2 class="screen-title">New Tab</h2>
+    <div id="editor-tab" class="tab"></div>
+    <div class="editor-controls">
+      <!-- The string, high e first like the lines on the tab -->
+      <div class="choice-row" id="string-picker" role="group" aria-label="String">
+        <span class="setting-label">String</span>
+        <button class="choice-btn" data-string="1" aria-pressed="false">e</button>
+        <button class="choice-btn" data-string="2" aria-pressed="false">B</button>
+        <button class="choice-btn" data-string="3" aria-pressed="false">G</button>
+        <button class="choice-btn" data-string="4" aria-pressed="false">D</button>
+        <button class="choice-btn" data-string="5" aria-pressed="false">A</button>
+        <button class="choice-btn" data-string="6" aria-pressed="true">E</button>
+      </div>
+      <div class="tempo">
+        <span class="setting-label">Fret</span>
+        <button id="fret-down" class="step-btn" aria-label="Lower fret">−</button>
+        <input id="fret-input" class="bpm-input" type="number" inputmode="numeric" min="0" max="24" step="1" value="0" aria-label="Fret">
+        <button id="fret-up" class="step-btn" aria-label="Higher fret">+</button>
+      </div>
+      <!-- How long the note lasts -->
+      <div class="choice-row" id="value-picker" role="group" aria-label="Note value">
+        <button class="choice-btn" data-beats="4" aria-pressed="false">Whole</button>
+        <button class="choice-btn" data-beats="2" aria-pressed="false">Half</button>
+        <button class="choice-btn" data-beats="1" aria-pressed="true">Quarter</button>
+        <button class="choice-btn" data-beats="0.5" aria-pressed="false">8th</button>
+        <button class="choice-btn" data-beats="0.25" aria-pressed="false">16th</button>
+        <label class="rhythm-switch"><input id="dotted-input" type="checkbox"> <span class="setting-label">Dotted</span></label>
+      </div>
+      <div class="editor-actions">
+        <button id="undo-note-btn" class="secondary-btn" disabled>Undo</button>
+        <button id="add-note-btn" class="secondary-btn add-note-btn">Add note</button>
+        <button id="save-tab-btn" class="secondary-btn" disabled>Save</button>
+      </div>
+      <p id="editor-hint" class="muted"></p>
+    </div>
   </section>
 
   <script type="module" src="js/app.js"></script>
