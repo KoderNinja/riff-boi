@@ -10,10 +10,11 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 
 Where we left off (Sep 26, 2026, morning):
 - The cloud session's commits are on GitHub now (I brought them to my Mac from the zip and pushed), so riffboi.com has the iPhone fix. My Mac's bar line fix went on top of them.
-- The Rhythm switch fix is done: it only changes the riff I'm recording now.
-- The time signature and Auto tempo are done too (merged from the `time-signature` branch).
-- Claude's part, in priority order: the GitHub About box, README and codebase check are done. The manual tab editor is built too (New Tab), on the `tab-editor` branch until I test it. Next: rank my ideas list by priority, then work on accuracy and on ways to tell which string I played (my requests).
-- My part: test on my iPhone and with my guitar, including the time signature and Auto tempo.
+- Done and on riffboi.com: the Rhythm switch fix (it only changes the riff I'm recording now).
+- Done, but only on my Mac until I test them: the time signature, Auto tempo and New Tab (on the `tab-editor` branch). Once I say they work, Claude puts them on `main` and pushes.
+- Also done: the GitHub About box (live now), a quick codebase check, and README updates for the new features (on the branch too).
+- My ideas are ranked at the bottom of this list. Next for Claude: build them in that order, asking me about each design first. After that, accuracy and ways to tell which string I played (my requests).
+- My part: test on my iPhone and with my guitar, including the time signature, Auto tempo and New Tab.
 
 ## Before the deadline
 
@@ -36,7 +37,7 @@ In order of priority. "Me" is stuff only I can do, "Claude" is building with Cla
 
 ### 2. Should do, to make it better
 - [ ] Me: write the "AI use" part of the README (my words)
-- [ ] Me: put the live link in Devpost's "Try it out" field (Claude is getting the GitHub About box ready)
+- [ ] Me: put the live link in Devpost's "Try it out" field (the GitHub About box is ready)
 - [ ] Me: fill in Devpost's "Built with" tags (like javascript, html, css, web audio api, pitchy)
 - [ ] Me: record a few string bends with `?debug`, so Claude can tune the bends feature
 - [x] Claude: a code tour, a plain-words walk through each file, so I can explain my own code in the video (`devpost/code-tour.md`)
@@ -49,7 +50,7 @@ In order of priority. "Me" is stuff only I can do, "Claude" is building with Cla
 - [x] Claude: change the time signature (like 3/4, 6/8 or 7/8), not just 4/4
 - [x] Claude: tempo detection (my idea). A choice to let Riff Boi work out the tempo from how I play, instead of setting the BPM myself (the Auto switch)
 - [x] Claude: start a manual tab editor, to write my own tabs from scratch (my request). New Tab on the home screen: pick a string, a fret and a note value, then Add note. Later: bends, rests, editing a note in the middle, and editing recorded riffs
-- [ ] Claude: rank my ideas list below by priority (my request)
+- [x] Claude: rank my ideas list below by priority (my request)
 - [ ] Me + Claude: better accuracy, and ways to tell which string I played (my request, after everything else)
 
 ### Later, after the hackathon
@@ -70,28 +71,35 @@ In order of priority. "Me" is stuff only I can do, "Claude" is building with Cla
 - [x] App icon so it can go on my phone's home screen (the blackletter R; I picked it from 2 options)
 - [x] Quick code review to check for bugs (my request). It found my iPhone's sound system starting paused, bends on octave-fixed notes, and amp hiss stretching the last note. All 3 fixed in the cloud session
 
-## Ideas for later
-- A super light Apple Watch version (my idea). It would need a real Apple Watch app written in Swift, since a web app can't use the watch's mic.
-- An iOS app (my idea). A tool like Capacitor can wrap this web app so the same code runs as a real iPhone app. That needs a Mac with Xcode. Trying it on my own iPhone is free, but the App Store needs a paid Apple Developer account. Keeping Riff Boi as plain HTML, CSS and JavaScript with no server keeps this easy.
+## Ideas, ranked (Sep 26)
+
+Ranked by how much each one helps Riff Boi before the deadline, for how much work it is. Claude asks me about the design of each one before building it. Sizes: small is an hour or two, medium is a few hours, big is days.
+
+### Before the deadline, in this order
+1. Rename or delete riffs. Size: small. Right now there's no way to remove a riff.
+2. Play a riff back so I can hear it. Size: small to medium. It works for riffs I recorded and for tabs I wrote in New Tab.
+3. Upload a recording (like an mp3) and get its tab, not in real time (my idea). Most of the pieces exist: my pentatonic test recording was made from an mp3 with the same Pitchy steps. Size: medium. Judges without a guitar could try Riff Boi this way.
+4. Tap a note to move it to another string. Size: small to medium. It fixes a wrong string guess by hand, and goes with the accuracy work.
+5. Copy a riff as text tab, part of the export idea. Size: small. The text tab code already exists.
+6. A key and scale finder that shows what key or scale a riff is in, like E minor pentatonic. Size: small to medium. It would be fun to show in the demo.
+7. A tuning setting like Drop D (my idea). Size: medium. Drop D is very common in metal.
+8. Mark the notes Riff Boi isn't sure about (dim them in the tab), so I know which ones to double-check. Size: medium. It goes with the accuracy work.
+9. Techniques in the tab: hammer-ons (`5h7`), pull-offs (`7p5`), slides (`5/7` up, `7\5` down), vibrato (`~`), palm mutes (P.M.), tremolo picking, pinch harmonics, tapping (`t`), sweep picking, and natural and artificial harmonics. Riff Boi already knows if a note was picked, so hammer-ons, pull-offs and slides are the easiest start. Size: medium to big. Hearing them right is the hard part.
+10. Share a riff with a link that opens its tab in a friend's browser. Size: medium.
+11. A metronome: play a click while I record. Size: small to medium. Showing a riff's tempo is done (that's Auto). The click could leak into the mic, so it needs care.
+12. An offline version with limited features (my idea): the core live tab works with no internet, and the extras stay online-only. Size: small to medium.
+13. Calibrate to my rig: play each open string once, and Riff Boi tunes its settings to my guitar, amp and mic. Size: medium. It goes with the accuracy work.
+14. Practice loop: play a saved riff back at my tempo with a click, and slow it down to learn it. Size: medium.
+15. Practice mode: the tab scrolls along at my speed so I can learn a riff back. Size: medium.
+16. Takes: record several takes of the same riff and keep the best one. Size: medium.
+
+### After the hackathon (big, or needs another kind of app)
 - A camera that watches my hands (my idea), for better string and fret accuracy. The phone or laptop camera would track my fretting hand to see which string and fret I'm on. Hand tracking like Google's MediaPipe already runs in the browser. A clip-on camera is another way to do it. Too big for the hackathon (see `scope.md`, Explicitly Cut).
-- A tuning setting like Drop D (my idea)
 - 7- and 8-string guitars, with the low B and F# strings and drop tunings
 - A bass version (my idea) for 4- and 5-string bass. Bass notes go much lower (the low E is about 41 Hz), so it needs to listen to a longer slice of sound to catch them
-- Techniques in the tab: hammer-ons (`5h7`), pull-offs (`7p5`), slides (`5/7` up, `7\5` down), vibrato (`~`), palm mutes (P.M.), tremolo picking, pinch harmonics, tapping (`t`), sweep picking, and natural and artificial harmonics. Riff Boi already knows if a note was picked, so hammer-ons, pull-offs and slides are the easiest start
-- A key and scale finder that shows what key or scale a riff is in, like E minor pentatonic
-- Tempo and a metronome: show a riff's BPM and play a click while I record
-- Mark the notes Riff Boi isn't sure about (dim them in the tab), so I know which ones to double-check
-- Calibrate to my rig: play each open string once, and Riff Boi tunes its settings to my guitar, amp and mic
-- Takes: record several takes of the same riff and keep the best one
-- Practice loop: play a saved riff back at my tempo with a click, and slow it down to learn it
-- An offline version with limited features (my idea): the core live tab works with no internet, and the extras stay online-only
-- Tap a note to move it to another string
 - Power chords
-- Rename or delete riffs
-- Export a riff as text, a Guitar Pro file or a printable PDF
-- Share a riff with a link that opens its tab in a friend's browser
-- Practice mode: the tab scrolls along at my speed so I can learn a riff back
+- Export a riff as a Guitar Pro file or a printable PDF (the rest of the export idea)
+- An iOS app (my idea). A tool like Capacitor can wrap this web app so the same code runs as a real iPhone app. That needs a Mac with Xcode. Trying it on my own iPhone is free, but the App Store needs a paid Apple Developer account. Keeping Riff Boi as plain HTML, CSS and JavaScript with no server keeps this easy.
+- A super light Apple Watch version (my idea). It would need a real Apple Watch app written in Swift, since a web app can't use the watch's mic.
 - Free AI that turns YouTube videos or sound files into tabs, kind of like Songsterr but free (my idea). YouTube's rules limit downloading videos, so it might work from sound files, or a video playing into the mic
-- Upload a recording (like an mp3) and get its tab, not in real time (my idea). Most of the pieces exist: my pentatonic test recording was made from an mp3 with the same Pitchy steps
-- Play a riff back so I can hear it
 - Put it out for other guitarists
