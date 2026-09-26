@@ -5,6 +5,8 @@
 import { readNote, createNoteTracker, cleanUpRiff, tuningOf } from '../js/notes.js';
 import { placeNotes, positionsFor, drawTab, tabToken } from '../js/tab.js';
 import { riffConfidence } from '../js/confidence.js';
+import { rhythmOf } from '../js/rhythm.js';
+import { tabSvg } from '../js/tabsvg.js';
 
 let allOk = true;
 function check(label, ok, detail = '') {
@@ -226,6 +228,44 @@ for (const [label, midis, expected] of patterns) {
   check('...even if its first note was missed', noFirst === 'E9 A6 A8 D6 D8 G6 G8 B6 B9 e6 e9', noFirst);
   const desc = place([72, 69, 67, 64, 62, 60, 57, 57]);
   check('a short pentatonic run coming down stays in the box', desc === 'e8 e5 B8 B5 G7 G5 D7 D7', desc);
+}
+
+// --- Rhythm (note values) and the tab picture ---
+// A riff at 120 BPM (one beat = 0.5 s): eighths, a quarter, an eighth and two sixteenths,
+// a half note (bent and released), a quarter, a dotted quarter and an eighth. 8 beats = 2 bars.
+const timed = [
+  { string: 6, fret: 0, t: 0 }, { string: 6, fret: 0, t: 0.25 }, { string: 5, fret: 2, t: 0.5 },
+  { string: 5, fret: 5, t: 1.0 }, { string: 5, fret: 2, t: 1.25 }, { string: 5, fret: 0, t: 1.375 },
+  { string: 3, fret: 7, bend: 2, release: true, t: 1.5 }, { string: 4, fret: 5, t: 2.5 },
+  { string: 4, fret: 7, t: 3.0 }, { string: 6, fret: 3, t: 3.75 },
+];
+const valueNames = (r) => r.map(({ value }) => (value.dotted ? 'dotted ' : '') + value.name).join(', ');
+const expectedValues = 'eighth, eighth, quarter, eighth, sixteenth, sixteenth, half, quarter, dotted quarter, eighth';
+const rhythm = rhythmOf(timed, 120, 4.0);
+check('rhythm: note values at 120 BPM', valueNames(rhythm) === expectedValues, valueNames(rhythm));
+check('rhythm: where each note starts, in beats', rhythm.map((r) => r.beat).join(' ') === '0 0.5 1 2 2.5 2.75 3 5 6 7.5', rhythm.map((r) => r.beat).join(' '));
+{
+  // Real playing isn't perfectly on time: nudge every note by up to 25 ms either way.
+  const wobbly = timed.map((n, i) => ({ ...n, t: n.t + (i % 2 ? 0.025 : -0.02) * (i ? 1 : 0) }));
+  check('rhythm: slightly early or late notes still snap to the same note values', valueNames(rhythmOf(wobbly, 120, 4.0)) === expectedValues, valueNames(rhythmOf(wobbly, 120, 4.0)));
+}
+check('rhythm: the same timing at half the tempo (60 BPM) gives notes half as long',
+  valueNames(rhythmOf(timed.slice(0, 3), 60, 1.0)) === 'sixteenth, sixteenth, eighth', valueNames(rhythmOf(timed.slice(0, 3), 60, 1.0)));
+check('rhythm: two notes very close together never land on the same spot',
+  rhythmOf([{ t: 0 }, { t: 0.01 }], 120, 1).map((r) => r.beat).join(' ') === '0 0.25');
+{
+  const svg = tabSvg(timed, { bpm: 120, endTime: 4.0 });
+  const count = (cls) => (svg.match(new RegExp(`class="${cls}"`, 'g')) || []).length;
+  check('tab picture: no broken numbers (NaN) in the drawing', !svg.includes('NaN') && !svg.includes('undefined'));
+  check('tab picture: 2 bars = a line at the start, one between the bars and one at the end', count('t-bar') === 3, count('t-bar'));
+  check('tab picture: every fret number is drawn, in order',
+    [...svg.matchAll(/class="t-fret[^"]*"[^>]*>([^<]+)</g)].map((m) => m[1]).join(' ') === '0 0 2 5 2 0 7 5 7 3');
+  check('tab picture: the bend is an arrow labelled "full", with a release', svg.includes('>full<') && count('t-bend') === 2);
+  check('tab picture: the tempo and 4/4 are shown', svg.includes('♩ = 120') && count('t-time') === 2);
+  const plain = tabSvg(timed, { bpm: 120, endTime: 4.0, timing: false });
+  check('tab picture: with rhythm off there are no bars, tempo or stems, just the notes',
+    !plain.includes('♩') && !plain.includes('t-time') && !plain.includes('t-stem') && (plain.match(/class="t-bar"/g) || []).length === 2);
+  check('tab picture: an empty riff is still a clean empty staff', !tabSvg([]).includes('NaN') && tabSvg([]).includes('t-line'));
 }
 
 let playable = true;

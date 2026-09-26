@@ -25,6 +25,17 @@
       <button id="tuner-btn" class="secondary-btn tuner-btn">Tuner</button>
     </header>
     <button id="new-riff-btn" class="record-btn"><span class="record-dot" aria-hidden="true"></span>New Riff</button>
+    <!-- Settings for the tab: the tempo you play at (for note values) and rhythm on/off -->
+    <div class="settings-row">
+      <div class="tempo">
+        <span class="setting-label">Tempo</span>
+        <button id="bpm-down" class="step-btn" aria-label="Slower">−</button>
+        <input id="bpm-input" class="bpm-input" type="number" inputmode="numeric" min="40" max="240" step="1" value="120" aria-label="Tempo in beats per minute">
+        <span class="setting-unit">BPM</span>
+        <button id="bpm-up" class="step-btn" aria-label="Faster">+</button>
+      </div>
+      <label class="rhythm-switch"><input id="rhythm-input" type="checkbox" checked> <span class="setting-label">Rhythm</span></label>
+    </div>
     <!-- Only shown when the address ends in ?debug (for tuning note detection) -->
     <button id="save-readings-btn" class="small-btn" hidden>Save last recording's readings</button>
     <h2 class="screen-title">Latest Riffs</h2>
@@ -39,7 +50,7 @@
       <span id="note-name" class="note-name">–</span>
       <span id="note-freq" class="note-freq">Play a note</span>
     </div>
-    <pre id="live-tab" class="tab"></pre>
+    <div id="live-tab" class="tab"></div>
     <!-- Confidence bar: how sure Riff Boi is about the tab (filled in by app.js) -->
     <div id="live-confidence" class="confidence">
       <div class="confidence-label"><span>Confidence</span><span class="confidence-pct">–</span></div>
@@ -78,7 +89,7 @@
   <section id="screen-riff" class="screen" hidden>
     <button id="back-btn" class="back-btn">← Latest Riffs</button>
     <h2 id="riff-title" class="screen-title"></h2>
-    <pre id="riff-tab" class="tab"></pre>
+    <div id="riff-tab" class="tab"></div>
     <!-- Same confidence bar, for the saved riff (hidden for riffs saved before it existed) -->
     <div id="riff-confidence" class="confidence" hidden>
       <div class="confidence-label"><span>Confidence</span><span class="confidence-pct">–</span></div>

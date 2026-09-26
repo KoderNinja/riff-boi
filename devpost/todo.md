@@ -36,10 +36,13 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 - [x] README (the AI part is still mine to write; add the live link and a screenshot later)
 - [x] New layout and the Metal look (I picked it from 2 options)
 - [ ] String bends: hear them and write them in the tab, like `7b9`, `7b9r7` and `7pb9r7` (built, waiting for my bend recordings and guitar test)
-- [ ] Note values: show quarter notes, half notes, eighth notes and so on for each note. It needs a tempo, so either I set the BPM or Riff Boi guesses it
+- [ ] Note values, drawn like a Songsterr tab: string lines with the fret numbers on them, bar lines, the tempo, rhythm stems under the tab. I set the BPM (built, waiting for my guitar test)
+- [x] A switch to turn rhythm off and just get the notes (evenly spaced, no bars, stems or tempo)
+- [ ] Change the time signature (like 3/4, 6/8 or 7/8), not just 4/4
 - [ ] Input picker and a "Can't hear your guitar" message (slice 4)
 - [x] App icon so it can go on my phone's home screen (the blackletter R; I picked it from 2 options)
 - [ ] If there's time: precision test (slice 7), final review and code tour
+- [ ] Later: a manual tab editor, to write my own tabs from scratch
 
 ## Ideas for later
 - A super light Apple Watch version (my idea). It would need a real Apple Watch app written in Swift, since a web app can't use the watch's mic.
@@ -52,11 +55,19 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 - Slide and vibrato marks in the tab, like `5/7` and `~`
 - A key and scale finder that shows what key or scale a riff is in, like E minor pentatonic
 - Tempo and a metronome: show a riff's BPM and play a click while I record
+- Mark the notes Riff Boi isn't sure about (dim them in the tab), so I know which ones to double-check
+- Calibrate to my rig: play each open string once, and Riff Boi tunes its settings to my guitar, amp and mic
+- Metal techniques in the tab: palm mutes (P.M.), tremolo picking, pinch harmonics, tapping (t), sweep picking, and natural and artificial harmonics
+- Takes: record several takes of the same riff and keep the best one
+- Practice loop: play a saved riff back at my tempo with a click, and slow it down to learn it
+- An offline version with limited features (my idea): the core live tab works with no internet, and the extras stay online-only
 - Tap a note to move it to another string
 - Power chords
 - Rename or delete riffs
 - Export a riff as text, a Guitar Pro file or a printable PDF
 - Share a riff with a link that opens its tab in a friend's browser
 - Practice mode: the tab scrolls along at my speed so I can learn a riff back
+- Free AI that turns YouTube videos or sound files into tabs, kind of like Songsterr but free (my idea). YouTube's rules limit downloading videos, so it might work from sound files, or a video playing into the mic
+- Upload a recording (like an mp3) and get its tab, not in real time (my idea). Most of the pieces exist: my pentatonic test recording was made from an mp3 with the same Pitchy steps
 - Play a riff back so I can hear it
 - Put it out for other guitarists

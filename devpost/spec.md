@@ -158,6 +158,14 @@ While a bend glides or is held, its pitches can't start new notes, and the note'
 Checked on the learner's 8 recordings (which have no bends): the same 110/115 notes and 0 false bends. Settling stricter (so bends slower than about 0.4 s for a whole step aren't split) lost 6 to 7 real notes on those recordings, so it wasn't used. Real bend recordings are needed to tune it further.
 PRD ref: `prd.md > What We're Building` (bends).
 
+### Tab Picture and Rhythm (`tabsvg.js` + `rhythm.js`) *(added during the build, learner request)*
+The tab is drawn as a picture (SVG) like a Songsterr tab, the learner's pick from 3 rendered options: six string lines with the fret numbers on them, "TAB" and 4/4 at the start, bar lines every 4 beats with measure numbers, the tempo (♩ = 120), bends as curved arrows labelled ½, full or 1½, and the rhythm underneath: no stem for a whole note, a short stem for a half note, a full stem for shorter notes, beams joining eighths and sixteenths in the same beat (flags for a lone one) and a dot for dotted notes.
+- **Tempo:** the learner sets the BPM on the home screen (− / + or typing, 40 to 240, default 120). Each riff saves the BPM it was played at.
+- **Note values:** each note's start is snapped to the nearest sixteenth note at that tempo, and it lasts until the next note starts. The last note lasts until the guitar went quiet (or Stop). The longest value that fits is used; leftover time is just space.
+- **Rhythm switch:** with rhythm off, the tab is just the notes, evenly spaced, with no bars, tempo or stems.
+- The newest note is red while recording. The old text tab (`drawTab`) stays for the checks and a future "copy as text".
+PRD ref: `prd.md > What We're Building` (note values).
+
 ## Data Model
 Everything lives in the browser's localStorage, as text in JSON format (a simple way of writing data as text).
 
@@ -180,7 +188,10 @@ Everything lives in the browser's localStorage, as text in JSON format (a simple
 - `string` counts 1–6 from high e to low E, the same as the lines on the tab.
 - `t` is seconds since you tapped New Riff. It's saved now and kept for later (e.g. rhythm).
 - Bent notes also have `bend` (semitones, 1 to 3), and `release: true` and/or `prebend: true` when those happened. `fret` is always the fretted note, so `{ "fret": 7, "bend": 2, "release": true }` is drawn as `7b9r7`.
+- `bpm` is the tempo the riff was played at, and `endTime` is when the last note ended (seconds since New Riff), so the note values can be drawn again. Riffs from before this don't have them: they use today's tempo, and the last note counts as a quarter note.
 - `confidence` is how sure Riff Boi was about the riff (the score and each part from 0 to 1, rounded to 2 decimals) plus the hint, or `null` if there was nothing to judge. Riffs saved before the confidence bar don't have it.
+
+**`riffboi.settings`**: `{ "bpm": 120, "rhythm": true }`, the tempo and the rhythm switch.
 
 **`riffboi.inputDeviceId`**: which audio input you picked.
 
@@ -202,6 +213,8 @@ beginners-paradise/          # the project folder = the GitHub repo
 │   ├── notes.js             # frequency → note, "is this a new note?" logic
 │   ├── tab.js               # position rule (string + fret) and drawing the tab
 │   ├── confidence.js        # how sure Riff Boi is about a riff (the confidence bar)
+│   ├── rhythm.js            # note starts → beats and note values at your tempo
+│   ├── tabsvg.js            # draws the tab picture (Songsterr style)
 │   └── storage.js           # save/load riffs and the chosen input (localStorage)
 ├── manifest.webmanifest     # (polish) home-screen app name, colors, icon
 ├── icons/                   # (polish) app icon for "Add to Home Screen"

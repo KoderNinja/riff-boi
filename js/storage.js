@@ -13,10 +13,32 @@ export function loadRiffs() {
   }
 }
 
+// Settings: the tempo (BPM) and whether the tab shows rhythm. Remembered between visits.
+const SETTINGS_KEY = 'riffboi.settings';
+export const DEFAULT_SETTINGS = { bpm: 120, rhythm: true };
+
+export function loadSettings() {
+  try {
+    return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY)) };
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+export function saveSettings(settings) {
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  } catch {
+    // Saving settings isn't vital (e.g. a private window): they just won't be remembered.
+  }
+}
+
 // Save a new riff at the top of the list and return it.
 // `confidence` is how sure Riff Boi was about it (see confidence.js), or null.
+// `timing` is { bpm, endTime }: the tempo it was played at, and when you tapped Stop
+// (seconds), so its note values can be drawn again later.
 // Throws if the browser won't let us save (the app shows a message).
-export function saveRiff(notes, confidence = null) {
+export function saveRiff(notes, confidence = null, timing = {}) {
   const now = new Date();
   const riff = {
     id: String(now.getTime()),
@@ -26,6 +48,8 @@ export function saveRiff(notes, confidence = null) {
     // Bend details are only there for bent notes (the rest are left out when saved).
     notes: notes.map(({ midi, name, string, fret, t, bend, release, prebend }) => ({ midi, name, string, fret, t, bend, release, prebend })),
     confidence: confidence && roundNumbers(confidence),
+    bpm: timing.bpm,
+    endTime: timing.endTime === undefined ? undefined : Math.round(timing.endTime * 100) / 100,
   };
   localStorage.setItem(RIFFS_KEY, JSON.stringify([riff, ...loadRiffs()]));
   return riff;

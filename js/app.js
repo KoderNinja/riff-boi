@@ -2,8 +2,9 @@
 
 import { startListening, stopListening } from './audio.js';
 import { createNoteTracker, cleanUpRiff, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN } from './notes.js';
-import { placeNotes, drawTab } from './tab.js';
-import { loadRiffs, saveRiff } from './storage.js';
+import { placeNotes } from './tab.js';
+import { tabSvg } from './tabsvg.js';
+import { loadRiffs, saveRiff, loadSettings, saveSettings, DEFAULT_SETTINGS } from './storage.js';
 import { riffConfidence } from './confidence.js';
 
 const screens = {
@@ -27,6 +28,7 @@ let riffNotes = [];
 let startTime = 0;
 let trackNote = null;
 let volumes = []; // every reading's volume, to measure background noise for the confidence bar
+let lastSound = 0; // when the guitar was last loud enough to hear (seconds): where the last note ends
 
 // The confidence bar moves slowly, so it's updated 4 times a second (every 15 readings).
 const CONFIDENCE_EVERY = 15;
@@ -63,6 +65,41 @@ function currentRiff() {
   return notes;
 }
 
+// --- Settings: tempo (BPM) and rhythm on/off, remembered between visits ---
+
+const settings = loadSettings();
+const BPM_MIN = 40;
+const BPM_MAX = 240;
+
+function setBpm(bpm) {
+  settings.bpm = Math.min(BPM_MAX, Math.max(BPM_MIN, Math.round(bpm) || DEFAULT_SETTINGS.bpm));
+  $('bpm-input').value = settings.bpm;
+  saveSettings(settings);
+}
+
+$('bpm-input').value = settings.bpm;
+$('rhythm-input').checked = settings.rhythm;
+$('bpm-down').addEventListener('click', () => setBpm(settings.bpm - 1));
+$('bpm-up').addEventListener('click', () => setBpm(settings.bpm + 1));
+$('bpm-input').addEventListener('change', (event) => setBpm(Number(event.target.value)));
+$('rhythm-input').addEventListener('change', (event) => {
+  settings.rhythm = event.target.checked;
+  saveSettings(settings);
+  showHome(); // redraw the riff cards with or without rhythm
+});
+
+// How to draw a saved riff's tab: at the tempo it was played (riffs from before tempo
+// existed use today's setting), and with rhythm on or off.
+function riffTiming(riff) {
+  return { bpm: riff.bpm ?? settings.bpm, endTime: riff.endTime ?? null, timing: settings.rhythm };
+}
+
+// The live tab, redrawn when a note is added or changes. The newest note is red.
+function drawLiveTab(notes) {
+  liveTab.innerHTML = tabSvg(notes, { bpm: settings.bpm, timing: settings.rhythm, highlightLast: true });
+  liveTab.scrollLeft = liveTab.scrollWidth; // keep the newest notes in view
+}
+
 // Fill in a confidence bar (see confidence.js). With no score yet, it shows an empty bar.
 function showConfidence(element, confidence) {
   const pct = confidence ? Math.round(confidence.score * 100) : 0;
@@ -93,8 +130,11 @@ function showHome() {
     top.append(label, meta);
     const preview = document.createElement('span');
     preview.className = 'mini-tab';
-    preview.setAttribute('aria-hidden', 'true'); // screen readers read the label, not the dashes
-    drawTab(preview, riff.notes.slice(0, MINI_TAB_NOTES));
+    preview.setAttribute('aria-hidden', 'true'); // screen readers read the label, not the picture
+    const shown = riff.notes.slice(0, MINI_TAB_NOTES);
+    const timing = riffTiming(riff);
+    if (shown.length < riff.notes.length) timing.endTime = null; // the riff goes on past the preview
+    preview.innerHTML = tabSvg(shown, { ...timing, rhythm: false });
     card.append(top, preview);
     card.addEventListener('click', () => showRiff(riff));
     const item = document.createElement('li');
@@ -109,7 +149,7 @@ function showHome() {
 
 function showRiff(riff) {
   $('riff-title').textContent = riff.label;
-  drawTab($('riff-tab'), riff.notes);
+  $('riff-tab').innerHTML = tabSvg(riff.notes, riffTiming(riff));
   $('riff-tab').scrollLeft = 0; // start at the beginning of the riff
   $('riff-count').textContent = noteCount(riff.notes.length);
   // Riffs saved before the confidence bar existed don't have a score: hide the bar for those.
@@ -128,6 +168,7 @@ function handleReading(freq, clarity, volume) {
   const t = (performance.now() - startTime) / 1000; // seconds since New Riff
   if (DEBUG) readings.push([round(freq, 2), round(clarity, 3), round(volume, 4), round(t, 3)]);
   volumes.push(volume);
+  if (volume >= VOLUME_MIN) lastSound = t;
   const time = formatTime(t);
   if (recTime.textContent !== time) recTime.textContent = time;
   const peakBefore = riffNotes[riffNotes.length - 1]?.peak;
@@ -150,7 +191,7 @@ function handleReading(freq, clarity, volume) {
   if (!result && riffNotes[riffNotes.length - 1]?.peak === peakBefore) return;
 
   const shown = currentRiff();
-  drawTab(liveTab, shown);
+  drawLiveTab(shown);
   noteName.textContent = shown.length ? shown[shown.length - 1].name : '–';
   noteFreq.textContent = noteCount(shown.length);
 }
@@ -163,9 +204,10 @@ $('new-riff-btn').addEventListener('click', async () => {
   riffNotes = [];
   readings = [];
   volumes = [];
+  lastSound = 0;
   startTime = performance.now();
   trackNote = createNoteTracker();
-  drawTab(liveTab, riffNotes);
+  drawLiveTab([]); // an empty staff, ready for notes
   showConfidence(liveConfidence, null);
   recTime.textContent = '0:00';
   noteName.textContent = '–';
@@ -185,6 +227,8 @@ $('new-riff-btn').addEventListener('click', async () => {
 
 stopBtn.addEventListener('click', async () => {
   stopBtn.disabled = true; // one tap is enough
+  // The last note lasts until the guitar went quiet (or until Stop, if it was still ringing).
+  const endTime = Math.min((performance.now() - startTime) / 1000, lastSound);
   stopListening();
   saveReadingsBtn.hidden = !DEBUG;
   const notes = currentRiff();
@@ -202,7 +246,7 @@ stopBtn.addEventListener('click', async () => {
   showScreen('saving');
   let riff;
   try {
-    riff = saveRiff(notes, riffConfidence(notes, volumes));
+    riff = saveRiff(notes, riffConfidence(notes, volumes), { bpm: settings.bpm, endTime });
   } catch (err) {
     console.error(err);
     $('saving-title').textContent = "Couldn't save";

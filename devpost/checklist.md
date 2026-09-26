@@ -99,6 +99,16 @@ Build mode: learn
   Learner check: Record a few bends with `?debug` (a whole step, a half step, a bend and release, a pre-bend release) and write their answer keys (like `G: 7b9r7`). Does the tab show them right? Those recordings become the bend test set.
   Commit: `Hear string bends and write them in the tab`
 
+- [ ] **10. See the rhythm: note values in a Songsterr-style tab**
+  Becomes usable: The tab is drawn like Songsterr: string lines with the fret numbers on them, bar lines, the tempo, bends as arrows and the rhythm underneath (quarter, eighth, sixteenth notes and so on), at the BPM you set on the home screen. A Rhythm switch turns it off to just see the notes.
+  Why now: The learner asked for note values, picked "I set the BPM", then asked for it to look like a Songsterr tab and picked option A from 3 rendered options.
+  PRD ref: `prd.md > What We're Building` (note values)
+  Spec ref: `spec.md > Tab Picture and Rhythm (tabsvg.js + rhythm.js)`, `spec.md > Data Model` (bpm, endTime, riffboi.settings)
+  Build: `rhythm.js` snaps note starts to sixteenths at the tempo and picks note values; `tabsvg.js` draws the picture; tempo control and Rhythm switch on the home screen; each riff saves its BPM and when its last note ended.
+  Verify (mechanical): Checks for note values at 120 and 60 BPM, notes a little early or late, bars, fret order, bend arrows, rhythm off and an empty staff (86 checks); a browser test of the tempo control (limits, remembered), the live and saved tab, card previews and the Rhythm switch.
+  Learner check: Set the tempo, play a riff you know along with a metronome, and look at the note values. Are they right? Switch rhythm off: is it just the notes?
+  Commit: `Draw the tab like Songsterr, with note values at your tempo`
+
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — after slice 2 (live tab from your real guitar): random notes and wrong strings reported → fixed with recordings + scoring; learner: "a lot better"
@@ -134,3 +144,4 @@ Activity mode:
 - Design pass (the look part of slice 8): two layouts were rendered as real screenshots and the learner picked "B: Metal", then asked for it to look less AI-made but still professional, so the glows and glossy gradients were removed (flat red, angled corners, grain, Oswald labels). New layout: round New Riff record button, riff cards with a mini tab and confidence, a REC timer and big last note while recording, Stop/Done at the bottom. The manifest and icon from slice 8 are still to do.
 - App icon (the learner picked the blackletter R from 2 options) and `manifest.webmanifest`, so slice 8 is built; its learner check is still to do.
 - Bends (slice 9, learner request). First version lost a Crazy Train note: a smeared note change (A2 to G#2) settled 0.7 semitones down and was read as a pre-bend. Fix: a bend must settle within 0.25 of a whole semitone, otherwise the normal note rules take over. Stricter settling for very slow bends was tried side by side and lost 6 to 7 real notes, so it wasn't used. Scoreboard unchanged (110/115, 83/83), 0 false bends, 74 checks.
+- Note values (slice 10, learner request): the learner chose to set the BPM, then asked for the tab to look like Songsterr and picked the full look (rhythm stems, bend arrows) from 3 rendered options. The last note first ran until Stop was tapped, which made it a whole note, so it now ends when the guitar goes quiet. A Rhythm on/off switch (learner request) came with it. Time signatures other than 4/4 are next on the to-do list.

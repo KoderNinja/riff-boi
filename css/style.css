@@ -108,6 +108,79 @@ body {
   background: var(--text);
 }
 
+/* Tempo and rhythm settings under New Riff. */
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px 22px;
+}
+
+.tempo,
+.rhythm-switch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.setting-label,
+.setting-unit {
+  font-family: var(--label-font);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.step-btn {
+  width: 34px;
+  height: 34px;
+  font: inherit;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid #333;
+  clip-path: var(--cut-small);
+  cursor: pointer;
+}
+
+.step-btn:active {
+  background: var(--red-dark);
+}
+
+.bpm-input {
+  width: 58px;
+  padding: 6px 4px;
+  font-family: var(--tab-font);
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid #333;
+  border-radius: 0;
+  appearance: textfield; /* no built-in arrows: the − and + buttons do that */
+}
+
+.bpm-input::-webkit-outer-spin-button,
+.bpm-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.rhythm-switch {
+  cursor: pointer;
+}
+
+.rhythm-switch input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--red);
+}
+
 /* Latest Riffs: each riff is a card with its date, note count, confidence and a mini tab. */
 .riff-list {
   width: 100%;
@@ -155,13 +228,12 @@ body {
 
 .mini-tab {
   display: block;
-  margin: 0;
-  font-family: var(--tab-font);
-  font-size: 0.72rem;
-  line-height: 1.25;
-  color: var(--muted);
-  white-space: pre;
   overflow: hidden;
+}
+
+.mini-tab .tab-svg {
+  width: auto;
+  height: 84px; /* a small version of the same tab picture */
 }
 
 /* --- Buttons --- */
@@ -244,6 +316,7 @@ body {
 /* Keyboard focus: the angled corners would cut off a normal outline, so draw it inside. */
 .big-btn:focus-visible,
 .secondary-btn:focus-visible,
+.step-btn:focus-visible,
 .riff-card:focus-visible {
   outline: 2px solid var(--text);
   outline-offset: -5px;
@@ -312,6 +385,93 @@ body {
   line-height: 1.5;
   color: var(--text);
   overflow-x: auto;
+}
+
+/* The tab picture (tabsvg.js): string lines, fret numbers, bar lines, bends and rhythm. */
+.tab-svg {
+  display: block;
+  overflow: visible;
+}
+
+.t-line {
+  stroke: #444;
+  stroke-width: 1.2;
+}
+
+.t-bar {
+  stroke: #777;
+  stroke-width: 1.4;
+}
+
+.t-gap {
+  fill: var(--panel); /* a dark patch behind each number, so the string line doesn't run through it */
+}
+
+.t-fret {
+  fill: var(--text);
+  font-family: var(--tab-font);
+  font-size: 15px;
+  font-weight: 700;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+.t-now {
+  fill: var(--red); /* the newest note while recording */
+}
+
+.t-clef,
+.t-time {
+  fill: var(--muted);
+  font-family: var(--label-font);
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.t-clef {
+  font-size: 14px;
+}
+
+.t-time {
+  font-size: 26px;
+}
+
+.t-tempo,
+.t-measure {
+  fill: var(--muted);
+  font-family: var(--label-font);
+  font-size: 12px;
+}
+
+.t-bend {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+
+.t-arrow,
+.t-bend-label {
+  fill: var(--text);
+}
+
+.t-bend-label {
+  font-family: var(--label-font);
+  font-size: 12px;
+  text-anchor: middle;
+}
+
+.t-stem {
+  stroke: var(--muted);
+  stroke-width: 1.5;
+}
+
+.t-beam {
+  stroke: var(--muted);
+  stroke-width: 3.5;
+}
+
+.t-dot {
+  fill: var(--muted);
 }
 
 /* Confidence bar under the tab: 0% (not sure at all) to 100% (very sure), plus a hint. */

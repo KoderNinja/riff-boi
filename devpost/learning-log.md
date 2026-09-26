@@ -101,3 +101,11 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - The first version broke one note in my Crazy Train recording. A sloppy note change from A2 to G#2 slid down and stopped 0.7 semitones below A2, and Riff Boi called it a pre-bend. Real bends stop right on a note, so now anything that stops between two notes goes back to the normal note rules.
 - I tried making it stricter so very slow bends don't get split up. Side by side on my recordings, that lost 6 or 7 real notes, because real notes drift in pitch as they ring. So I kept the version that loses nothing: 110/115 notes and 0 false bends. The catch is that bends slower than about 0.4 seconds for a whole step can come out as separate notes.
 - Claude broke the bend code on purpose in 6 ways, and at first two of the breaks got past the checks. Fixing those checks meant copying the exact numbers from my real recording (to 6 decimal places), because the same numbers rounded to 2 decimals took a different path through the code.
+
+## Sep 25, 2026: Note values, drawn like Songsterr (my request)
+- To know whether a note is a quarter or an eighth, Riff Boi needs the tempo. I set it myself (BPM) on the home screen, because guessing a tempo can come out double or half speed.
+- Each note's start gets snapped to the nearest sixteenth note at that tempo, so notes that are a little early or late still come out right. A note lasts until the next one starts.
+- The tab is now a picture (SVG, shapes written as code) like Songsterr: string lines, bar lines, the tempo, bends as arrows, and stems and beams under the tab for the rhythm. I picked this look from 3 real options.
+- A bug I noticed with Claude: my last note always came out as a whole note, because it lasted until I tapped Stop. Now it ends when the guitar goes quiet.
+- A test can be wrong too. One check expected a quarter note at 60 BPM, but half a second at 60 BPM really is an eighth note, so we fixed the check, not the code.
+- A Rhythm switch turns it all off, for when I just want the notes.
