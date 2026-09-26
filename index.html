@@ -4,20 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Riff Boi</title>
+  <!-- Logo/title font: UnifrakturCook (picked by the learner), from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
   <!-- Each <section> is one screen. app.js shows one at a time. -->
 
-  <!-- Home screen (the Latest Riffs list comes in slice 3) -->
+  <!-- Home: Latest Riffs -->
   <section id="screen-home" class="screen">
     <h1 class="logo">Riff Boi</h1>
     <button id="new-riff-btn" class="big-btn">New Riff</button>
     <!-- Only shown when the address ends in ?debug (for tuning note detection) -->
     <button id="save-readings-btn" class="small-btn" hidden>Save last recording's readings</button>
+    <h2 class="screen-title">Latest Riffs</h2>
+    <p id="no-riffs-msg" class="muted">No riffs yet</p>
+    <ul id="riff-list" class="riff-list"></ul>
   </section>
 
-  <!-- Recording screen -->
+  <!-- Recording -->
   <section id="screen-recording" class="screen" hidden>
     <h2 class="screen-title">Listening…</h2>
     <pre id="live-tab" class="tab"></pre>
@@ -27,6 +34,21 @@
     </div>
     <p id="status-msg" class="status-msg"></p>
     <button id="stop-btn" class="big-btn">Stop</button>
+  </section>
+
+  <!-- Saving confirmation -->
+  <section id="screen-saving" class="screen" hidden>
+    <h2 id="saving-title" class="saving-title">Saving…</h2>
+    <p id="saving-details" class="saving-details"></p>
+    <p id="saving-where" class="muted"></p>
+  </section>
+
+  <!-- Riff View: one saved riff -->
+  <section id="screen-riff" class="screen" hidden>
+    <h2 id="riff-title" class="screen-title"></h2>
+    <pre id="riff-tab" class="tab"></pre>
+    <p id="riff-count" class="muted"></p>
+    <button id="back-btn" class="small-btn">← Latest Riffs</button>
   </section>
 
   <script type="module" src="js/app.js"></script>

@@ -232,5 +232,5 @@ beginners-paradise/          # the project folder = the GitHub repo
 - **Agreed investigation during the build:** once live note-to-tab works, the learner plays a short, known riff (about 8–12 notes) three ways: slow + clean through the interface, faster + clean, then with distortion. For each, count correct notes, missed notes and extra notes, then compare against the position rule. Record the results in `devpost/learning-log.md`, tune the limits and test again.
 
 **Still open (don't block the build):**
-- Heading font choice (during the build).
+- ~~Heading font choice~~ — picked by the learner during the build: **UnifrakturCook** (blackletter), for the logo and screen titles, in normal capitals (blackletter is hard to read in ALL CAPS).
 - Tuning settings, rhythm, editing, power chords: later, per `prd.md > Deferred From the POC`.

@@ -2,24 +2,36 @@
 
 const PITCHY_URL = 'https://cdn.jsdelivr.net/npm/pitchy@4.1.0/+esm';
 const BUFFER_SIZE = 2048; // how many sound samples Pitchy looks at each time
+// notes.js counts readings ("hold for 7 readings"), so readings must come at a steady rate.
+// A fixed timer does that on any screen (60 Hz, 120 Hz, battery saver...).
+const READINGS_PER_SECOND = 60;
 
 let audioContext = null;
 let stream = null;
 let loopId = null;
+let session = 0; // goes up every time listening stops, so a start that's still loading knows to give up
 
-// Start listening. onReading(freq, clarity, volume) is called about 60 times a second.
+// Start listening. onReading(freq, clarity, volume) is called 60 times a second.
 export async function startListening(onReading) {
+  const mySession = ++session;
   // Create the audio context right away, while we're still inside the button tap
   // (browsers only allow sound to start from something the user did).
   audioContext = new AudioContext();
 
   // Ask for the mic. Turn off the "phone call" clean-up features:
   // they're made for voices and would mess with a guitar's sound.
-  stream = await navigator.mediaDevices.getUserMedia({
+  const micStream = await navigator.mediaDevices.getUserMedia({
     audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
   });
+  // Stop was tapped while we waited (e.g. during the permission prompt)? Let the mic go.
+  if (mySession !== session) {
+    micStream.getTracks().forEach((track) => track.stop());
+    return;
+  }
+  stream = micStream;
 
   const { PitchDetector } = await import(PITCHY_URL);
+  if (mySession !== session) return; // stopped while Pitchy was loading
   const detector = PitchDetector.forFloat32Array(BUFFER_SIZE);
 
   // Connect mic → analyser. The analyser lets us grab the latest slice of sound.
@@ -33,16 +45,16 @@ export async function startListening(onReading) {
     analyser.getFloatTimeDomainData(samples);
     const [freq, clarity] = detector.findPitch(samples, audioContext.sampleRate);
     onReading(freq, clarity, getVolume(samples));
-    loopId = requestAnimationFrame(tick); // run again on the next screen refresh (~60/s)
   }
-  tick();
+  loopId = setInterval(tick, 1000 / READINGS_PER_SECOND);
 }
 
 // Stop listening and release the microphone.
 export function stopListening() {
-  if (loopId !== null) cancelAnimationFrame(loopId);
+  session++;
+  if (loopId !== null) clearInterval(loopId);
   if (stream) stream.getTracks().forEach((track) => track.stop());
-  if (audioContext) audioContext.close();
+  if (audioContext && audioContext.state !== 'closed') audioContext.close();
   loopId = null;
   stream = null;
   audioContext = null;

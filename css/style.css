@@ -6,6 +6,7 @@
   --red-dark: #8e0d14;    /* pressed buttons */
   --text: #ececec;        /* main text */
   --muted: #8a8a8a;       /* less important text */
+  --title-font: 'UnifrakturCook', 'Times New Roman', serif; /* blackletter, only for the logo and titles */
 }
 
 * {
@@ -37,16 +38,19 @@ body {
 }
 
 .logo {
-  font-size: 3rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  font-family: var(--title-font);
+  font-weight: 700;
+  font-size: 4rem;
+  line-height: 1;
   color: var(--red);
   margin: 24px 0 0;
 }
 
+/* Blackletter is hard to read in ALL CAPS, so titles keep normal capitals. */
 .screen-title {
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  font-family: var(--title-font);
+  font-weight: 700;
+  font-size: 1.75rem;
   color: var(--muted);
   margin: 0;
 }
@@ -118,4 +122,58 @@ body {
   min-height: 1.5em;
   margin: 0;
   text-align: center;
+}
+
+.muted {
+  color: var(--muted);
+  margin: 0;
+}
+
+/* Latest Riffs list: each riff is a big tappable row. */
+.riff-list {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.riff-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  font: inherit;
+  color: var(--text);
+  background: var(--panel);
+  border: none;
+  border-left: 4px solid var(--red);
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.riff-row:active {
+  background: var(--red-dark);
+}
+
+.riff-count {
+  color: var(--muted);
+}
+
+/* Saving confirmation */
+.saving-title {
+  margin: 20vh 0 0;
+  font-family: var(--title-font);
+  font-weight: 700;
+  font-size: 2.75rem;
+  color: var(--red);
+}
+
+.saving-details {
+  margin: 0;
+  font-size: 1.25rem;
 }
