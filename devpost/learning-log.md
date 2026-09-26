@@ -172,3 +172,9 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - A loop can only be a whole number of samples long, so each note's loop plays a tiny bit faster or slower to land exactly in tune. Bends glide that speed up and down.
 - The red "now playing" note first used animation frames, which browsers pause when the page isn't showing. The test caught it: the riff never finished. Timers keep running, so now it always finishes.
 - Mutation testing showed two checks were too loose (turning off the fade, or leaving a steady offset in the sound, went unnoticed). I measured the real numbers and tightened them.
+
+## Sep 26, 2026: Tabs from a recording (Upload and Try a sample)
+- Live, Riff Boi takes a reading 60 times a second of the newest 2048 samples of sound. A file has all its samples at once, so the upload walks through them doing the same thing: a reading every 800 samples (48,000 a second / 60), each from the 2048 samples before that point.
+- To be sure an upload gives the same notes as playing live, the steps from readings to notes are now in one shared function, and a check runs every recording through both ways. They match, down to the strings.
+- The proof: my pentatonic mp3 in the browser gave exactly the tab the saved readings of the same recording give (11 of 12 notes, 85% confidence). Judges without a guitar can tap Try a sample and see it work.
+- Mutation testing showed two lines that can't change anything, because the note tracker already fixes the note itself. Code that looks important but does nothing is worth knowing about. I kept them so it matches the live code.

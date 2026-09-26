@@ -17,6 +17,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 - Shows how sure it is about the tab, with a hint when something's off, like background noise or an out-of-tune guitar.
 - Lets you write a tab by hand too (New Tab): pick a string, a fret and a note value for each note.
 - Plays a riff back with a plucked-string sound, so you can hear what the tab says.
+- Gets the tab of a recording too: upload an mp3, wav or m4a, or tap Try a sample (my pentatonic scale) if there's no guitar around.
 - Has a tuner built in.
 - Lets you pick your mic or audio interface, remembers it, and tells you when it can't hear your guitar.
 
@@ -36,13 +37,13 @@ Then open http://localhost:8000 in Chrome, click New Riff, allow the mic and pla
 
 The server is needed because browsers block the mic and JavaScript modules on a page opened straight from a file. On localhost they're allowed.
 
-No guitar around? A piano or keyboard app playing single notes should work too.
+No guitar around? Tap Try a sample to see Riff Boi write the tab of my pentatonic scale recording, or play single notes on a piano or keyboard app.
 
 If it can't hear your guitar, add `?debug` to the address (like https://riffboi.com/?debug). The Recording and Tuner screens then show what the mic is picking up: how loud and how clear the sound is, its pitch, and whether the browser's sound is running.
 
 ## How it works
 
-The browser's Web Audio API listens to the mic 60 times a second, and [Pitchy](https://github.com/ianprime0509/pitchy) works out the pitch of each slice of sound and how clear it is. `js/notes.js` turns those pitches into notes. It decides when a new note starts (a pick, a pitch change, a hammer-on) and ignores harmonics and background noise. It also follows the pitch closely to hear bends: a bend glides smoothly through the pitches in between, while a hammer-on or slide jumps from fret to fret. `js/tab.js` picks a string and fret for each note. The sound can't tell you which string you played, so it goes with the spot that needs the least hand movement. `js/rhythm.js` turns when each note started into note values (quarter, eighth and so on) using your tempo and time signature, and it can work out the tempo from your playing when Auto is on. `js/tabsvg.js` draws the tab picture. `js/confidence.js` scores how clear, in tune, quiet and steady the notes were, and `js/editor.js` turns a tab you write by hand into the same kind of riff, `js/playback.js` plays a tab back with a plucked-string sound made from noise (the Karplus-Strong trick), and `js/storage.js` saves riffs in the browser's localStorage, so there's no server and no accounts.
+The browser's Web Audio API listens to the mic 60 times a second, and [Pitchy](https://github.com/ianprime0509/pitchy) works out the pitch of each slice of sound and how clear it is. `js/notes.js` turns those pitches into notes. It decides when a new note starts (a pick, a pitch change, a hammer-on) and ignores harmonics and background noise. It also follows the pitch closely to hear bends: a bend glides smoothly through the pitches in between, while a hammer-on or slide jumps from fret to fret. `js/tab.js` picks a string and fret for each note. The sound can't tell you which string you played, so it goes with the spot that needs the least hand movement. `js/rhythm.js` turns when each note started into note values (quarter, eighth and so on) using your tempo and time signature, and it can work out the tempo from your playing when Auto is on. `js/tabsvg.js` draws the tab picture. `js/confidence.js` scores how clear, in tune, quiet and steady the notes were, and `js/editor.js` turns a tab you write by hand into the same kind of riff, `js/playback.js` plays a tab back with a plucked-string sound made from noise (the Karplus-Strong trick), `js/upload.js` reads a recording with the same steps as listening live, just all at once, and `js/storage.js` saves riffs in the browser's localStorage, so there's no server and no accounts.
 
 The full plan is in [`devpost/spec.md`](devpost/spec.md).
 
@@ -59,11 +60,11 @@ node tools/check.mjs
 node tools/score.mjs
 ```
 
-`check.mjs` runs 147 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, input picker, saving, tab editor and playback logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
+`check.mjs` runs 150 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, input picker, saving, tab editor, playback and upload logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
 
 ## What it can't do yet
 
-It only hears single notes, so no chords or power chords yet. It assumes standard tuning. The string and fret are a best guess, because the sound doesn't say which string you played. A really soft first note can get missed. A pre-bend only shows up once you release it, since until then it sounds just like a normal note, and a very slow bend (slower than about 0.4 seconds for a whole step) can come out as separate notes. Auto tempo needs a steady beat and at least 4 notes, and it can come out at double or half speed (you can type the right tempo on the saved riff). On an iPhone, the silent switch can mute playback.
+It only hears single notes, so no chords or power chords yet. It assumes standard tuning. The string and fret are a best guess, because the sound doesn't say which string you played. A really soft first note can get missed. A pre-bend only shows up once you release it, since until then it sounds just like a normal note, and a very slow bend (slower than about 0.4 seconds for a whole step) can come out as separate notes. Auto tempo needs a steady beat and at least 4 notes, and it can come out at double or half speed (you can type the right tempo on the saved riff). On an iPhone, the silent switch can mute playback. Uploaded recordings can be up to 5 minutes long.
 
 ## How I made it
 

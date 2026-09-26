@@ -56,12 +56,12 @@ export function saveInputId(deviceId) {
 
 // Save a new riff at the top of the list and return it.
 // `confidence` is how sure Riff Boi was about it (see confidence.js), or null.
-// `timing` is { bpm, endTime, rhythm, meter, autoTempo, written }: the tempo it was played at,
-// when its last note ended (seconds), whether rhythm was on, its time signature, whether Riff Boi
-// worked the tempo out by itself, and whether it was written by hand (New Tab), so its tab can be
-// drawn the same way later.
+// `details` is { bpm, endTime, rhythm, meter, autoTempo, written, name }: the tempo it was played
+// at, when its last note ended (seconds), whether rhythm was on, its time signature, whether Riff
+// Boi worked the tempo out by itself, and whether it was written by hand (New Tab), so its tab can
+// be drawn the same way later. And its name, if it has one (like an uploaded file's).
 // Throws if the browser won't let us save (the app shows a message).
-export function saveRiff(notes, confidence = null, timing = {}) {
+export function saveRiff(notes, confidence = null, details = {}) {
   const now = new Date();
   const riff = {
     id: String(now.getTime()),
@@ -71,12 +71,13 @@ export function saveRiff(notes, confidence = null, timing = {}) {
     // Bend details are only there for bent notes (the rest are left out when saved).
     notes: notes.map(({ midi, name, string, fret, t, bend, release, prebend }) => ({ midi, name, string, fret, t, bend, release, prebend })),
     confidence: confidence && roundNumbers(confidence),
-    bpm: timing.bpm,
-    endTime: timing.endTime === undefined ? undefined : Math.round(timing.endTime * 100) / 100,
-    rhythm: timing.rhythm,
-    meter: timing.meter,
-    autoTempo: timing.autoTempo || undefined, // only saved when it's true
-    written: timing.written || undefined, // the same
+    bpm: details.bpm,
+    endTime: details.endTime === undefined ? undefined : Math.round(details.endTime * 100) / 100,
+    rhythm: details.rhythm,
+    meter: details.meter,
+    autoTempo: details.autoTempo || undefined, // only saved when it's true
+    written: details.written || undefined, // the same
+    name: details.name || undefined,
   };
   localStorage.setItem(RIFFS_KEY, JSON.stringify([riff, ...loadRiffs()]));
   return riff;

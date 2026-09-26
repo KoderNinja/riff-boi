@@ -108,6 +108,14 @@ body {
   background: var(--text);
 }
 
+/* Upload a recording and Try a sample, under New Riff. */
+.file-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
 /* Tempo and rhythm settings under New Riff. */
 .settings-row {
   display: flex;

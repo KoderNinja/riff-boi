@@ -26,6 +26,12 @@
       <button id="tuner-btn" class="secondary-btn tuner-btn">Tuner</button>
     </header>
     <button id="new-riff-btn" class="record-btn"><span class="record-dot" aria-hidden="true"></span>New Riff</button>
+    <!-- Or get the tab of a recording: a sound file, or the sample (my pentatonic scale) -->
+    <div class="file-row">
+      <button id="upload-btn" class="secondary-btn">Upload a recording</button>
+      <button id="sample-btn" class="secondary-btn">Try a sample</button>
+      <input id="upload-input" type="file" accept="audio/*" hidden>
+    </div>
     <!-- Settings for the tab: the tempo you play at (for note values), or Auto (Riff Boi works it
          out from your notes when you tap Stop), the time signature, and rhythm on/off -->
     <div class="settings-row">

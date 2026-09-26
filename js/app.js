@@ -9,6 +9,7 @@ import { loadRiffs, saveRiff, updateRiff, deleteRiff, riffTiming, loadSettings, 
 import { riffConfidence } from './confidence.js';
 import { writtenRiff, retime, EDITOR_MAX_FRET } from './editor.js';
 import { playNotes } from './playback.js';
+import { riffFromRecording } from './upload.js';
 
 const screens = {
   home: document.getElementById('screen-home'),
@@ -421,6 +422,15 @@ $('new-riff-btn').addEventListener('click', async () => {
   }
 });
 
+// The tempo to save a riff at. With Auto detect tempo on, work it out from the notes (not with
+// rhythm off: that tab has no tempo). If Riff Boi can't tell (under 4 notes, or no steady beat),
+// it's the tempo in the box.
+function tempoFor(notes) {
+  const auto = settings.autoTempo && settings.rhythm;
+  const detected = auto ? detectTempo(notes) : null;
+  return { auto, detected, bpm: detected === null ? settings.bpm : clampBpm(detected, settings.bpm) };
+}
+
 // --- Stop: save the riff ---
 
 stopBtn.addEventListener('click', async () => {
@@ -442,11 +452,7 @@ stopBtn.addEventListener('click', async () => {
   $('saving-details').textContent = '';
   $('saving-where').textContent = '';
   showScreen('saving');
-  // With Auto on, work out the tempo from the notes (not with rhythm off: that tab has no tempo).
-  // If Riff Boi can't tell (under 4 notes, or no steady beat), the riff uses the tempo in the box.
-  const auto = settings.autoTempo && settings.rhythm;
-  const detected = auto ? detectTempo(notes) : null;
-  const bpm = detected === null ? settings.bpm : clampBpm(detected, settings.bpm);
+  const { auto, detected, bpm } = tempoFor(notes);
   let riff;
   try {
     riff = saveRiff(notes, riffConfidence(notes, volumes), { bpm, endTime, rhythm: settings.rhythm, meter: settings.meter, autoTempo: detected !== null });
@@ -467,6 +473,73 @@ stopBtn.addEventListener('click', async () => {
   await wait(auto ? 2500 : 1500); // a little longer, to read the tempo
   showHome();
 });
+
+// --- Upload a recording, or try the sample ---
+
+$('upload-btn').addEventListener('click', () => $('upload-input').click());
+$('upload-input').addEventListener('change', () => {
+  const file = $('upload-input').files[0];
+  $('upload-input').value = ''; // so picking the same file again still works
+  if (file) tabFromRecording(file, file.name.replace(/\.[^.]+$/, '').slice(0, 40));
+});
+
+// The sample is my pentatonic scale, so people without a guitar can see Riff Boi work.
+$('sample-btn').addEventListener('click', async () => {
+  let file;
+  try {
+    const response = await fetch('samples/pentatonic.mp3');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    file = await response.blob();
+  } catch (err) {
+    console.error(err);
+    return showProblem("Couldn't load the sample", 'Check your internet and try again');
+  }
+  tabFromRecording(file, 'Sample: pentatonic scale');
+});
+
+// Read a recording, save its riff (named `name`) and show it. Uses the tempo, time signature,
+// Auto detect tempo and Show note lengths settings, like a riff you record.
+async function tabFromRecording(file, name) {
+  $('saving-title').textContent = 'Reading the recording…';
+  $('saving-details').textContent = '';
+  $('saving-where').textContent = '';
+  showScreen('saving');
+  let result;
+  try {
+    result = await riffFromRecording(file, (fraction) => {
+      $('saving-details').textContent = `${Math.round(fraction * 100)}%`;
+    });
+  } catch (err) {
+    console.error(err);
+    if (err.name === 'TooLongError') return showProblem('That recording is too long', 'Try one under 5 minutes');
+    if (err.name === 'PitchyLoadError') return showProblem("Couldn't load the pitch detector", 'Check your internet and try again');
+    return showProblem("Couldn't read that file", 'Try an mp3, wav or m4a recording');
+  }
+  if (result.notes.length === 0) return showProblem('No notes found', 'Riff Boi hears single notes, like a riff or a scale');
+  placeNotes(result.notes);
+  const { detected, bpm } = tempoFor(result.notes);
+  let riff;
+  try {
+    riff = saveRiff(result.notes, riffConfidence(result.notes, result.volumes), {
+      bpm, endTime: result.endTime, rhythm: settings.rhythm, meter: settings.meter, autoTempo: detected !== null, name,
+    });
+  } catch (err) {
+    console.error(err);
+    return showProblem("Couldn't save", 'Your browser blocked saving (private window?)');
+  }
+  if (detected !== null) setBpm(bpm); // the next riff's live tab starts at this tempo
+  showRiff(riff);
+}
+
+// Show a problem on the Saving screen for a moment, then go home.
+async function showProblem(title, details) {
+  $('saving-title').textContent = title;
+  $('saving-details').textContent = details;
+  $('saving-where').textContent = '';
+  showScreen('saving');
+  await wait(3000);
+  showHome();
+}
 
 // --- Playback: hear a riff ---
 

@@ -402,3 +402,27 @@ export function median(values) {
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
+
+// A whole recording at once (an uploaded file, or a saved debug recording). `readings` are
+// [frequency, clarity, volume, seconds], like the ones live. The same steps app.js takes while
+// you play: returns the riff's notes (cleaned up, strings not picked yet) and when the last
+// note stopped ringing (seconds), which is where Stop would end it.
+export function notesFromReadings(readings) {
+  const track = createNoteTracker();
+  const notes = [];
+  let ringing = 0;
+  let lastSound = 0;
+  for (const [freq, clarity, volume, t] of readings) {
+    const result = track(freq, clarity, volume, t);
+    if (result?.fix) Object.assign(notes[notes.length - 1], result.fix);
+    else if (result?.bend) Object.assign(notes[notes.length - 1], result.bend);
+    else if (result) {
+      result.t = Math.round(result.t * 100) / 100; // like app.js (the tracker keeps updating this same note)
+      notes.push(result);
+    }
+    ringing = stillRinging(notes[notes.length - 1], freq, clarity, volume) ? ringing + 1 : 0;
+    if (ringing >= RINGING_READINGS) lastSound = t;
+  }
+  return { notes: cleanUpRiff(notes), endTime: Math.min(readings.at(-1)?.[3] ?? 0, lastSound) };
+}
+

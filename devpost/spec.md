@@ -174,6 +174,13 @@ The tab is drawn as a picture (SVG) like a Songsterr tab, the learner's pick fro
 - The newest note is red while recording. The old text tab (`drawTab`) stays for the checks and a future "copy as text".
 PRD ref: `prd.md > What We're Building` (note values).
 
+### Upload a Recording (`upload.js`) *(added after the build, learner idea)*
+"Upload a recording" and "Try a sample" sit under New Riff (the learner chose both). Upload opens the file picker for a sound file (mp3, wav, m4a and so on, up to 5 minutes); Try a sample uses `samples/pentatonic.mp3`, the learner's own recording of a pentatonic scale, so judges without a guitar can see it work (the learner agreed to put it in the public repo).
+- **The same steps as live, all at once:** the file is decoded at 48 kHz and mixed to one channel, then read like the live input: 60 readings a second, each from the latest 2048 samples (timed where the slice ends), with Pitchy and the same loudness math as `audio.js`. `notesFromReadings` in `notes.js` runs the same steps as `app.js` while recording, and the last note ends where it stopped ringing. The riff then gets strings, a confidence score, and the tempo, time signature, Auto detect tempo and Show note lengths settings like a recorded riff.
+- It's saved with the file's name (the sample is "Sample: pentatonic scale") and opens straight away on the Riff View, where Play works.
+- **Checked:** the made-up bend readings and every real recording give the same notes, strings and end through `notesFromReadings` as the scoreboard's replay; and in the browser the sample mp3 gives exactly the tab the saved readings of it give (11 of 12 notes, 85% confidence, the same as the scoreboard). Reading the 6-second sample takes about 0.1 s.
+- **Problems:** "Couldn't read that file" (not a sound file the browser can read), "That recording is too long" (over 5 minutes), "No notes found", or "Couldn't load the pitch detector" (no internet). Each shows for 3 seconds, then home.
+
 ### Playback (`playback.js`) *(added after the build, learner request)*
 A **Play** button on the Riff View and in New Tab plays the tab back with a plucked-string sound (the learner's pick over a simple tone). Each note turns red as it plays and the tab scrolls to keep it in view; the button says Stop while it plays. Leaving the screen, changing the tempo or adding a note stops it.
 - **What it plays:** what the tab shows. With rhythm on, each note starts on its beat and lasts its note value at the riff's tempo, and leftover time is silence. With rhythm off, the notes play when they were played. Bends glide up, releases glide back down (after 60% of the note), pre-bends start up. A note is cut (a 40 ms fade) when its time is up, and rings at most 2.9 s.
@@ -213,7 +220,7 @@ Everything lives in the browser's localStorage, as text in JSON format (a simple
 - `rhythm` is whether the Rhythm switch was on when the riff was recorded. Riffs from before this don't have it and are drawn with rhythm on.
 - `meter` is the time signature, like `"7/8"`. Riffs from before this don't have it and are 4/4.
 - `written: true` means it was written by hand in New Tab (only saved when true).
-- `name` is the name you gave it with Rename. Without one, the riff shows its `label` (when it was made).
+- `name` is the name you gave it with Rename, or an uploaded file's name. Without one, the riff shows its `label` (when it was made).
 - `autoTempo: true` means Riff Boi worked out `bpm` itself. It's only saved when true, and typing a new tempo sets it to `false`.
 - `confidence` is how sure Riff Boi was about the riff (the score and each part from 0 to 1, rounded to 2 decimals) plus the hint, or `null` if there was nothing to judge. Riffs saved before the confidence bar don't have it.
 
@@ -243,9 +250,11 @@ beginners-paradise/          # the project folder = the GitHub repo
 │   ├── tabsvg.js            # draws the tab picture (Songsterr style)
 │   ├── editor.js            # New Tab: turns a tab written by hand into a riff
 │   ├── playback.js          # plays a tab back with a plucked-string sound
+│   ├── upload.js            # reads a recording (mp3, wav...) into a riff, like listening live
 │   └── storage.js           # save/load riffs and the chosen input (localStorage)
 ├── manifest.webmanifest     # (polish) home-screen app name, colors, icon
 ├── icons/                   # (polish) app icon for "Add to Home Screen"
+├── samples/pentatonic.mp3   # my pentatonic scale, for Try a sample
 ├── README.md                # what Riff Boi is, how to run it, tech used, AI disclosure
 ├── .gitignore               # keeps learner-profile.md and .env files out of git
 ├── CLAUDE.md                # instructions for Claude in this project

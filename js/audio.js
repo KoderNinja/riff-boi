@@ -1,10 +1,10 @@
 // audio.js — opens the microphone and asks Pitchy about the sound many times a second.
 
-const PITCHY_URL = 'https://cdn.jsdelivr.net/npm/pitchy@4.1.0/+esm';
-const BUFFER_SIZE = 2048; // how many sound samples Pitchy looks at each time
+export const PITCHY_URL = 'https://cdn.jsdelivr.net/npm/pitchy@4.1.0/+esm';
+export const BUFFER_SIZE = 2048; // how many sound samples Pitchy looks at each time
 // notes.js counts readings ("hold for 7 readings"), so readings must come at a steady rate.
 // A fixed timer does that on any screen (60 Hz, 120 Hz, battery saver...).
-const READINGS_PER_SECOND = 60;
+export const READINGS_PER_SECOND = 60;
 // Turn off the "phone call" clean-up features when opening the mic:
 // they're made for voices and would mess with a guitar's sound.
 const GUITAR_SOUND = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
@@ -133,7 +133,7 @@ export function onInputsChange(onChange) {
 }
 
 // Volume of a slice of sound (root mean square): 0 is silence, 1 is as loud as it gets.
-function getVolume(samples) {
+export function getVolume(samples) {
   let sum = 0;
   for (const s of samples) sum += s * s;
   return Math.sqrt(sum / samples.length);

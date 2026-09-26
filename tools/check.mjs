@@ -2,8 +2,8 @@
 // Usage: node tools/check.mjs
 // Uses made-up readings (no guitar needed). Run it after changing notes.js or tab.js.
 
-import { readFileSync } from 'node:fs';
-import { readNote, createNoteTracker, cleanUpRiff, tuningOf, stillRinging, RINGING_READINGS } from '../js/notes.js';
+import { readFileSync, readdirSync } from 'node:fs';
+import { readNote, createNoteTracker, cleanUpRiff, tuningOf, stillRinging, RINGING_READINGS, notesFromReadings } from '../js/notes.js';
 import { placeNotes, positionsFor, drawTab, tabToken } from '../js/tab.js';
 import { riffConfidence } from '../js/confidence.js';
 import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS } from '../js/rhythm.js';
@@ -12,6 +12,7 @@ import { openInput, listInputs } from '../js/audio.js';
 import { saveRiff, loadRiffs, updateRiff, deleteRiff, riffTiming } from '../js/storage.js';
 import { writtenRiff, retime } from '../js/editor.js';
 import { playbackPlan, pitchPoints, pluckSamples, loopFor } from '../js/playback.js';
+import { readingsFrom } from '../js/upload.js';
 
 let allOk = true;
 function check(label, ok, detail = '') {
@@ -567,6 +568,49 @@ check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().m
   check('playback: the plucked string fades like a real one', fade < 0.45, fade.toFixed(3));
   const offset = sound.subarray(0, 200).reduce((sum, x) => sum + x, 0) / 200;
   check('playback: the pick has no steady offset (it would never fade)', Math.abs(offset) < 1e-6, offset);
+}
+
+// --- Upload a recording ---
+{
+  // A whole recording at once must give the same riff as the scoreboard's replay of it
+  // (the same steps as live), on every real recording.
+  const dir = new URL('./recordings/', import.meta.url);
+  const differ = [];
+  for (const file of readdirSync(dir).filter((name) => name.endsWith('.json')).sort()) {
+    const { readings } = JSON.parse(readFileSync(new URL(file, dir), 'utf8'));
+    const track = createNoteTracker();
+    const raw = [];
+    for (const [freq, clarity, volume, t] of readings) {
+      const result = track(freq, clarity, volume, t);
+      if (result?.fix) Object.assign(raw[raw.length - 1], result.fix);
+      else if (result?.bend) Object.assign(raw[raw.length - 1], result.bend);
+      else if (result) raw.push(result);
+    }
+    const replayed = cleanUpRiff(raw);
+    placeNotes(replayed);
+    const { notes, endTime } = notesFromReadings(readings);
+    placeNotes(notes);
+    const tab = (list) => list.map((n) => `${n.name}@${n.string}/${n.fret}${n.bend ? `b${n.bend}` : ''}`).join(' ');
+    const lastEnds = Math.min(readings.at(-1)[3], riffEnd(readings));
+    if (tab(notes) !== tab(replayed) || endTime !== lastEnds) differ.push(file);
+  }
+  check('upload: a whole recording gives the same notes, strings and end as playing it live, on every recording', differ.length === 0, differ.join(', '));
+  // None of the recordings has a bend or an octave fix yet, so use the made-up bend readings too.
+  const viaUpload = (readings) => {
+    const { notes } = notesFromReadings(readings.map(([f, c, v], i) => [f, c, v, i / 60]));
+    placeNotes(notes);
+    return notes.map((n) => 'EADGBe'[6 - n.string] + tabToken(n)).join(' ');
+  };
+  const wrong = bendCases.filter(([, readings, expected]) => viaUpload(readings) !== expected).map(([label]) => label);
+  check('upload: bends, releases, pre-bends and octave fixes come out the same as live', wrong.length === 0, wrong.join('; '));
+
+  // Readings like live: 60 a second, each from the latest 2048 samples, timed where the slice ends.
+  const samples = new Float32Array(48000).fill(0.5); // 1 second at 48 kHz
+  const slices = [];
+  const readings = [...readingsFrom(samples, 48000, (slice) => (slices.push(slice.length), [110, 0.9]))];
+  check('upload: 60 readings a second of 2048 samples each, timed where each slice ends',
+    readings.length === 58 && slices.every((n) => n === 2048) && readings[0][3] === 2048 / 48000 && readings[1][3] === (2048 + 800) / 48000 && readings[0][2] === 0.5 && readings[0][0] === 110,
+    `${readings.length} readings, first at ${readings[0]?.[3]}`);
 }
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');
