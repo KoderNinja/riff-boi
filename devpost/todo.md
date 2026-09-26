@@ -10,7 +10,8 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 
 Where we left off (Sep 26, 2026, about 1:30am):
 - The code review is done. In the cloud session, Claude fixed my iPhone not hearing notes (the phone started the sound system paused) and 2 bugs the review found. Those commits aren't on GitHub yet, so riffboi.com doesn't have them until I push (the first "must do" below).
-- Claude's part, in priority order: a code tour, getting the precision test ready, the time signature, tempo detection, then updating the GitHub descriptions and README, then a quick codebase check (my requests).
+- Claude's part, in priority order: a code tour, getting the precision test ready, the time signature, tempo detection, then updating the GitHub descriptions and README, then a quick codebase check (my requests). Then start the manual tab editor (my request).
+- Stopped for the night (Sep 26): the code tour and the precision test steps are done. The time signature and Auto tempo are half built, saved on the `time-signature` branch (not merged into `main`, so riffboi.com doesn't get a half-built screen). Next: wire them up in `app.js`, then styles, checks and a browser test.
 - My part: push the new commits, then test on my iPhone and with my guitar.
 
 ## Before the deadline
