@@ -1,6 +1,7 @@
 // app.js — starts Riff Boi, switches screens and wires up the buttons.
 
-import { startListening, stopListening, listInputs, onInputsChange, soundInfo } from './audio.js';
+import { startListening, stopListening, listInputs, onInputsChange, soundInfo, recordedSound } from './audio.js';
+import { wavFile } from './wav.js';
 import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS } from './notes.js';
 import { placeNotes, otherSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken } from './tab.js';
 import { tabSvg } from './tabsvg.js';
@@ -442,7 +443,7 @@ $('new-riff-btn').addEventListener('click', async () => {
   stopBtn.disabled = false;
   showScreen('recording');
   try {
-    await startListening(handleReading, loadInputId());
+    await startListening(handleReading, loadInputId(), { keepSound: DEBUG });
   } catch (err) {
     console.error(err);
     showMessage(statusMsg, statusHint, problemFor(err));
@@ -466,6 +467,7 @@ stopBtn.addEventListener('click', async () => {
   const endTime = Math.min((performance.now() - startTime) / 1000, lastSound);
   stopListening();
   saveReadingsBtn.hidden = !DEBUG;
+  $('save-sound-btn').hidden = !DEBUG;
   const notes = currentRiff();
 
   if (notes.length === 0) {
@@ -1082,6 +1084,15 @@ $('tuner-done-btn').addEventListener('click', () => {
 });
 
 // Save the readings (plus the notes Riff Boi wrote) as a .json file in Downloads.
+// The raw sound too, as a WAV file (for testing, like telling strings apart by their sound).
+$('save-sound-btn').addEventListener('click', () => {
+  const { samples, sampleRate } = recordedSound();
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(new Blob([wavFile(samples, sampleRate)], { type: 'audio/wav' }));
+  link.download = 'riffboi-sound.wav';
+  link.click();
+});
+
 saveReadingsBtn.addEventListener('click', () => {
   const data = JSON.stringify({ notes: currentRiff(), readings });
   const link = document.createElement('a');

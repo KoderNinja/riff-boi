@@ -43,7 +43,7 @@ The server is needed because browsers block the mic and JavaScript modules on a 
 
 No guitar around? A piano or keyboard app playing single notes should work too, or upload a recording of single notes.
 
-If it can't hear your guitar, add `?debug` to the address (like https://riffboi.com/?debug). The Recording and Tuner screens then show what the mic is picking up: how loud and how clear the sound is, its pitch, and whether the browser's sound is running.
+If it can't hear your guitar, add `?debug` to the address (like https://riffboi.com/?debug). The Recording and Tuner screens then show what the mic is picking up: how loud and how clear the sound is, its pitch, and whether the browser's sound is running. After a recording, `?debug` can also save its readings (JSON) and its raw sound (WAV), for testing.
 
 ## How it works
 
@@ -64,7 +64,7 @@ node tools/check.mjs
 node tools/score.mjs
 ```
 
-`check.mjs` runs 175 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, input picker, saving, tab editor, playback, upload, scale finder and share link logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 113 of 115 notes right (98%) and puts all 84 checked notes on the right string.
+`check.mjs` runs 177 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, input picker, saving, tab editor, playback, upload, scale finder and share link logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 113 of 115 notes right (98%) and puts all 84 checked notes on the right string.
 
 ## What it can't do yet
 

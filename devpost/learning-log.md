@@ -215,3 +215,8 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - Distortion also squashes the volume jump that shows a pick, so fast picked notes were treated like hammer-ons (4 readings). But a pick breaks the pitch up for a moment, so a break now counts as a new attack.
 - 110 → 113 of 115 notes, with 0 wrong and no new extra notes, and notes land closer to when I played them. I kept the changes only because the numbers proved them, and I left the last 2 misses alone because fixing them risked fake notes.
 - A test is only useful if it can fail: I checked that the new tests fail on the old code, and broke each new rule on purpose to make sure a test notices.
+
+## Sep 26, 2026: How fast is real-time, and which string?
+- I measured the delay: a note shows up about 64 ms after its pitch first appears (90% within 164 ms). The slow ones start with a blurry attack. Faster would mean trusting blurry readings, which is where fake notes come from, so it stays.
+- Knowing the string from the sound is a real research problem: a thicker string is stiffer, so its overtones sit a little sharp (inharmonicity), and that can tell strings apart on a clean sound. To try it, Riff Boi needs the raw sound, not just pitch readings, so `?debug` can now save a WAV file. The plan is in `devpost/string-detection.md`.
+- The raw sound is copied on the browser's audio thread by an AudioWorklet, a small piece of code that gets every 128 samples as they come in.

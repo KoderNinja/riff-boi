@@ -16,7 +16,8 @@ let session = 0; // goes up every time listening stops, so a start that's still 
 
 // Start listening to an input: its id from listInputs(), or '' for the default input.
 // onReading(freq, clarity, volume) is called 60 times a second.
-export async function startListening(onReading, deviceId = '') {
+// `keepSound` (only with ?debug) also keeps the raw sound, for recordedSound().
+export async function startListening(onReading, deviceId = '', { keepSound = false } = {}) {
   const mySession = ++session;
   // Create the audio context right away, while we're still inside the button tap
   // (browsers only allow sound to start from something the user did). iPhones often
@@ -59,6 +60,7 @@ export async function startListening(onReading, deviceId = '') {
   const analyser = audioContext.createAnalyser();
   analyser.fftSize = BUFFER_SIZE;
   source.connect(analyser);
+  if (keepSound) keepTheSound(source);
   const samples = new Float32Array(BUFFER_SIZE);
 
   function tick() {
@@ -70,6 +72,36 @@ export async function startListening(onReading, deviceId = '') {
 }
 
 // Stop listening and release the microphone.
+// --- Keeping the raw sound (only with ?debug) ---
+
+let sound = { pieces: [], sampleRate: 48000 };
+
+// Copy the input's raw sound while listening (see recorder-worklet.js). If this browser can't,
+// nothing else changes: the notes work as always.
+async function keepTheSound(source) {
+  sound = { pieces: [], sampleRate: source.context.sampleRate };
+  try {
+    await source.context.audioWorklet.addModule(new URL('./recorder-worklet.js', import.meta.url));
+    const recorder = new AudioWorkletNode(source.context, 'riffboi-recorder');
+    recorder.port.onmessage = (event) => sound.pieces.push(event.data);
+    source.connect(recorder);
+    recorder.connect(source.context.destination); // it only sends silence; connected, it keeps running
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// The raw sound of the last recording (with keepSound): { samples, sampleRate }.
+export function recordedSound() {
+  const samples = new Float32Array(sound.pieces.reduce((sum, piece) => sum + piece.length, 0));
+  let at = 0;
+  for (const piece of sound.pieces) {
+    samples.set(piece, at);
+    at += piece.length;
+  }
+  return { samples, sampleRate: sound.sampleRate };
+}
+
 export function stopListening() {
   session++;
   if (loopId !== null) clearInterval(loopId);

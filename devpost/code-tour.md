@@ -39,6 +39,7 @@ It also handles the tempo (40 to 240 BPM), the Auto detect tempo switch, the tim
 - Why a fixed timer? `notes.js` counts readings ("hold for 3 readings"), so readings have to come at a steady rate on any phone or screen.
 - The `session` number: if you tap Stop while the mic permission popup is still up, the late start knows to give up and let the mic go.
 - The volume is the root mean square (RMS) of the slice: square every sample, average them, take the square root.
+- With `?debug`, it also keeps the raw sound: `recorder-worklet.js` runs on the browser's audio thread and copies every 128 samples, and `wav.js` turns them into a WAV file you can save.
 
 ## `js/notes.js`: the brain
 
@@ -116,7 +117,7 @@ Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs`
 
 ## `tools/`: the tests
 
-- `check.mjs`: 175 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
+- `check.mjs`: 177 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
 - `score.mjs`: the scoreboard. It replays my 8 real recordings and compares them to what I really played (the `.txt` answer files): 110 of 115 notes, and 83 of 83 on the right string.
 - `replay.mjs`: replays one `?debug` recording through the current code, to compare before and after a change.
 

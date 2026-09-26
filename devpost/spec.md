@@ -104,7 +104,7 @@ Learner decision (added during spec, a change from the PRD's no-setup idea): see
 ### Audio Listener (`audio.js`)
 Opens the chosen input with `getUserMedia`, connects it to a Web Audio `AnalyserNode`, and about 60 times a second hands a slice of sound to Pitchy. It also measures volume (how loud the slice is) to help spot new notes. It stops everything cleanly when you tap Stop.
 *(Fixed after the code review)* iPhones often start the sound system (the `AudioContext`) paused, even inside a tap, and pause it again for a call or Siri. While it's paused, Pitchy only gets silence, so no notes show up (the learner's iPhone test). So the listener asks it to start inside the tap, again once the mic is open, and every time it gets paused.
-*(Added after the code review)* With `?debug` in the address, the Recording and Tuner screens show the mic's numbers: whether the sound system is running, its sample rate, whether the mic is live, the phone's voice clean-up settings as the phone really applied them, and the latest volume, clarity and pitch.
+*(Added after the code review)* With `?debug` in the address, the Recording and Tuner screens show the mic's numbers: whether the sound system is running, its sample rate, whether the mic is live, the phone's voice clean-up settings as the phone really applied them, and the latest volume, clarity and pitch. After a recording, it can save the readings (JSON) and, since Sep 26, the raw sound as a WAV file (16-bit, one channel), copied by an AudioWorklet (`recorder-worklet.js`, loaded only with `?debug`), for testing ideas like telling strings apart by their sound (`devpost/string-detection.md`).
 PRD ref: `prd.md > Starting a Riff`, `prd.md > Live Note-to-Tab`.
 
 ### Note Detector (`notes.js`)

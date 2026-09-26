@@ -14,6 +14,7 @@ import { writtenRiff, retime, typedFret } from '../js/editor.js';
 import { playbackPlan, pitchPoints, pluckSamples, loopFor, clickTimes } from '../js/playback.js';
 import { readingsFrom } from '../js/upload.js';
 import { findScale } from '../js/scale.js';
+import { wavFile } from '../js/wav.js';
 import { riffToLink, riffFromLink } from '../js/share.js';
 
 let allOk = true;
@@ -754,6 +755,17 @@ check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().m
   const odd = riffFromLink(pack({ ...good, n: '   ', b: 999, m: '13/8', e: -1 }));
   check('share: odd values fall back to safe ones (name, tempo, time signature, end)',
     odd?.name === 'Shared riff' && odd.bpm === 120 && odd.meter === '4/4' && odd.endTime === null, JSON.stringify(odd));
+}
+
+// --- Saving the raw sound as a WAV file (?debug) ---
+{
+  const view = new DataView(wavFile(new Float32Array([0, 1, -1, 0.5, 2, -3]), 48000));
+  const text = (at, n) => String.fromCharCode(...Array.from({ length: n }, (_, i) => view.getUint8(at + i)));
+  const header = [text(0, 4), view.getUint32(4, true), text(8, 4), text(12, 4), view.getUint32(16, true), view.getUint16(20, true), view.getUint16(22, true),
+    view.getUint32(24, true), view.getUint32(28, true), view.getUint16(32, true), view.getUint16(34, true), text(36, 4), view.getUint32(40, true)].join(' ');
+  check('wav: the header says 16-bit, one channel, 48 kHz, 6 samples', header === 'RIFF 48 WAVE fmt  16 1 1 48000 96000 2 16 data 12' && view.byteLength === 56, header);
+  const samples = Array.from({ length: 6 }, (_, i) => view.getInt16(44 + i * 2, true)).join(' ');
+  check('wav: sound from -1 to 1 becomes whole numbers, and louder than that is clipped', samples === '0 32767 -32768 16384 32767 -32768', samples);
 }
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');
