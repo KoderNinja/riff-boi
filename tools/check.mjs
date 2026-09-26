@@ -4,7 +4,7 @@
 
 import { readFileSync, readdirSync } from 'node:fs';
 import { readNote, createNoteTracker, cleanUpRiff, tuningOf, stillRinging, RINGING_READINGS, notesFromReadings } from '../js/notes.js';
-import { placeNotes, positionsFor, drawTab, tabToken, otherSpots, tabText } from '../js/tab.js';
+import { placeNotes, positionsFor, drawTab, tabToken, otherSpots, tabText, fretOn, withFret } from '../js/tab.js';
 import { riffConfidence } from '../js/confidence.js';
 import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS, barStarts } from '../js/rhythm.js';
 import { tabSvg } from '../js/tabsvg.js';
@@ -635,6 +635,13 @@ check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().m
   check('move a note: C3 on the A string can also go on the low E (fret 8)', spots({ midi: 48, string: 5, fret: 3 }) === '6/8', spots({ midi: 48, string: 5, fret: 3 }));
   check('move a note: G3 on the G string can go on the D, A or low E', spots({ midi: 55, string: 3, fret: 0 }) === '4/5 5/10 6/15', spots({ midi: 55, string: 3, fret: 0 }));
   check('move a note: the open low E can only be played there', spots({ midi: 40, string: 6, fret: 0 }) === '');
+  check('edit a note: dragging C3 to the low E makes it fret 8; it can\'t go on the high e',
+    fretOn(48, 6) === 8 && fretOn(48, 1) === null && fretOn(48, 5) === 3);
+  check('edit a note: frets up to 24 when you edit by hand (22 when Riff Boi guesses)',
+    fretOn(88, 1, 24) === 24 && fretOn(88, 1) === null && otherSpots({ midi: 83, string: 1, fret: 19 }, 24).map((s) => `${s.string}/${s.fret}`).join(' ') === '2/24' && otherSpots({ midi: 83, string: 1, fret: 19 }).length === 0);
+  const edited = withFret({ midi: 48, name: 'C3', string: 5, fret: 3, bend: 2, t: 1 }, 5);
+  check('edit a note: a new fret makes it a new note on the same string, and a bend stays a bend',
+    edited.midi === 50 && edited.name === 'D3' && edited.fret === 5 && edited.string === 5 && edited.bend === 2 && edited.t === 1, JSON.stringify(edited));
 }
 
 // --- Copy as text tab ---

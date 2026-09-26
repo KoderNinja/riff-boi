@@ -1,5 +1,7 @@
 // tab.js — picks a string and fret for each note, and draws the tab.
 
+import { midiToName } from './notes.js';
+
 // Standard tuning, as MIDI numbers. String 1 is the high e, string 6 is the low E,
 // the same order as the lines on a tab (high e on top).
 export const TUNING = [64, 59, 55, 50, 45, 40];
@@ -14,30 +16,31 @@ const STRING_COST = 1;     // cost per string you jump across
 const OPEN_POSITION = 3;   // hand this close to the nut = open strings are easy
 const WALK_COST = 0.5;     // walking up/down one string a fret at a time: keeping going is cheap
 
-// Every string/fret spot where this note can be played.
-export function positionsFor(midi) {
+// Every string/fret spot where this note can be played (up to `maxFret`).
+export function positionsFor(midi, maxFret = MAX_FRET) {
   const spots = [];
   TUNING.forEach((openMidi, i) => {
     const fret = midi - openMidi;
-    if (fret >= 0 && fret <= MAX_FRET) spots.push({ string: i + 1, fret });
+    if (fret >= 0 && fret <= maxFret) spots.push({ string: i + 1, fret });
   });
   return spots;
 }
 
-// Makes a position picker for one riff. It remembers where your hand is,
-// so call it once per riff and then pick(midi) for every note in order.
-// `first` is where the first note goes ({ string, fret }), and `finger` says which finger
-// plays it (0 = index ... 3 = pinky), which sets where the hand's box starts.
-// pick.totalCost() adds up the effort of the whole riff.
-//
-// The rule: imagine your hand covers a box of 4 frets. Each possible spot for a note
-// gets a "cost": moving your hand outside the box, and jumping across strings, both
-// cost effort. The cheapest spot wins; on a tie, the thicker string.
-// One exception: if you just moved one fret along a string, taking one more step the
-// same way on that string is cheap — you're probably walking up (or down) that string.
+// The fret that plays this note on `string`, or null if that string can't (up to `maxFret`).
+export function fretOn(midi, string, maxFret = MAX_FRET) {
+  const fret = midi - TUNING[string - 1];
+  return fret >= 0 && fret <= maxFret ? fret : null;
+}
+
 // Where else this note can be played: every other string with a fret that gives the same pitch.
-export function otherSpots(note) {
-  return positionsFor(note.midi).filter((spot) => spot.string !== note.string);
+export function otherSpots(note, maxFret = MAX_FRET) {
+  return positionsFor(note.midi, maxFret).filter((spot) => spot.string !== note.string);
+}
+
+// The note on its string at another fret, so it becomes a different note (a bend stays a bend).
+export function withFret(note, fret) {
+  const midi = TUNING[note.string - 1] + fret;
+  return { ...note, fret, midi, name: midiToName(midi) };
 }
 
 export function createPositionPicker(first = null, finger = 0) {

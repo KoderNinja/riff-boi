@@ -2,7 +2,7 @@
 
 import { startListening, stopListening, listInputs, onInputsChange, soundInfo } from './audio.js';
 import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS } from './notes.js';
-import { placeNotes, otherSpots, STRING_NAMES, tabText } from './tab.js';
+import { placeNotes, otherSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken } from './tab.js';
 import { tabSvg } from './tabsvg.js';
 import { METERS, detectTempo, barStarts } from './rhythm.js';
 import { loadRiffs, saveRiff, updateRiff, deleteRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
@@ -104,11 +104,19 @@ function clampBpm(bpm, fallback) {
 
 function setBpm(bpm) {
   settings.bpm = clampBpm(bpm, DEFAULT_SETTINGS.bpm);
-  $('bpm-input').value = settings.bpm;
+  showTempo();
   saveSettings(settings);
 }
 
-$('bpm-input').value = settings.bpm;
+// With Auto detect tempo on, the tempo box is blank (Riff Boi works the tempo out); its − and +
+// are off. The live tab still needs a tempo while you play: it uses the last one.
+function showTempo() {
+  const auto = settings.autoTempo;
+  $('bpm-input').value = auto ? '' : settings.bpm;
+  $('bpm-input').disabled = $('bpm-down').disabled = $('bpm-up').disabled = auto;
+}
+
+showTempo();
 $('rhythm-input').checked = settings.rhythm;
 $('bpm-down').addEventListener('click', () => setBpm(settings.bpm - 1));
 $('bpm-up').addEventListener('click', () => setBpm(settings.bpm + 1));
@@ -122,6 +130,7 @@ $('rhythm-input').addEventListener('change', (event) => {
 $('auto-tempo-input').checked = settings.autoTempo;
 $('auto-tempo-input').addEventListener('change', (event) => {
   settings.autoTempo = event.target.checked;
+  showTempo();
   saveSettings(settings);
 });
 
@@ -310,7 +319,7 @@ function showRiff(riff) {
 // and "auto" shows if Riff Boi worked it out.
 function drawRiff(riff) {
   stopPlayback();
-  closeMove();
+  closeEdit();
   const timing = riffTiming(riff, settings.bpm);
   $('riff-tab').innerHTML = tabSvg(riff.notes, timing);
   // Each note can be tapped (or reached with Tab and Enter) to move it to another string.
@@ -585,73 +594,210 @@ window.addEventListener('hashchange', () => {
   if (location.hash.startsWith('#riff=')) openSharedRiff();
 });
 
-// --- Move a note to another string ---
+// --- Edit a note on a saved riff ---
 
-// Riff Boi can't hear which string you played, so it guesses. Tapping a note shows the other
-// strings it can be played on; picking one moves it there and saves the riff.
-function openMove(i) {
+// Riff Boi can't hear which string you played, so it guesses. Drag a note up or down to another
+// string: it stays the same note, so its fret changes to match. Or tap it to change its fret
+// (that changes the note), move it with buttons, or delete it. Frets go up to 24, like New Tab.
+
+function openEdit(i) {
   stopPlayback(); // both use the red highlight
   const note = shownRiff.notes[i];
-  const row = $('move-row');
-  const spots = otherSpots(note);
   const title = document.createElement('span');
   title.className = 'move-title';
-  title.textContent = spots.length
-    ? `Move ${note.name} to:`
-    : `${note.name} can only be played on the ${STRING_NAMES[note.string - 1]} string`;
-  const buttons = spots.map((spot) => {
+  title.textContent = `${note.name} on the ${STRING_NAMES[note.string - 1]} string, fret ${note.fret}`;
+
+  // The fret: type it and press Enter, or − and +. A new fret is a new note.
+  const fretRow = document.createElement('div');
+  fretRow.className = 'tempo';
+  const label = document.createElement('span');
+  label.className = 'setting-label';
+  label.textContent = 'Fret';
+  const box = document.createElement('input');
+  Object.assign(box, { type: 'number', className: 'bpm-input', min: 0, max: EDITOR_MAX_FRET, step: 1, value: note.fret });
+  box.setAttribute('enterkeyhint', 'enter');
+  box.setAttribute('aria-label', 'Fret');
+  const setFretTo = (fret) => {
+    if (fret === note.fret) return;
+    changeNote(i, withFret(note, fret));
+    $('move-row').querySelector('input')?.select(); // ready to type another
+  };
+  box.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    const fret = typedFret(box.value);
+    if (fret === null) return flashHint(`Type a fret from 0 to ${EDITOR_MAX_FRET}`);
+    setFretTo(fret);
+  });
+  const down = stepButton('−', 'Lower fret', () => setFretTo(Math.max(0, note.fret - 1)));
+  const up = stepButton('+', 'Higher fret', () => setFretTo(Math.min(EDITOR_MAX_FRET, note.fret + 1)));
+  fretRow.append(label, down, box, up);
+
+  // The same note on another string (what dragging does, as buttons).
+  const spots = otherSpots(note, EDITOR_MAX_FRET);
+  const same = spots.map((spot) => {
     const button = document.createElement('button');
     button.className = 'choice-btn';
     button.textContent = `${STRING_NAMES[spot.string - 1]} string, fret ${spot.fret}`;
-    button.addEventListener('click', () => moveNote(i, spot));
+    button.addEventListener('click', () => changeNote(i, spot));
     return button;
   });
-  const cancel = document.createElement('button');
-  cancel.className = 'riff-action';
-  cancel.textContent = spots.length ? 'Cancel' : 'OK';
-  cancel.addEventListener('click', () => {
-    closeMove();
+  const sameLabel = document.createElement('span');
+  sameLabel.className = 'move-title';
+  sameLabel.textContent = spots.length ? 'The same note on:' : `${note.name} can only be played on the ${STRING_NAMES[note.string - 1]} string`;
+
+  const actions = [];
+  if (shownRiff.notes.length > 1) { // a riff needs a note; delete the whole riff from Latest Riffs instead
+    const remove = document.createElement('button');
+    remove.className = 'riff-action riff-delete';
+    remove.textContent = 'Delete note';
+    remove.addEventListener('click', () => deleteNote(i));
+    actions.push(remove);
+  }
+  const done = document.createElement('button');
+  done.className = 'riff-action';
+  done.textContent = 'Done';
+  done.addEventListener('click', () => {
+    closeEdit();
     focusNote(i); // back where you were, for keyboards
   });
-  row.replaceChildren(title, ...buttons, cancel);
-  row.hidden = false;
+  actions.push(done);
+
+  $('move-row').replaceChildren(title, fretRow, ...actions, sameLabel, ...same);
+  $('move-row').hidden = false;
   $('move-hint').hidden = true;
   $('riff-tab').querySelectorAll('.t-fret').forEach((fret, j) => fret.classList.toggle('t-now', j === i));
-  (buttons[0] ?? cancel).focus();
+  box.focus();
+  box.select();
 }
 
-function closeMove() {
+function stepButton(text, label, onClick) {
+  const button = document.createElement('button');
+  button.className = 'step-btn';
+  button.textContent = text;
+  button.setAttribute('aria-label', label);
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+function closeEdit() {
   $('move-row').hidden = true;
   $('move-row').replaceChildren();
   $('move-hint').hidden = false;
   $('riff-tab').querySelectorAll('.t-now').forEach((fret) => fret.classList.remove('t-now'));
 }
 
-function moveNote(i, spot) {
-  const notes = shownRiff.notes.map((note, j) => (j === i ? { ...note, string: spot.string, fret: spot.fret } : note));
+// Save the riff's notes and redraw it. The browser may block saving: then the tab still
+// changes, but won't be remembered.
+function saveNotes(notes) {
   try {
     shownRiff = updateRiff(shownRiff.id, { notes }) ?? { ...shownRiff, notes };
   } catch (err) {
-    console.error(err); // the browser blocked saving: the tab still changes, but won't be remembered
+    console.error(err);
     shownRiff = { ...shownRiff, notes };
   }
   drawRiff(shownRiff);
-  focusNote(i);
+}
+
+// Change note i (like { string, fret }, or a new fret from withFret) and keep editing it.
+function changeNote(i, changes) {
+  saveNotes(shownRiff.notes.map((note, j) => (j === i ? { ...note, ...changes } : note)));
+  openEdit(i);
+}
+
+function deleteNote(i) {
+  if (!confirm(`Delete ${shownRiff.notes[i].name}?`)) return;
+  saveNotes(shownRiff.notes.filter((_, j) => j !== i));
+  focusNote(Math.min(i, shownRiff.notes.length - 1));
 }
 
 function focusNote(i) {
   $('riff-tab').querySelectorAll('.t-fret')[i]?.focus();
 }
 
+// A short message in the hint line under the tab, then back to the hint.
+let hintTimer = 0;
+function flashHint(text) {
+  const hint = $('move-hint');
+  hint.textContent = text;
+  hint.hidden = false;
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => (hint.textContent = EDIT_HINT), 3000);
+}
+const EDIT_HINT = 'Tap a note to change it, or drag it to another string';
+$('move-hint').textContent = EDIT_HINT;
+
+// Dragging: press on a note (or the dark patch behind it), move up or down, let go. While it
+// moves, it shows the fret it would have on that string, or × if it can't go there.
+let drag = null;
+let justDragged = false; // a click comes right after a drag; it isn't a tap
+
+$('riff-tab').addEventListener('pointerdown', (event) => {
+  const target = event.target.closest('.t-fret, .t-gap');
+  if (!target || event.button !== 0) return;
+  const text = target.classList.contains('t-gap') ? target.nextElementSibling : target;
+  if (!text?.classList.contains('t-fret')) return;
+  drag = { i: Number(text.dataset.index), text, gap: text.previousElementSibling, startY: event.clientY, moved: false, target: null };
+  try {
+    text.setPointerCapture(event.pointerId); // keep getting the moves even off the note
+  } catch {
+    // some browsers can't capture here; dragging still works while the finger stays on the tab
+  }
+});
+
+$('riff-tab').addEventListener('pointermove', (event) => {
+  if (!drag) return;
+  if (!drag.moved && Math.abs(event.clientY - drag.startY) < 6) return; // still a tap
+  if (!drag.moved) stopPlayback();
+  drag.moved = true;
+  const svg = drag.text.ownerSVGElement;
+  const lines = [...svg.querySelectorAll('.t-line')].map((line) => Number(line.getAttribute('y1')));
+  const y = new DOMPoint(event.clientX, event.clientY).matrixTransform(svg.getScreenCTM().inverse()).y;
+  const nearest = lines.reduce((best, lineY, s) => (Math.abs(lineY - y) < Math.abs(lines[best] - y) ? s : best), 0);
+  const string = nearest + 1;
+  const note = shownRiff.notes[drag.i];
+  const fret = string === note.string ? note.fret : fretOn(note.midi, string, EDITOR_MAX_FRET);
+  drag.target = fret === null ? null : { string, fret };
+  drag.text.setAttribute('y', lines[nearest]);
+  drag.gap?.setAttribute('y', lines[nearest] - 8);
+  drag.text.textContent = fret === null ? '×' : tabToken({ ...note, string, fret });
+  drag.text.classList.toggle('t-drop-bad', fret === null);
+});
+
+$('riff-tab').addEventListener('pointerup', () => {
+  if (!drag) return;
+  const { i, moved, target } = drag;
+  drag = null;
+  if (!moved) return; // a tap: the click below opens the editing row
+  justDragged = true;
+  setTimeout(() => (justDragged = false), 0);
+  const note = shownRiff.notes[i];
+  if (!target) {
+    drawRiff(shownRiff); // back where it was
+    return flashHint(`${note.name} can't be played on that string`);
+  }
+  if (target.string === note.string) return drawRiff(shownRiff);
+  saveNotes(shownRiff.notes.map((n, j) => (j === i ? { ...n, ...target } : n)));
+  focusNote(i);
+});
+
+$('riff-tab').addEventListener('pointercancel', () => {
+  if (!drag) return;
+  drag = null;
+  drawRiff(shownRiff); // the page scrolled or the browser took over: put it back
+});
+
 $('riff-tab').addEventListener('click', (event) => {
-  const fret = event.target.closest('.t-fret');
-  if (fret) openMove(Number(fret.dataset.index));
+  if (justDragged) return;
+  const fret = event.target.closest('.t-fret, .t-gap');
+  const text = fret?.classList.contains('t-gap') ? fret.nextElementSibling : fret;
+  if (text?.classList.contains('t-fret')) openEdit(Number(text.dataset.index));
 });
 $('riff-tab').addEventListener('keydown', (event) => {
   const fret = event.target.closest('.t-fret');
   if (fret && (event.key === 'Enter' || event.key === ' ')) {
     event.preventDefault(); // Space would scroll the page
-    openMove(Number(fret.dataset.index));
+    openEdit(Number(fret.dataset.index));
   }
 });
 

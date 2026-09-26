@@ -158,6 +158,17 @@ body {
   background: var(--red-dark);
 }
 
+/* The tempo while Auto detect tempo is on: blank, and − and + are off. */
+.step-btn:disabled,
+.bpm-input:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.step-btn:disabled:active {
+  background: var(--panel);
+}
+
 .bpm-input {
   width: 58px;
   padding: 6px 4px;
@@ -849,9 +860,15 @@ body {
   cursor: default;
 }
 
-/* Moving a note to another string, on a saved riff. */
-#riff-tab .t-fret {
+/* Editing a note on a saved riff: tap it, or drag it to another string. */
+#riff-tab .t-fret,
+#riff-tab .t-gap {
   cursor: pointer;
+  touch-action: none; /* a drag on a note moves the note, not the page */
+}
+
+#riff-tab .t-drop-bad {
+  fill: var(--muted); /* shown as × where the note can't go */
 }
 
 #riff-tab .t-fret:focus {
