@@ -51,13 +51,11 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 - A tuning setting like Drop D (my idea)
 - 7- and 8-string guitars, with the low B and F# strings and drop tunings
 - A bass version (my idea) for 4- and 5-string bass. Bass notes go much lower (the low E is about 41 Hz), so it needs to listen to a longer slice of sound to catch them
-- Hammer-on and pull-off marks in the tab, like `5h7` and `7p5` (Riff Boi already knows if a note was picked)
-- Slide and vibrato marks in the tab, like `5/7` and `~`
+- Techniques in the tab: hammer-ons (`5h7`), pull-offs (`7p5`), slides (`5/7` up, `7\5` down), vibrato (`~`), palm mutes (P.M.), tremolo picking, pinch harmonics, tapping (`t`), sweep picking, and natural and artificial harmonics. Riff Boi already knows if a note was picked, so hammer-ons, pull-offs and slides are the easiest start
 - A key and scale finder that shows what key or scale a riff is in, like E minor pentatonic
 - Tempo and a metronome: show a riff's BPM and play a click while I record
 - Mark the notes Riff Boi isn't sure about (dim them in the tab), so I know which ones to double-check
 - Calibrate to my rig: play each open string once, and Riff Boi tunes its settings to my guitar, amp and mic
-- Metal techniques in the tab: palm mutes (P.M.), tremolo picking, pinch harmonics, tapping (t), sweep picking, and natural and artificial harmonics
 - Takes: record several takes of the same riff and keep the best one
 - Practice loop: play a saved riff back at my tempo with a click, and slow it down to learn it
 - An offline version with limited features (my idea): the core live tab works with no internet, and the extras stay online-only
