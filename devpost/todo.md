@@ -35,7 +35,7 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 - [ ] Confidence bar (slice 6): built, waiting for my guitar test
 - [x] README (the AI part is still mine to write; add the live link and a screenshot later)
 - [x] New layout and the Metal look (I picked it from 2 options)
-- [ ] String bends: hear them and write them in the tab, like `7b9`, `7b9r7` and `7pb9r7`
+- [ ] String bends: hear them and write them in the tab, like `7b9`, `7b9r7` and `7pb9r7` (built, waiting for my bend recordings and guitar test)
 - [ ] Note values: show quarter notes, half notes, eighth notes and so on for each note. It needs a tempo, so either I set the BPM or Riff Boi guesses it
 - [ ] Input picker and a "Can't hear your guitar" message (slice 4)
 - [x] App icon so it can go on my phone's home screen (the blackletter R; I picked it from 2 options)

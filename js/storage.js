@@ -23,7 +23,8 @@ export function saveRiff(notes, confidence = null) {
     label: now.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }),
     createdAt: now.toISOString(),
     // Keep just what's needed to draw the tab again later (see spec.md > Data Model).
-    notes: notes.map(({ midi, name, string, fret, t }) => ({ midi, name, string, fret, t })),
+    // Bend details are only there for bent notes (the rest are left out when saved).
+    notes: notes.map(({ midi, name, string, fret, t, bend, release, prebend }) => ({ midi, name, string, fret, t, bend, release, prebend })),
     confidence: confidence && roundNumbers(confidence),
   };
   localStorage.setItem(RIFFS_KEY, JSON.stringify([riff, ...loadRiffs()]));

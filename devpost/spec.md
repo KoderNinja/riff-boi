@@ -149,6 +149,15 @@ Under the tab on the Recording screen (live, updated 4 times a second) and in th
 It combines four things Riff Boi can measure about the *sound*, each from 0 (bad) to 1 (good): **tone** (Pitchy's clarity), **tuning** (cents off, like the tuner), **background noise** (the quiet moments vs the notes) and **steadiness** (how often a note's first readings were really that note). Notes Riff Boi had to correct count against it. It can't know whether a string guess is right.
 PRD ref: `prd.md > What We're Building` (confidence bar).
 
+### Bends (`notes.js` + `tab.js`) *(added during the build, learner request)*
+Bending pushes the string sideways, so the ringing note's pitch **glides** smoothly through the in-between pitches with no new pick. Hammer-ons, pull-offs and slides **jump** from fret to fret instead. The note tracker follows the ringing note's pitch in semitones with decimals, measured from the note's own pitch (the middle of its first 3 clear readings). When the pitch moves 0.3 semitones or more, it waits for the pitch to settle (3 readings within 0.15), then decides:
+- It glided (at least 3 readings in between two notes) and settled within 0.25 of 1, 2 or 3 semitones up: a **bend**, written `7b9` (fret 7 bent up to sound like fret 9). Gliding back down to the note: a **release**, `7b9r7`.
+- It glided *down* 1 to 3 semitones from the picked pitch: the string was bent before the pick and then released, a **pre-bend**, `7pb9r7`. The note becomes the fretted (lower) note. A pre-bend that's never released sounds exactly like a normal note, so it can't be heard.
+- It jumped, settled between two notes, or didn't settle within 40 readings: not a bend, so the normal new-note rules handle it (on the learner's Crazy Train recording, a smeared note change settled 0.7 semitones below the note and must not count).
+While a bend glides or is held, its pitches can't start new notes, and the note's quality for the confidence bar stops being measured (a bent note is out of tune on purpose). A new pick always starts a new note.
+Checked on the learner's 8 recordings (which have no bends): the same 110/115 notes and 0 false bends. Settling stricter (so bends slower than about 0.4 s for a whole step aren't split) lost 6 to 7 real notes on those recordings, so it wasn't used. Real bend recordings are needed to tune it further.
+PRD ref: `prd.md > What We're Building` (bends).
+
 ## Data Model
 Everything lives in the browser's localStorage, as text in JSON format (a simple way of writing data as text).
 
@@ -170,6 +179,7 @@ Everything lives in the browser's localStorage, as text in JSON format (a simple
 - `midi` is the note number: every note has one, e.g. low E = 40.
 - `string` counts 1–6 from high e to low E, the same as the lines on the tab.
 - `t` is seconds since you tapped New Riff. It's saved now and kept for later (e.g. rhythm).
+- Bent notes also have `bend` (semitones, 1 to 3), and `release: true` and/or `prebend: true` when those happened. `fret` is always the fretted note, so `{ "fret": 7, "bend": 2, "release": true }` is drawn as `7b9r7`.
 - `confidence` is how sure Riff Boi was about the riff (the score and each part from 0 to 1, rounded to 2 decimals) plus the hint, or `null` if there was nothing to judge. Riffs saved before the confidence bar don't have it.
 
 **`riffboi.inputDeviceId`**: which audio input you picked.

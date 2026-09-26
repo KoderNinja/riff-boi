@@ -3,7 +3,7 @@
 // Uses made-up readings (no guitar needed). Run it after changing notes.js or tab.js.
 
 import { readNote, createNoteTracker, cleanUpRiff, tuningOf } from '../js/notes.js';
-import { placeNotes, positionsFor, drawTab } from '../js/tab.js';
+import { placeNotes, positionsFor, drawTab, tabToken } from '../js/tab.js';
 import { riffConfidence } from '../js/confidence.js';
 
 let allOk = true;
@@ -39,6 +39,7 @@ function notesFrom(readings) {
   readings.forEach(([f, c, v], i) => {
     const result = track(f, c, v, i / 60);
     if (result?.fix) notes[notes.length - 1] = result.fix.name;
+    else if (result?.bend) { if (result.bend.name) notes[notes.length - 1] = result.bend.name; } // a pre-bend moves the note down
     else if (result) notes.push(result.name);
   });
   return notes.join(' ');
@@ -108,6 +109,7 @@ function riffFrom(readings) {
   readings.forEach(([f, c, v], i) => {
     const result = track(f, c, v, i / 60);
     if (result?.fix) Object.assign(notes[notes.length - 1], result.fix);
+    else if (result?.bend) Object.assign(notes[notes.length - 1], result.bend);
     else if (result) notes.push(result);
   });
   return cleanUpRiff(notes);
@@ -129,6 +131,59 @@ const allFixed = riffConfidence(riffFrom(lick()).map((n) => ({ ...n, fixed: true
 check('confidence: notes Riff Boi had to correct count against it (every note fixed = 30% less)',
   Math.abs(allFixed.score - clean.score * 0.7) < 0.001, describe(allFixed));
 check('confidence: no notes = no score (the bar stays empty)', riffConfidence([], []) === null);
+
+// --- Bends ---
+// A bend GLIDES the pitch smoothly with no new pick; hammer-ons and slides JUMP.
+// D4 (MIDI 62) lands on the B string, fret 3, so a whole-step bend is written B3b5.
+const glide = (from, to, n, v = 0.2) => Array.from({ length: n }, (_, i) => [hz(from + ((to - from) * (i + 1)) / n), 0.97, v]);
+const hold = (midi, n, v = 0.18) => Array.from({ length: n }, () => [hz(midi), 0.97, v]);
+function tabOf(readings) {
+  const notes = riffFrom(readings);
+  placeNotes(notes);
+  return notes.map((n) => 'EADGBe'[6 - n.string] + tabToken(n)).join(' ');
+}
+const bendCases = [
+  ['a whole-step bend is one bent note', [...pick(62), ...glide(62, 64, 10), ...hold(64, 20)], 'B3b5'],
+  ['a bend and release', [...pick(62), ...glide(62, 64, 10), ...hold(64, 12), ...glide(64, 62, 10), ...hold(62, 12)], 'B3b5r3'],
+  ['a half-step bend', [...pick(62), ...glide(62, 63, 8), ...hold(63, 20)], 'B3b4'],
+  ['a 1½-step bend', [...pick(62), ...glide(62, 65, 12), ...hold(65, 20)], 'B3b6'],
+  ['a slow bend (0.4 s)', [...pick(62), ...glide(62, 64, 24), ...hold(64, 20)], 'B3b5'],
+  ['a bend that ends a little flat (20 cents) still counts', [...pick(62), ...glide(62, 63.8, 10), ...hold(63.8, 20)], 'B3b5'],
+  ['a pre-bend: picked already bent, then released', [...pick(64), ...glide(64, 62, 10), ...hold(62, 15)], 'B3pb5r3'],
+  ['vibrato is not a bend', [...pick(62), ...Array.from({ length: 60 }, (_, i) => [hz(62 + 0.4 * Math.sin(i / 2)), 0.97, 0.2])], 'B3'],
+];
+for (const [label, readings, expected] of bendCases) {
+  const got = tabOf(readings);
+  check(`bends: ${label} (${expected})`, got === expected, got);
+}
+const notBends = [
+  ['a hammer-on (the pitch jumps) is a new note, not a bend', [...pick(62), ...hold(64, 20)], 'D4 E4'],
+  ['a quick slide through the frets is new notes, not a bend', [...pick(62), ...hold(63, 3), ...hold(64, 20)], 'D4 E4'],
+  // The real readings (semitones below the A2) from Crazy Train at 9.5 s: it slid down and stopped
+  // BETWEEN A2 and G#2, then G#2 came in. A bend or release always ends right on a note.
+  ['a smeared note change that stops between two notes is a new note, not a pre-bend (Crazy Train at 9.5 s)',
+    [...pick(45), ...[-0.303761, -0.447903, -0.711744, -0.609664, -0.759698, -0.696888, -0.660628].map((o) => [hz(45 + o), 0.97, 0.2]), ...hold(44, 20)], 'A2 G#2'],
+  ['a picked note after a bend is a new note', [...pick(62), ...glide(62, 64, 10), ...hold(64, 10), ...pick(67)], 'D4 G4'],
+];
+for (const [label, readings, expected] of notBends) {
+  const got = notesFrom(readings);
+  check(`bends: ${label}`, got === expected, got || '(no notes)');
+}
+check('bends: tab tokens (7, 7b9, 7b9r7, 7pb9r7)',
+  [{ fret: 7 }, { fret: 7, bend: 2 }, { fret: 7, bend: 2, release: true }, { fret: 7, bend: 2, prebend: true, release: true }].map(tabToken).join(' ') === '7 7b9 7b9r7 7pb9r7');
+{
+  const bentTab = { textContent: '', scrollLeft: 0, scrollWidth: 0 };
+  drawTab(bentTab, [{ string: 3, fret: 7, bend: 2, release: true }, { string: 2, fret: 5 }]);
+  const bentLines = bentTab.textContent.split('\n');
+  check('bends: a tab with a bend still has six lines of equal length',
+    bentLines.length === 6 && new Set(bentLines.map((l) => l.length)).size === 1 && bentLines[2].includes('7b9r7'), bentTab.textContent);
+}
+{
+  // Bent right after the pick, so the bend happens while the note's quality is still being judged.
+  const bendRiff = [...silence(20), ...pick(62).slice(0, 8), ...glide(62, 64, 10), ...hold(64, 20)];
+  const c = riffConfidence(riffFrom(bendRiff), bendRiff.map((r) => r[2]));
+  check('bends: a clean bend doesn\'t lower the confidence score (it\'s out of tune on purpose)', c.score > 0.9, describe(c));
+}
 
 // --- String and fret ---
 const riff = [42, 42, 49, 42, 50].map((midi) => ({ midi }));

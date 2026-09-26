@@ -94,3 +94,10 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - The angled corners are CSS `clip-path`, which cuts the corners off a box. The grain is a tiny SVG noise pattern repeated behind everything.
 - Animations turn off for people who set their device to reduce motion, and keyboard users still get a visible outline inside the angled buttons.
 - I picked the app icon too: the blackletter R from my logo. A small file called a web app manifest tells my phone the app's name, colors and icon, so "Add to Home Screen" opens Riff Boi full-screen like a real app.
+
+## Sep 25, 2026: String bends (my request)
+- A bend and a hammer-on can end on the same note, so how do you tell them apart by sound? A bend glides smoothly through the pitches in between, and a hammer-on or slide jumps straight from fret to fret. Riff Boi now follows the pitch with decimals (like the tuner) and waits for it to settle before deciding.
+- It writes bends the way tab sites do: `7b9` (bend), `7b9r7` (bend and release) and `7pb9r7` (pre-bend). A pre-bend only shows up once I release it, because before that it sounds exactly like a normal higher note.
+- The first version broke one note in my Crazy Train recording. A sloppy note change from A2 to G#2 slid down and stopped 0.7 semitones below A2, and Riff Boi called it a pre-bend. Real bends stop right on a note, so now anything that stops between two notes goes back to the normal note rules.
+- I tried making it stricter so very slow bends don't get split up. Side by side on my recordings, that lost 6 or 7 real notes, because real notes drift in pitch as they ring. So I kept the version that loses nothing: 110/115 notes and 0 false bends. The catch is that bends slower than about 0.4 seconds for a whole step can come out as separate notes.
+- Claude broke the bend code on purpose in 6 ways, and at first two of the breaks got past the checks. Fixing those checks meant copying the exact numbers from my real recording (to 6 decimal places), because the same numbers rounded to 2 decimals took a different path through the code.

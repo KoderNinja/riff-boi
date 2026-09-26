@@ -135,6 +135,9 @@ function handleReading(freq, clarity, volume) {
   if (result?.fix) {
     // The last note was really an octave lower: correct it.
     Object.assign(riffNotes[riffNotes.length - 1], result.fix);
+  } else if (result?.bend) {
+    // The last note was bent, released or pre-bent: mark it (the tab shows it like 7b9).
+    Object.assign(riffNotes[riffNotes.length - 1], result.bend);
   } else if (result) {
     result.t = round(result.t, 2);
     riffNotes.push(result); // the tracker keeps updating this note's peak loudness

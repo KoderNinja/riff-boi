@@ -60,6 +60,20 @@ export const REPICK_HOLD = 7;      // ...and then hold its pitch this many readi
 export const BREAK_RING = 8;       // a pitch break only counts as a re-pick after the note rang this long
 export const QUALITY_WINDOW = 20;  // judge each note's quality over its first 20 readings (1/3 s)
 
+// Bends: pushing the string sideways makes the ringing note's pitch glide, with no new pick.
+export const BEND_START = 0.3;     // semitones away from the note's own pitch before it counts as moving
+export const BEND_STEADY = 0.15;   // the pitch has settled when 3 readings in a row stay this close together
+export const BEND_NEAR = 0.25;     // a settled pitch this close to a whole semitone counts as that note
+export const BEND_BETWEEN = 0.15;  // a reading this far from a whole semitone is "in between" two notes
+export const GLIDE_READINGS = 3;   // a bend passes through at least this many in-between readings
+export const BEND_MAX = 3;         // the biggest bend Riff Boi writes: 3 semitones (1½ steps)
+export const GLIDE_MAX = 40;       // a move that hasn't settled after this many readings (2/3 s) isn't a bend
+const SETTLE_READINGS = 3;         // readings the pitch must hold still to count as settled
+// (Tried stricter settling so very slow bends aren't split up: on the learner's recordings it
+// lost 6-7 real notes and heard a false bend, because real notes drift. So bends slower than
+// about 0.4 s for a whole step can come out as separate notes.)
+const BASE_READINGS = 3;           // the note's own pitch = the middle of its first 3 clear readings
+
 // Is this pitch probably a harmonic of the ringing note, not a new note?
 // Distortion and strong picking make a note's overtones loud. The ones with a DIFFERENT
 // note name are the fifth (in any octave above, e.g. C over F) and two octaves + a major
@@ -74,6 +88,8 @@ function isLikelyHarmonic(midi, ringingMidi) {
 //   its pitch was heard; quality = how clear, steady and in tune its first readings were;
 //   both keep updating while the note rings, because the tracker updates that same object),
 // - { fix: { midi, name } } when the note it just wrote was in the wrong octave,
+// - { bend: { bend, release, prebend, ... } } when the ringing note was bent, released or
+//   pre-bent (the tracker marks that same note object too; see followBend below),
 // - or null.
 //
 // How it works: it follows the note's NAME (F#, C#...) and works out the octave separately,
@@ -96,6 +112,12 @@ export function createNoteTracker() {
   let volumes = [0, 0, 0];  // the last few volumes, to spot a pick
   let sincePick = Infinity; // readings since the last pick
   let pickUsed = true;      // has the last pick already started a note?
+  // Bends (see followBend), reset every time a note starts:
+  let base = null;          // the ringing note's own pitch, in semitones with decimals (like MIDI)
+  let baseReadings = [];    // its first clear readings, to find `base`
+  let bendMove = 'none';    // 'none', 'moving' (glide or jump?), 'bent', 'jumped' or 'done'
+  let level = 0;            // where the pitch last settled, in semitones above `base` (0 or the bend)
+  let move = [];            // the pitch on each reading since it left `level`
 
   function start(midi, t, volume) {
     current = { midi, name: midiToName(midi), t, peak: volume, quality: { heard: 0, matched: 0, claritySum: 0, centsSum: 0 } };
@@ -104,7 +126,106 @@ export function createNoteTracker() {
     candidate = null;
     candidateCount = 0;
     repickCount = 0;
+    base = null;
+    baseReadings = [];
+    bendMove = 'none';
+    level = 0;
+    move = [];
     return current;
+  }
+
+  // Follows the ringing note's pitch to spot bends. A bend GLIDES smoothly through the
+  // in-between pitches; hammer-ons, pull-offs and slides JUMP from fret to fret. So when the
+  // pitch settles again, a glide = a bend (or a release) and a jump = a new note. Returns:
+  // - a { bend } change when a bend, a release or a pre-bend is sure,
+  // - true while the pitch is gliding or held bent (so it doesn't start new notes),
+  // - false when nothing bend-like is going on.
+  function followBend(freq) {
+    const pitch = 69 + 12 * Math.log2(freq / 440);
+    if (base === null) {
+      if (Math.abs(pitch - current.midi) < 0.5) baseReadings.push(pitch);
+      if (baseReadings.length === BASE_READINGS) base = median(baseReadings);
+      return false;
+    }
+    if (bendMove === 'done') return false;
+    const offset = pitch - base;
+    // Way off (an octave or a harmonic for a moment): not part of a bend.
+    if (Math.abs(offset) > BEND_MAX + 0.4) return bendMove === 'moving' || bendMove === 'bent';
+
+    // Back where it started? Then nothing happened (vibrato, a wobble).
+    if (Math.abs(offset - level) < BEND_START) {
+      if (bendMove === 'moving' || bendMove === 'jumped') bendMove = level === 0 ? 'none' : 'bent';
+      return bendMove === 'bent';
+    }
+    if (bendMove === 'jumped') return false; // a hammer-on or slide: its new note is on the way
+    if (bendMove !== 'moving') {             // leaving the note's pitch (or the bend)
+      bendMove = 'moving';
+      move = [];
+    }
+    move.push(offset);
+
+    // Wait until the pitch settles: the last few readings stay close together.
+    const recent = move.slice(-SETTLE_READINGS);
+    const unsettled = recent.length < SETTLE_READINGS || Math.max(...recent) - Math.min(...recent) > BEND_STEADY;
+    if (unsettled && (level > 0 || move.length <= GLIDE_MAX)) return true;
+    const settled = average(recent);
+    const steps = Math.round(settled);
+    if (unsettled || Math.abs(settled - steps) > BEND_NEAR) {
+      // Never settled, or settled BETWEEN two notes: that's a smeared note change or a wobble,
+      // not a bend we can write. Leave it to the normal note rules (unless the note is bent).
+      if (level > 0) return true;
+      bendMove = 'jumped';
+      return false;
+    }
+    const between = move.slice(0, -SETTLE_READINGS).filter((x) => Math.abs(x - Math.round(x)) > BEND_BETWEEN).length;
+    return settle(steps, between >= GLIDE_READINGS);
+  }
+
+  // The pitch settled `steps` semitones above the note's own pitch. `glided` = it got there smoothly.
+  function settle(steps, glided) {
+    const from = level;
+    if (steps === from) {                 // just a little sharp or flat: nothing changed
+      bendMove = from === 0 ? 'none' : 'bent';
+      return from !== 0;
+    }
+    if (from === 0 && !glided) {          // it jumped: a hammer-on, pull-off or slide
+      bendMove = 'jumped';
+      return false;
+    }
+    if (from === 0 && steps > 0) return bendTo(steps); // glided up: a bend
+    if (from === 0) {
+      // Glided DOWN from the picked pitch: the string was bent before the pick, then released.
+      const fretted = current.midi + steps;
+      if (fretted < LOWEST_MIDI) {
+        bendMove = 'done';
+        return false;
+      }
+      base += steps;
+      bendMove = 'done';
+      return changeNote({ midi: fretted, name: midiToName(fretted), bend: -steps, prebend: true, release: true });
+    }
+    if (steps === 0) {                    // glided back down from the bend: a release
+      bendMove = 'done';
+      return changeNote({ release: true });
+    }
+    if (steps > from) return bendTo(steps); // bent further
+    level = steps;                        // let part of the bend go: keep following it
+    bendMove = steps > 0 ? 'bent' : 'done';
+    return steps > 0;
+  }
+
+  function bendTo(steps) {
+    level = steps;
+    bendMove = 'bent';
+    return changeNote({ bend: steps });
+  }
+
+  // Mark the ringing note as bent (or released), and tell the app so it redraws the tab.
+  function changeNote(changes) {
+    Object.assign(current, changes);
+    candidate = null; // the bent pitch isn't a new note
+    candidateCount = 0;
+    return { bend: changes };
   }
 
   return function update(freq, clarity, volume, t) {
@@ -130,7 +251,8 @@ export function createNoteTracker() {
 
     const note = readNote(freq, clarity, volume);
     // Keep score of the ringing note's first readings: did we hear it clearly and in tune?
-    if (current && current.quality.heard < QUALITY_WINDOW) {
+    // (Not once it starts bending: a bent note is out of tune on purpose.)
+    if (current && bendMove === 'none' && current.quality.heard < QUALITY_WINDOW) {
       const q = current.quality;
       q.heard++;
       if (note && note.midi % 12 === current.midi % 12) {
@@ -152,8 +274,17 @@ export function createNoteTracker() {
     junk = 0;
     const name = note.midi % 12;
 
+    // Is the ringing note being bent? (A new pick always means a new note, so only without one.)
+    let bending = false;
+    if (current && !picked) {
+      const bend = followBend(freq);
+      if (bend && typeof bend === 'object') return bend; // a bend, release or pre-bend just became sure
+      bending = bend;
+    }
+
     // Same note name as the one ringing.
     if (current && name === current.midi % 12) {
+      if (bending) return null; // mid-bend: no re-picks or octave fixes
       candidate = null;
       candidateCount = 0;
       current.peak = Math.max(current.peak, volume); // the loudest this note has been
@@ -200,6 +331,7 @@ export function createNoteTracker() {
       candidateLow = note.midi;
       candidateBreak = pitchBreak;
     }
+    if (bending) return null; // the bent pitch isn't a new note
     const needed = !current || picked ? STABLE_READINGS : LEGATO_READINGS;
     if (candidateCount < needed) return null;
     // Unpicked, no break in the pitch, and exactly a harmonic of the ringing note?
@@ -244,6 +376,10 @@ export function cleanUpRiff(notes) {
     }
     return note;
   });
+}
+
+function average(values) {
+  return values.reduce((sum, x) => sum + x, 0) / values.length;
 }
 
 export function median(values) {

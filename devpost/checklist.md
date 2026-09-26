@@ -89,6 +89,16 @@ Build mode: learn
   Learner check: Open Riff Boi on phone width (or your phone later via GitHub Pages) and run through the whole journey. Does it look like it belongs with technical metal? Follow the README steps yourself: could a judge get it running?
   Commit: `Polish look, add manifest and README`
 
+- [ ] **9. Bend a string and see it in the tab**
+  Becomes usable: Bends show up like real tab while you play: `7b9` for a bend, `7b9r7` for a bend and release, `7pb9r7` for a pre-bend once it's released. Hammer-ons, slides and vibrato stay as they were.
+  Why now: The learner asked for it after the design pass. It changes the note tracker, the most tested part of the app, so it comes with checks and the scoreboard.
+  PRD ref: `prd.md > What We're Building` (bends)
+  Spec ref: `spec.md > Bends (notes.js + tab.js)`, `spec.md > Data Model` (bend fields)
+  Build: Follow the ringing note's pitch with decimals in `notes.js` and decide glide (bend) vs jump (new note) when it settles; `tabToken()` in `tab.js` writes 7b9, 7b9r7 and 7pb9r7; save the bend fields with riffs; `tools/score.mjs` reads bends in answer keys and counts right and false bends.
+  Verify (mechanical): Checks for whole, half and 1½-step bends, bend + release, pre-bend, a 0.4 s bend and a slightly flat bend, and that hammer-ons, slides, vibrato and the Crazy Train smear are NOT bends; the scoreboard stays at 110/115 with 0 false bends; a browser test with a fake riff of bends.
+  Learner check: Record a few bends with `?debug` (a whole step, a half step, a bend and release, a pre-bend release) and write their answer keys (like `G: 7b9r7`). Does the tab show them right? Those recordings become the bend test set.
+  Commit: `Hear string bends and write them in the tab`
+
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — after slice 2 (live tab from your real guitar): random notes and wrong strings reported → fixed with recordings + scoring; learner: "a lot better"
@@ -122,3 +132,5 @@ Activity mode:
 - Build order changed at the learner's request (priorities: final look, tuner, confidence score): the tuner (slice 5) was built before slice 4; slice 4 (input picker + can't-hear message) is kept; final look stays last. A "confidence score" feature was requested and will be added as a slice once the learner describes what it should show.
 - Project published to GitHub (public, the 8 commits with their original dates), first as KoderNinja/riff-boi, then moved to the learner's `riff-boi` org (https://github.com/riff-boi/riff-boi) so a collaborator can deploy it on Vercel. The build continues in a Claude Code cloud session: each checked step is pushed, and the learner tests on the live link with the guitar. New order at the learner's request: slice 6 (confidence bar) → README (from slice 8) → design and layout pass (from slice 8) → string bends (new slice, learner request) → slice 4 → app icon + manifest (slice 8) → slice 7 if time allows. To-do and idea lists: `devpost/todo.md`.
 - Design pass (the look part of slice 8): two layouts were rendered as real screenshots and the learner picked "B: Metal", then asked for it to look less AI-made but still professional, so the glows and glossy gradients were removed (flat red, angled corners, grain, Oswald labels). New layout: round New Riff record button, riff cards with a mini tab and confidence, a REC timer and big last note while recording, Stop/Done at the bottom. The manifest and icon from slice 8 are still to do.
+- App icon (the learner picked the blackletter R from 2 options) and `manifest.webmanifest`, so slice 8 is built; its learner check is still to do.
+- Bends (slice 9, learner request). First version lost a Crazy Train note: a smeared note change (A2 to G#2) settled 0.7 semitones down and was read as a pre-bend. Fix: a bend must settle within 0.25 of a whole semitone, otherwise the normal note rules take over. Stricter settling for very slow bends was tried side by side and lost 6 to 7 real notes, so it wasn't used. Scoreboard unchanged (110/115, 83/83), 0 false bends, 74 checks.

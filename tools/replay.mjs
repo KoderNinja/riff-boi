@@ -12,6 +12,7 @@ const raw = [];
 for (const [freq, clarity, volume, t] of readings) {
   const result = trackNote(freq, clarity, volume, t);
   if (result?.fix) Object.assign(raw[raw.length - 1], result.fix);
+  else if (result?.bend) Object.assign(raw[raw.length - 1], result.bend);
   else if (result) raw.push(result);
 }
 const notes = cleanUpRiff(raw);
