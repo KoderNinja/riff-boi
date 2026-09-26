@@ -30,7 +30,7 @@ It wires up the buttons and switches screens. The important part is `handleReadi
 - After 5 seconds (300 readings) with no notes, it shows "Can't hear your guitar".
 - It keeps track of when the last note's own pitch was last heard (`stillRinging`), so on Stop the last note ends there, not when you tapped Stop.
 
-It also handles the tempo (40 to 240 BPM), the Auto switch, the time signature, the Rhythm switch and the input picker, all remembered between visits. On Stop, with Auto on, it asks `detectTempo` for the tempo and saves it with the riff. On a saved riff, typing a new tempo saves it and redraws the tab. With `?debug` in the address, it records every raw reading so you can save them as a file, and shows the mic's numbers on screen.
+It also handles the tempo (40 to 240 BPM), the Auto detect tempo switch, the time signature, the Show note lengths switch (rhythm on or off) and the input picker, all remembered between visits. On Stop, with Auto on, it asks `detectTempo` for the tempo and saves it with the riff. On a saved riff, typing a new tempo saves it and redraws the tab. With `?debug` in the address, it records every raw reading so you can save them as a file, and shows the mic's numbers on screen.
 
 ## `js/audio.js`: the ears
 
