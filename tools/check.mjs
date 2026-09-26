@@ -10,7 +10,7 @@ import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS, barStarts } fro
 import { tabSvg } from '../js/tabsvg.js';
 import { openInput, listInputs } from '../js/audio.js';
 import { saveRiff, loadRiffs, updateRiff, deleteRiff, riffTiming } from '../js/storage.js';
-import { writtenRiff, retime } from '../js/editor.js';
+import { writtenRiff, retime, typedFret } from '../js/editor.js';
 import { playbackPlan, pitchPoints, pluckSamples, loopFor, clickTimes } from '../js/playback.js';
 import { readingsFrom } from '../js/upload.js';
 import { findScale } from '../js/scale.js';
@@ -501,6 +501,8 @@ check('saved riff: changing a riff that isn\'t there does nothing', updateRiff('
   const { notes, endTime } = writtenRiff([
     { string: 6, fret: 0, beats: 1 }, { string: 6, fret: 3, beats: 0.5 }, { string: 5, fret: 2, beats: 0.5 }, { string: 5, fret: 5, beats: 2 },
   ], 120);
+  const typed = ['0', '5', ' 7 ', '24', '', ' ', '25', '-1', '5.5', '1e1', 'abc'].map((text) => typedFret(text));
+  check('new tab: a typed fret counts only if it\'s a whole number from 0 to 24', JSON.stringify(typed) === '[0,5,7,24,null,null,null,null,null,null,null]', JSON.stringify(typed));
   check('new tab: each note gets its pitch from the string and fret', notes.map((n) => n.name).join(' ') === 'E2 G2 B2 D3', notes.map((n) => n.name).join(' '));
   check('new tab: each note starts where the one before it ended', notes.map((n) => n.t).join(' ') === '0 0.5 0.75 1' && endTime === 2, `${notes.map((n) => n.t).join(' ')} end ${endTime}`);
   check('new tab: it\'s drawn with the note values that were picked', valueNames(rhythmOf(notes, 120, endTime)) === 'quarter, eighth, eighth, half', valueNames(rhythmOf(notes, 120, endTime)));

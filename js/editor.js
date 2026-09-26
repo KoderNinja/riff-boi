@@ -6,6 +6,14 @@ import { TUNING } from './tab.js';
 
 export const EDITOR_MAX_FRET = 24; // written tabs can use every fret on a 24-fret guitar
 
+// A fret typed in the Fret box: a whole number from 0 to 24, or null if it isn't one.
+export function typedFret(text) {
+  const trimmed = String(text).trim();
+  if (!/^\d+$/.test(trimmed)) return null; // only digits: no "", "-1", "5.5" or "1e1"
+  const fret = Number(trimmed);
+  return fret <= EDITOR_MAX_FRET ? fret : null;
+}
+
 // `written`: the notes in order, each { string, fret, beats } (beats: how long it lasts, in
 // quarter notes). A riff keeps its notes in seconds, so each note starts where the one before
 // it ended, at this tempo. Returns the notes and when the last one ends (seconds).

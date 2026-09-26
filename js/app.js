@@ -7,7 +7,7 @@ import { tabSvg } from './tabsvg.js';
 import { METERS, detectTempo, barStarts } from './rhythm.js';
 import { loadRiffs, saveRiff, updateRiff, deleteRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
 import { riffConfidence } from './confidence.js';
-import { writtenRiff, retime, EDITOR_MAX_FRET } from './editor.js';
+import { writtenRiff, retime, EDITOR_MAX_FRET, typedFret } from './editor.js';
 import { playNotes } from './playback.js';
 import { riffFromRecording } from './upload.js';
 import { findScale } from './scale.js';
@@ -797,7 +797,7 @@ function drawEditor() {
   $('undo-note-btn').disabled = $('save-tab-btn').disabled = $('editor-play-btn').disabled = editor.written.length === 0;
   $('editor-hint').textContent = editor.written.length
     ? noteCount(editor.written.length)
-    : `Pick a string, a fret and how long the note lasts, then Add note. ${settings.meter} at ${settings.bpm} BPM, from the home screen.`;
+    : `Pick a string and how long the note lasts, then type a fret and press Enter (or tap Add note). ${settings.meter} at ${settings.bpm} BPM, from the home screen.`;
 }
 
 $('new-tab-btn').addEventListener('click', () => {
@@ -836,11 +836,27 @@ $('fret-down').addEventListener('click', () => setFret(Number($('fret-input').va
 $('fret-up').addEventListener('click', () => setFret(Number($('fret-input').value) + 1));
 $('fret-input').addEventListener('change', (event) => setFret(Number(event.target.value)));
 
-$('add-note-btn').addEventListener('click', () => {
+function addNote() {
   setFret(Number($('fret-input').value));
   const beats = editor.beats * ($('dotted-input').checked ? 1.5 : 1);
   editor.written.push({ string: editor.string, fret: Number($('fret-input').value), beats });
   drawEditor();
+}
+
+$('add-note-btn').addEventListener('click', addNote);
+
+// Type a fret and press Enter (or a phone keyboard's enter key) to add the note. The fret stays
+// selected, so typing the next one replaces it, and Enter on its own adds the same fret again
+// (handy for chugs). A fret that isn't 0 to 24 isn't added.
+$('fret-input').addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter') return;
+  event.preventDefault();
+  if (typedFret($('fret-input').value) === null) {
+    $('editor-hint').textContent = `Type a fret from 0 to ${EDITOR_MAX_FRET}`;
+    return;
+  }
+  addNote();
+  $('fret-input').select();
 });
 
 $('editor-play-btn').addEventListener('click', () => {
