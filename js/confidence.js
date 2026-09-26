@@ -18,10 +18,10 @@ const WEIGHTS = { tone: 0.35, steadiness: 0.25, tuning: 0.2, noise: 0.2 };
 const FIX_PENALTY = 0.3;               // lose up to 30% if every note had to be corrected
 
 const HINTS = {
-  tone: 'Pitch is unclear — try less distortion or your audio interface',
-  tuning: 'Guitar may be out of tune — try the tuner',
+  tone: 'Pitch is unclear. Try less distortion or your audio interface',
+  tuning: 'Guitar may be out of tune. Try the tuner',
   noise: 'Lots of background noise',
-  steadiness: 'Notes are hard to follow — pick each note clearly',
+  steadiness: 'Notes are hard to follow. Pick each note clearly',
 };
 
 // 0 at `bad`, 1 at `good`, in between on a straight line.

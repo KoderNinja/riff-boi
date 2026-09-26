@@ -118,7 +118,7 @@ const clean = confidenceOf(lick());
 check('confidence: a clean riff scores high and "Sounds clean"', clean.score > 0.9 && clean.hint === 'Sounds clean', describe(clean));
 const outOfTune = confidenceOf(lick({ cents: 30 }));
 check('confidence: 30 cents out of tune scores lower and suggests the tuner',
-  outOfTune.score < clean.score - 0.1 && outOfTune.hint.includes('try the tuner'), describe(outOfTune));
+  outOfTune.score < clean.score - 0.1 && outOfTune.hint.includes('Try the tuner'), describe(outOfTune));
 const noisy = confidenceOf(lick({ gap: 0.06 }));
 check('confidence: loud background noise between notes scores lower and says so',
   noisy.score < clean.score - 0.1 && noisy.hint === 'Lots of background noise', describe(noisy));

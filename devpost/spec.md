@@ -145,7 +145,7 @@ A screen opened from the home screen. It uses the same listener (`audio.js`) and
 PRD ref: `prd.md > Screens and Layout` (Tuner).
 
 ### Confidence Bar (`confidence.js`) *(added during the build)*
-Under the tab on the Recording screen (live, updated 4 times a second) and in the Riff View (saved with the riff): a bar from 0 to 100% plus a one-line hint about the weakest part (e.g. "Lots of background noise", "Guitar may be out of tune — try the tuner").
+Under the tab on the Recording screen (live, updated 4 times a second) and in the Riff View (saved with the riff): a bar from 0 to 100% plus a one-line hint about the weakest part (e.g. "Lots of background noise", "Guitar may be out of tune. Try the tuner").
 It combines four things Riff Boi can measure about the *sound*, each from 0 (bad) to 1 (good): **tone** (Pitchy's clarity), **tuning** (cents off, like the tuner), **background noise** (the quiet moments vs the notes) and **steadiness** (how often a note's first readings were really that note). Notes Riff Boi had to correct count against it. It can't know whether a string guess is right.
 PRD ref: `prd.md > What We're Building` (confidence bar).
 
@@ -214,7 +214,7 @@ beginners-paradise/          # the project folder = the GitHub repo
 - **Noisy or distorted signal gives wrong or extra notes** → only high-clarity readings count. The clarity and volume limits are easy-to-change numbers, and a clean tone through the interface is recommended for the demo.
 - **Saved input unplugged** → fall back to the default input.
 - **Pitchy fails to load from the CDN** → the app shows an error message; the fix is copying the library into `js/vendor/`.
-- **Stop with nothing caught** → nothing saved; "No notes caught — nothing saved."
+- **Stop with nothing caught** → nothing saved; "No notes caught. Nothing saved".
 
 ## What Was Simplified and Why
 - **One web app** instead of a native phone app: mobile-first design + GitHub Pages + "Add to Home Screen" gets close to the app feel. A true app would need Xcode or React Native setup and app store steps.

@@ -1,87 +1,94 @@
 # Learning Log
 
-What I learned and the problems I solved along the way. I'll use this for my demo video and write-up.
+What I learned and the problems I solved while building Riff Boi. I'm using this for my demo video and write-up.
 
-## Sep 25, 2026 — Getting started (`/1-start`)
-- **Flipped interaction:** instead of just asking the AI for things, I let it interview me so my ideas and decisions shape the project.
-- **Plan before building:** the path is scope → PRD (what it does) → spec (how it's built) → build → ship.
-- **`.gitignore`:** a file that tells git which files never to commit. I used it to keep my personal learner profile and any `.env` secret files out of my public repo.
-- **Starting idea:** an app where I play guitar and it writes out the tabs.
+## Sep 25, 2026: Getting started (`/1-start`)
+- Instead of just asking the AI for stuff, I let it interview me first (it calls this "flipped interaction"), so the project is built on my ideas and decisions.
+- I planned before building: scope, then the PRD (what it does), then the spec (how it's built), then build and ship.
+- A `.gitignore` file tells git which files to never commit. I used it to keep my personal learner profile and any `.env` secret files out of my public repo.
+- My starting idea: an app where I play guitar and it writes out the tabs.
 
-## Sep 25, 2026 — Scoping (`/2-scope`)
-- **Proof of concept:** the smallest working version that proves the core idea. Mine: "I play a riff and the tabs just show up."
-- **Finding the kernel:** my real problem is losing riffs I find while improvising because writing them down breaks my flow.
-- **Feasibility tradeoffs:** computers can detect single notes much more easily than chords, because the notes in a chord blend together. So single notes come first and power chords come later.
-- **Cutting scope:** I cut the camera idea (seeing which string/fret I'm on). It's a hard computer vision problem and too big for 5 days.
-- **Open problem:** audio gives the pitch but not the string, so the app will have to guess the fret position.
+## Sep 25, 2026: Scoping (`/2-scope`)
+- A proof of concept is the smallest version that proves the idea works. Mine: "I play a riff and the tabs just show up."
+- The real problem I'm solving: I lose riffs I find while improvising, because writing them down breaks my flow.
+- Computers can pick out single notes a lot more easily than chords, because the notes in a chord blend together. So single notes come first and power chords come later.
+- I cut the camera idea (seeing which string and fret I'm on). It's a hard computer vision problem and way too big for 5 days.
+- Still open: audio gives you the pitch but not the string, so the app has to guess the fret position.
 
-## Sep 25, 2026 — Product requirements (`/3-prd`)
-- **PRD:** a non-technical description of exactly what the app does: screens, buttons, what you see, and how to tell it works.
-- **Acceptance criteria:** checkable statements like "playing a note makes a fret number appear" so I can test each part.
-- **Tradeoff I made:** one tap to start (from a riff list) instead of listening the instant the app opens, because I wanted my riffs saved in the app.
-- **Hard problem, simple answer:** audio can't tell which string a note was played on. Instead of building an editing feature, I went with a simple rule that picks a playable position. Editing is next in line if there's time.
-- **Edge cases ("what if?"):** planned what happens with no riffs yet, no microphone permission, and when the app can't hear the guitar.
-- **Named it:** Riff Boy. Dark, metal, black and red.
+## Sep 25, 2026: Product requirements (`/3-prd`)
+- A PRD is a non-technical description of exactly what the app does: the screens, the buttons, what you see, and how to tell it works.
+- Acceptance criteria are checkable statements like "playing a note makes a fret number appear", so I can test each part.
+- A tradeoff I made: one tap to start (from a list of riffs) instead of listening the second the app opens, because I wanted my riffs saved in the app.
+- Audio can't tell which string a note was played on. Instead of building an editing feature, I went with a simple rule that picks a playable spot. Editing is next in line if there's time.
+- I planned the "what if" cases: no riffs yet, no mic permission, and when the app can't hear the guitar.
+- I named it Riff Boy. Dark, metal, black and red.
 
-## Sep 25, 2026 — Technical plan (`/4-spec`)
-- **Tech spec:** the blueprint for *how* the app gets built: tools, files, and how data moves between them.
-- **Web vs mobile app:** I pictured a mobile app, but chose a mobile-first **web app** to start. The browser can already use the mic, it's free to put online, and it can go on my phone's home screen.
-- **HTML / CSS / JavaScript:** structure / look / behavior. No framework, so I can understand every file.
-- **Web Audio API + Pitchy:** the browser's sound toolkit, plus a small library that tells you what note it hears and how sure it is (the "clarity" score).
-- **localStorage:** the browser's notebook for one website. That's where my riffs are saved, with no accounts or server.
-- **GitHub Pages:** free hosting from my GitHub repo. Phones only allow the mic on secure (https) sites, so I need it for phone testing.
-- **My decision:** add an input picker so I can use my audio interface for more precision. It remembers my choice.
-- **My big question: how precise will it be?** It depends on a clean signal, figuring out where one note ends and the next begins (hardest), playing speed, and tuning. Plan: test a known riff slow/fast/distorted and count right, missed and extra notes.
+## Sep 25, 2026: Technical plan (`/4-spec`)
+- A tech spec is the blueprint for how the app gets built: the tools, the files, and how data moves between them.
+- I pictured a phone app, but I went with a mobile-first web app to start. The browser can already use the mic, it's free to put online, and it can go on my phone's home screen.
+- HTML is the structure, CSS is the look and JavaScript is the behavior. No framework, so I can understand every file.
+- The Web Audio API is the browser's sound toolkit, and Pitchy is a small library that tells you what note it hears and how sure it is (the "clarity" score).
+- localStorage is the browser's notebook for one website. That's where my riffs are saved, with no accounts or server.
+- GitHub Pages is free hosting from a GitHub repo. Phones only allow the mic on secure (https) sites, so I need a host like that to test on my phone.
+- My decision: add an input picker so I can use my audio interface for better precision. It remembers my choice.
+- My big question was how precise it would be. That depends on a clean signal, figuring out where one note ends and the next begins (the hardest part), how fast I play, and tuning. The plan: play a known riff slow, fast and distorted, and count the right, missed and extra notes.
 
-## Sep 25, 2026 — Build slice 1: hearing notes (`/5-build`)
-- **Building in slices:** small steps I can actually try, each tested and saved before the next. The riskiest part (the mic + Pitchy) went first so problems show up early.
-- **git and commits:** `git init` made my folder a repository; each commit is a saved checkpoint I can go back to.
-- **Local server:** `python3 -m http.server 8000` serves my app at http://localhost:8000. Needed because the mic and JavaScript modules don't work when you just double-click the file.
-- **How it hears notes:** about 60 times a second the app grabs a slice of sound, Pitchy says the pitch and how sure it is, and `notes.js` turns the frequency into a note name (110 Hz = A2). Unclear, quiet or out-of-range sounds are ignored.
-- **Voice filters off:** browsers clean up mic sound for voice calls (echo/noise removal, auto volume), which would mess up a guitar, so I turned them off.
-- **Testing without a guitar:** Claude tested with fake tones; I tested with my real guitar and the notes matched.
+## Sep 25, 2026: Build slice 1, hearing notes (`/5-build`)
+- I build in slices: small steps I can actually try, each one tested and saved before the next. The riskiest part (the mic and Pitchy) went first so problems would show up early.
+- `git init` made my folder a repository, and each commit is a saved checkpoint I can go back to.
+- `python3 -m http.server 8000` runs my app at http://localhost:8000. I need it because the mic and JavaScript modules don't work when you just double-click the file.
+- About 60 times a second the app grabs a slice of sound, Pitchy says the pitch and how sure it is, and `notes.js` turns the frequency into a note name (110 Hz is A2). Unclear, quiet or out-of-range sounds get ignored.
+- Browsers clean up mic sound for voice calls (echo and noise removal, auto volume). That would mess up a guitar, so I turned it off.
+- Claude tested with fake tones and I tested with my real guitar. The notes matched.
 
-## Sep 25, 2026 — Build slice 2: live tab (`/5-build`)
-- **When does a new note start?** The app hears a ringing note ~60 times a second, so it needs rules: a steady pitch after silence, a pitch change, or a volume jump (the pick hitting the string again).
-- **Position rule:** audio gives the note but not the string, so Riff Boy picks the fret closest to my last one.
-- **Fake tones vs a real guitar:** everything passed with clean test tones, but my real guitar (laptop mic, slightly distorted amp) added lots of random notes. Distortion adds harmonics (extra pitches an octave or fifth up) that fooled the detector.
-- **The fix:** notes I didn't pick (hammer-ons/pull-offs) must hold a bit longer, and unpicked octave/fifth jumps are ignored as harmonics. Result: the right notes now.
-- **Debug recorder:** `?debug` saves everything the app heard to a file, so we can replay real playing while tuning instead of guessing.
-- **Renamed:** Riff Boy → **Riff Boi** during the build.
+## Sep 25, 2026: Build slice 2, live tab (`/5-build`)
+- The app hears a ringing note about 60 times a second, so it needs rules for when a new note starts: a steady pitch after silence, a pitch change, or a volume jump (the pick hitting the string again).
+- Audio gives the note but not the string, so Riff Boy picks the fret closest to my last one.
+- Everything passed with clean test tones, but my real guitar (laptop mic, slightly distorted amp) added a bunch of random notes. Distortion adds harmonics, extra pitches an octave or a fifth up, and those fooled the detector.
+- The fix: notes I didn't pick (hammer-ons and pull-offs) have to hold a bit longer, and unpicked octave or fifth jumps get ignored as harmonics. After that it got the right notes.
+- The `?debug` recorder saves everything the app heard to a file, so we can replay real playing while tuning instead of guessing.
+- I renamed it from Riff Boy to Riff Boi.
 
-## Sep 25, 2026 — Making note detection accurate with real data
-- **Evidence over guessing:** I recorded myself playing the Crazy Train riff with `?debug`, and we replayed that recording through the code after every change, scoring it against the notes I really played. Score went from **8 to 26 of 31 notes correct**.
-- **What was wrong:** with a laptop mic and distortion, the detector often heard the **octave above** the real note; some real notes were just under the "clarity" limit; and my amp/room made the volume **pulse about 6 times a second**, which looked like extra picks.
-- **Fixes:** follow the note's *name* first and pick the lowest octave heard (a guitar note's real pitch is its lowest); accept slightly less clear readings; a repeated note only counts if it's nearly as loud as the note's first attack.
-- **Tuning numbers:** I tested several settings side by side and kept the one with the fewest total mistakes, not just the most correct notes.
-- **Checks:** `node tools/check.mjs` re-runs all the logic checks in one command, so a fix can't secretly break something that worked before.
-- **Strings are still a guess:** audio can't tell which string you played. The rule now imagines a 4-fret hand box and avoids jumping strings, which fixed my Crazy Train opening.
-- **New ideas:** a built-in tuner (added to the plan) and a tuning setting like Drop D (saved for later).
+## Sep 25, 2026: Making note detection accurate with real data
+- I recorded myself playing the Crazy Train riff with `?debug`, and we replayed that recording through the code after every change, scoring it against the notes I really played. It went from 8 to 26 of 31 notes correct.
+- What was wrong: with a laptop mic and distortion, the detector often heard the octave above the real note, some real notes were just under the clarity limit, and my amp and room made the volume pulse about 6 times a second, which looked like extra picks.
+- The fixes: follow the note's name first and pick the lowest octave heard (a guitar note's real pitch is its lowest), accept slightly less clear readings, and only count a repeated note if it's nearly as loud as the note's first attack.
+- I tried several settings side by side and kept the one with the fewest total mistakes, not just the most correct notes.
+- `node tools/check.mjs` re-runs all the logic checks with one command, so a fix can't quietly break something that used to work.
+- Strings are still a guess, since audio can't tell which string you played. The rule now imagines a 4-fret hand box and avoids jumping strings, which fixed my Crazy Train opening.
+- New ideas: a built-in tuner (added to the plan) and a tuning setting like Drop D (saved for later).
 
-## Sep 25, 2026 — My own test set (my idea!)
-- **Labeled test data:** I recorded myself playing frets 1–12 on every string and wrote down exactly what I played (the "ground truth"). Every change to Riff Boi now gets a score against my answers, for notes AND strings.
-- **Scoreboard:** `node tools/score.mjs` scores every recording at once. Result: **97 of 103 notes and 72 of 72 strings right**.
-- **What the data showed:** one small mistake snowballs — a stray note or one wrong octave pulled whole runs onto the wrong string. Fixing the first mistake fixed the whole run.
-- **Background noise:** quiet sounds before I start playing showed up as notes. Riff Boi now drops notes much quieter (under 35%) than my typical note. I picked 35% by measuring: noise was 14–22%, my real notes were 56% or louder.
-- **Overfitting:** if you tune on the same recordings you test on, the score can look better than it really is. The fair test is a new riff that wasn't used for tuning.
+## Sep 25, 2026: My own test set (my idea!)
+- I recorded myself playing frets 1 to 12 on every string and wrote down exactly what I played (the "ground truth"). Every change to Riff Boi now gets scored against my answers, for notes and strings.
+- `node tools/score.mjs` scores every recording at once. Result: 97 of 103 notes and 72 of 72 strings right.
+- The data showed that one small mistake snowballs. A stray note or one wrong octave pulled whole runs onto the wrong string, and fixing the first mistake fixed the whole run.
+- Quiet sounds before I started playing were showing up as notes, so Riff Boi now drops notes that are much quieter (under 35%) than my typical note. I picked 35% by measuring: the noise was 14 to 22%, and my real notes were 56% or louder.
+- Overfitting: if you tune on the same recordings you test on, the score can look better than it really is. The fair test is a new riff that wasn't used for tuning.
 
-## Sep 25, 2026 — Code review and a fair test
-- **Independent review:** separate AI reviewers tried to break Riff Boi's logic, and other reviewers double-checked every problem they reported. 9 real problems were confirmed (e.g. picking the same note twice was often lost, and on a 120 Hz screen the app would have taken readings twice as fast and broken).
-- **Write the test first:** for each problem we wrote a check, watched it FAIL, then fixed the code and watched it pass. That proves the check really tests the problem.
-- **A bug in my own earlier fix:** a pedal riff (open low E, a high note, back to E) was being "corrected" into the wrong octave. No test covered it until we thought about how metal riffs actually work.
-- **Fair test:** my pentatonic at the 6th fret (never used for tuning) scored 10/12 notes, 6/10 strings before the fixes and 11/12, 11/11 after.
-- **Same notes, different places:** the sound can't tell the 6th-fret box from the 1st-position box. Riff Boi now tries every place you could have started and picks the one that needs the least hand movement.
-- **Scoreboard now:** 110/115 notes (96%), 0 wrong notes, 83/83 strings.
+## Sep 25, 2026: Code review and a fair test
+- Separate AI reviewers tried to break Riff Boi's logic, and other reviewers double-checked every problem they reported. 9 real problems were confirmed. For example, picking the same note twice was often lost, and on a 120 Hz screen the app would have taken readings twice as fast and broken.
+- For each problem we wrote a check first, watched it fail, then fixed the code and watched it pass. That proves the check really tests the problem.
+- One bug was in my own earlier fix: a pedal riff (open low E, a high note, back to E) was getting "corrected" into the wrong octave. No test covered it until we thought about how metal riffs actually work.
+- The fair test was my pentatonic at the 6th fret, which was never used for tuning. It scored 10/12 notes and 6/10 strings before the fixes, and 11/12 and 11/11 after.
+- The sound can't tell the 6th-fret box from the 1st-position box, so Riff Boi now tries every place you could have started and picks the one that needs the least hand movement.
+- Scoreboard now: 110/115 notes (96%), 0 wrong notes, 83/83 strings.
 
-## Sep 25, 2026 — Putting Riff Boi on GitHub
-- **My first public repo:** https://github.com/KoderNinja/riff-boi (the hackathon requires a public GitHub repo).
-- **History kept:** my 8 commits went up exactly as they were, with their original dates, which shows the work happened during the hackathon.
-- **What stayed private:** my learner profile, `.claude/` and `.DS_Store` never left my Mac, thanks to `.gitignore`.
-- **Remote and push:** a *remote* is the copy of my repo on GitHub; *pushing* sends my new commits there. Claude now builds in a cloud session and pushes each checked step, and I test it with my guitar on the live link.
+## Sep 25, 2026: Putting Riff Boi on GitHub
+- I made my first public repo, since the hackathon needs one: https://github.com/KoderNinja/riff-boi
+- My 8 commits went up exactly as they were, with their original dates, which shows the work happened during the hackathon.
+- My learner profile, `.claude/` and `.DS_Store` never left my Mac, because of `.gitignore`.
+- A remote is the copy of my repo on GitHub, and pushing sends my new commits there. Claude now builds in a cloud session and pushes each checked step, and I test it with my guitar on the live link.
 
-## Sep 25, 2026 — Build slice 6: confidence bar
-- **A confidence score:** Riff Boi now shows how sure it is about a riff, from 0 to 100%, live while I play and saved with each riff. It combines four measurements of the sound (tone clarity, tuning, background noise and steadiness), weighted by how much each one matters.
-- **Honest limits:** it only judges the *sound*. It can't know whether a string guess is right, so a high score means "the notes are probably right", not "the tab matches where I played".
-- **The hint:** it names the weakest part, like "Lots of background noise" or "Guitar may be out of tune — try the tuner", so I know what to fix.
-- **Checked against my recordings:** Crazy Train (laptop mic, distortion, my least accurate recording) gets the lowest score, 51%. My fret runs get 84–100%.
-- **Breaking the code on purpose:** to prove the new checks really work, Claude broke the confidence code in 5 different ways in a copy of the project, and a check failed every time. This is called *mutation testing*.
+## Sep 25, 2026: Build slice 6, confidence bar
+- Riff Boi now shows how sure it is about a riff, from 0 to 100%, live while I play and saved with each riff. It combines four things it can measure about the sound: how clear the tone is, how in tune it is, how much background noise there is, and how steady the notes are.
+- It only judges the sound. It can't know if a string guess is right, so a high score means the notes are probably right, not that the tab matches where I played.
+- The hint names the weakest part, like "Lots of background noise" or "Guitar may be out of tune. Try the tuner", so I know what to fix.
+- Crazy Train (laptop mic and distortion, my least accurate recording) gets the lowest score, 51%. My fret runs get 84 to 100%.
+- To prove the new checks really work, Claude broke the confidence code on purpose in 5 different ways in a copy of the project, and a check caught it every time. That's called mutation testing.
+
+## Sep 25, 2026: The Metal look
+- Claude built two versions of a new layout and showed me real screenshots, and I picked the Metal one.
+- New Riff is now a big round record button, each saved riff shows a mini tab and its confidence, and the recording screen has a REC timer, the last note big, and Stop at the bottom where my thumb is.
+- Then I asked for it to look less AI-made but still professional, so the glowing gradients came out. It's flat red now, with sharp corners and a fine grain.
+- The angled corners are CSS `clip-path`, which cuts the corners off a box. The grain is a tiny SVG noise pattern repeated behind everything.
+- Animations turn off for people who set their device to reduce motion, and keyboard users still get a visible outline inside the angled buttons.

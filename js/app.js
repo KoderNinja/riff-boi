@@ -187,7 +187,7 @@ stopBtn.addEventListener('click', async () => {
   const notes = currentRiff();
 
   if (notes.length === 0) {
-    statusMsg.textContent = 'No notes caught — nothing saved';
+    statusMsg.textContent = 'No notes caught. Nothing saved';
     await wait(2000);
     showHome();
     return;
@@ -250,8 +250,8 @@ function showTuning(tuning, freq) {
   needle.hidden = false;
   needle.style.left = `${50 + tuning.cents}%`; // -50 cents = left edge, +50 = right edge
   if (inTune) $('tuner-status').textContent = 'In tune';
-  else if (tuning.cents < 0) $('tuner-status').textContent = `${-tuning.cents} cents flat — tune up`;
-  else $('tuner-status').textContent = `${tuning.cents} cents sharp — tune down`;
+  else if (tuning.cents < 0) $('tuner-status').textContent = `${-tuning.cents} cents flat, tune up`;
+  else $('tuner-status').textContent = `${tuning.cents} cents sharp, tune down`;
 }
 
 $('tuner-btn').addEventListener('click', async () => {
