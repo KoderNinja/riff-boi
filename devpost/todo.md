@@ -47,9 +47,10 @@ Where we left off (Sep 25, 2026, late):
 - [ ] String bends: hear them and write them in the tab, like `7b9`, `7b9r7` and `7pb9r7` (built, waiting for my bend recordings and guitar test)
 - [ ] Note values, drawn like a Songsterr tab: string lines with the fret numbers on them, bar lines, the tempo, rhythm stems under the tab. I set the BPM (built, waiting for my guitar test)
 - [x] A switch to turn rhythm off and just get the notes (evenly spaced, no bars, stems or tempo)
-- [ ] Change the time signature (like 3/4, 6/8 or 7/8), not just 4/4
 - [ ] Input picker and a "Can't hear your guitar" message (slice 4): built, waiting for my guitar test
-- [ ] Quick code review to check for bugs (my request, after the next few tasks)
+- [ ] Quick code review to check for bugs (my request)
+- [ ] If there's time: change the time signature (like 3/4, 6/8 or 7/8), not just 4/4
+- [ ] If there's time: tempo detection (my idea). A choice to let Riff Boi work out the tempo from how I play, instead of setting the BPM myself
 - [x] App icon so it can go on my phone's home screen (the blackletter R; I picked it from 2 options)
 - [ ] If there's time: precision test (slice 7), final review and code tour
 - [ ] Later: a manual tab editor, to write my own tabs from scratch
