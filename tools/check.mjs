@@ -13,6 +13,7 @@ import { saveRiff, loadRiffs, updateRiff, deleteRiff, riffTiming } from '../js/s
 import { writtenRiff, retime } from '../js/editor.js';
 import { playbackPlan, pitchPoints, pluckSamples, loopFor } from '../js/playback.js';
 import { readingsFrom } from '../js/upload.js';
+import { findScale } from '../js/scale.js';
 
 let allOk = true;
 function check(label, ok, detail = '') {
@@ -637,6 +638,38 @@ check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().m
   const quarters = Array.from({ length: 7 }, (_, i) => ({ t: i * 0.5 })); // 120 BPM
   check('copy: bar lines go every 4 quarter notes in 4/4, every 3 in 3/4',
     barStarts(quarters, 120, 3.5, '4/4').join(' ') === '4' && barStarts(quarters, 120, 3.5, '3/4').join(' ') === '3 6', `${barStarts(quarters, 120, 3.5, '4/4')} / ${barStarts(quarters, 120, 3.5, '3/4')}`);
+}
+
+// --- Key and scale finder ---
+{
+  const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const riff = (names) => names.split(' ').map((name) => ({ midi: (Number(name.slice(-1)) + 1) * 12 + NAMES.indexOf(name.slice(0, -1)) }));
+  const said = (names) => {
+    const found = findScale(riff(names));
+    return found ? found.name + (found.sameAs ? ` = ${found.sameAs}` : '') : 'none';
+  };
+  const cases = [
+    ['a pentatonic box starting on A#', 'A#2 C#3 D#3 F3 G#3 A#3 C#4 D#4 F4 G#4 A#4 C#5', 'A# minor pentatonic = C# major pentatonic'],
+    ['the same box when the first A# was missed (my sample: starts on C#)', 'C#3 D#3 F3 G#3 A#3 C#4 D#4 F4 G#4 A#4 C#5', 'C# major pentatonic = A# minor pentatonic'],
+    ['an E minor pentatonic riff', 'E2 G2 A2 B2 D3 E3 D3 B2', 'E minor pentatonic = G major pentatonic'],
+    ['a C major scale', 'C3 D3 E3 F3 G3 A3 B3 C4', 'C major = A minor'],
+    ['an E Phrygian riff (the F right above the E)', 'E2 F2 E2 G2 A2 B2 C3 D3', 'E Phrygian'],
+    ['an A harmonic minor run', 'A2 B2 C3 D3 E3 F3 G#3 A3', 'A harmonic minor'],
+    ['an E blues lick', 'E2 G2 A2 A#2 B2 D3 E3', 'E blues'],
+    // The home note counts before the size: this riff lives on A, so it's A minor, not E minor pentatonic.
+    ['a riff that starts and ends on A (A B D E G)', 'A2 B2 D3 E3 G3 A3', 'A minor = C major'],
+    // It starts and ends on A, with a low E under it: the first note counts more than the lowest.
+    ['A minor pentatonic with a low E in it', 'A2 C3 D3 E3 G3 E2 A2', 'A minor pentatonic = C major pentatonic'],
+    // A pickup note (D#) that fits no scale here: then the lowest note (E) is home, not the last (G).
+    ['a riff that starts on a pickup note into a low E', 'D#3 E2 A2 B2 D3 G3', 'E minor pentatonic = G major pentatonic'],
+    ['only 3 different notes: can\'t tell', 'E2 G2 A2 E2 G2', 'none'],
+    ['a chromatic run: no clear key', 'E2 F2 F#2 G2 G#2 A2 A#2 B2 C3 C#3 D3 D#3', 'none'],
+  ];
+  const wrongScales = cases.filter(([, names, want]) => said(names) !== want).map(([label, names]) => `${label}: ${said(names)}`);
+  check('key and scale: pentatonics, major, minor, Phrygian, harmonic minor and blues come out right, and unclear riffs say nothing', wrongScales.length === 0, wrongScales.join('; '));
+  // D# between D and E: no scale here has D, D# and E together, so it's a passing note.
+  const passing = findScale(riff('E2 G2 A2 B2 D3 D#3 E3 D3 B2'));
+  check('key and scale: a riff with a passing note outside its scale still gets it, and says how many', passing?.name === 'E minor pentatonic' && passing.outside === 1, JSON.stringify(passing));
 }
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');

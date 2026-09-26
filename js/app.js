@@ -10,6 +10,7 @@ import { riffConfidence } from './confidence.js';
 import { writtenRiff, retime, EDITOR_MAX_FRET } from './editor.js';
 import { playNotes } from './playback.js';
 import { riffFromRecording } from './upload.js';
+import { findScale } from './scale.js';
 
 const screens = {
   home: document.getElementById('screen-home'),
@@ -289,6 +290,12 @@ function showRiff(riff) {
   drawRiff(riff);
   $('riff-tab').scrollLeft = 0; // start at the beginning of the riff
   $('riff-count').textContent = noteCount(riff.notes.length) + (riff.name ? ` · ${riff.label}` : '');
+  const scale = findScale(riff.notes);
+  $('riff-scale').hidden = !scale;
+  if (scale) {
+    const outside = scale.outside ? `, with ${noteCount(scale.outside)} outside it` : '';
+    $('riff-scale').textContent = `Sounds like ${scale.name}${scale.sameAs ? ` (the same notes as ${scale.sameAs})` : ''}${outside}`;
+  }
   // Riffs saved before the confidence bar existed don't have a score: hide the bar for those.
   $('riff-confidence').hidden = !riff.confidence;
   if (riff.confidence) showConfidence($('riff-confidence'), riff.confidence);

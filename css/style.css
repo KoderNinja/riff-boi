@@ -887,3 +887,9 @@ body {
   margin: 8px 0 0;
   font-size: 0.85rem;
 }
+
+/* Which key and scale a saved riff sounds like. */
+.riff-scale {
+  margin-top: -8px;
+  text-align: center;
+}

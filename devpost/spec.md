@@ -133,6 +133,7 @@ PRD ref: `prd.md > Stopping and Saving`, `prd.md > Open Questions` (where it's s
 
 ### Riff View
 Draws a saved riff's tab with the same drawing code as Recording, plus a back button, a **Play** button and the riff's tempo.
+- **Key and scale** *(added after the build, learner idea)*: a line under the note count, like "Sounds like E minor pentatonic (the same notes as G major pentatonic)". `findScale` in `scale.js` tries 7 scales (minor and major pentatonic, blues, minor, major, harmonic minor, Phrygian) in all 12 keys. Best = the fewest notes outside it; then the root that sounds like home (the first note counts most, then the lowest, then the last); then the smaller scale. Scales with a relative (major/minor, and the pentatonics) name both. Hidden with fewer than 4 different notes, or when over a quarter of the notes fit no scale; with a few outside, it says how many. Claude's choices while the learner was away: the scales in the list, the ranking, sharps (like the rest of the app).
 - **Copy** *(added after the build, learner idea: export as text)*: copies the riff as text tab: its name (with the tempo and time signature when it has rhythm), then six lines like `A|-5-7-|-7b9r7-|` with a bar line where each bar starts (`barStarts` in `rhythm.js`, `tabText` in `tab.js`). The button says Copied, or Couldn't copy, for 2 seconds. It tries the Clipboard API first and falls back to copying from a hidden text box, because some browsers (like in-app ones, and the Claude app's browser pane) block the Clipboard API. Claude's choices while the learner was away: the button sits next to Play, no "made with Riff Boi" line.
 - **Move a note to another string** *(added after the build, learner idea)*: Riff Boi can't hear which string you played, so tapping a note in the tab (or Tab to it and Enter) shows the other strings it can be played on (`otherSpots` in `tab.js`, frets 0 to 22) as buttons, plus Cancel. Picking one moves the note and saves the riff; a note with only one spot (like the open low E) says so. A hint under the tab says notes can be tapped. Claude's choices while the learner was away: the row sits under the tab, the note is red while it's open, keyboard focus goes back to the note afterwards, and it stops playback.
 PRD ref: `prd.md > Latest Riffs List` (tap to view).
@@ -253,6 +254,7 @@ beginners-paradise/          # the project folder = the GitHub repo
 │   ├── editor.js            # New Tab: turns a tab written by hand into a riff
 │   ├── playback.js          # plays a tab back with a plucked-string sound
 │   ├── upload.js            # reads a recording (mp3, wav...) into a riff, like listening live
+│   ├── scale.js             # which key and scale a riff sounds like
 │   └── storage.js           # save/load riffs and the chosen input (localStorage)
 ├── manifest.webmanifest     # (polish) home-screen app name, colors, icon
 ├── icons/                   # (polish) app icon for "Add to Home Screen"

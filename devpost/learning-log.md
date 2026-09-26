@@ -186,3 +186,8 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 ## Sep 26, 2026: Copy as text tab
 - Copy puts the riff on the clipboard as plain text tab, with bar lines where each bar starts, so I can paste it into a message or a forum.
 - Browsers only let a page copy right after a real tap, and some block the newer way to copy completely (the test browser did, even on a real click). So Riff Boi tries the newer way, then the older one: put the text in a hidden box, select it and copy. Testing on the strictest browser found this.
+
+## Sep 26, 2026: Which key and scale a riff is in
+- Riff Boi tries 7 scales starting on each of the 12 notes (84 in all) and keeps the one with the fewest notes outside it. When several fit, the "home" note decides (the first note counts most, then the lowest, then the last), then the smaller scale.
+- Many scales share their notes: C major and A minor are the same 7 notes, just with a different home. So Riff Boi names both, like "C# major pentatonic (the same notes as A# minor pentatonic)" for my sample. My sample starts on C# because the first A# was missed; with it, it says A# minor pentatonic.
+- Mutation testing changed the design: the tests didn't notice when I swapped two rules. Trying a riff that lives on A showed the order matters: size first said "E minor pentatonic", home note first says "A minor", which is what a guitarist would say.
