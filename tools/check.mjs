@@ -354,6 +354,33 @@ check('time signature: one that isn\'t in the list is 4/4', meterOf('nonsense').
   }
 }
 
+// --- Distorted, fast playing (from the Crazy Train and pentatonic recordings) ---
+{
+  // Distortion squashes the volume, so these don't have the jump of a pick: just a steady level.
+  const steady = (midi, n, clarity = 0.95, volume = 0.05) => Array.from({ length: n }, () => [hz(midi), clarity, volume]);
+  const at = (freq, n, clarity = 0.9, volume = 0.05) => Array.from({ length: n }, () => [freq, clarity, volume]);
+  const D3 = 50;
+  check('distortion: a new note heard clearly twice, then as 1/6 of its pitch, still counts',
+    notesFrom([...silence(4), ...steady(D3, 2), ...at(hz(D3) / 6, 1), ...silence(6)]) === 'D3', notesFrom([...silence(4), ...steady(D3, 2), ...at(hz(D3) / 6, 1), ...silence(6)]));
+  check('distortion: ...or an unclear but in-tune third reading of it',
+    notesFrom([...silence(4), ...steady(D3, 2), ...steady(D3, 1, 0.7), ...silence(6)]) === 'D3', notesFrom([...silence(4), ...steady(D3, 2), ...steady(D3, 1, 0.7), ...silence(6)]));
+  check('distortion: fractions of a pitch alone never make a note', notesFrom([...silence(4), ...at(hz(D3) / 6, 12), ...at(hz(D3) / 4, 12), ...silence(6)]) === '');
+  check('distortion: one clear reading plus unclear ones isn\'t enough', notesFrom([...silence(4), ...steady(D3, 1), ...steady(D3, 4, 0.7), ...silence(6)]) === '');
+  // 45 cents sharp still rounds to D, but it's too far out of tune to count.
+  check('distortion: an unclear reading that\'s out of tune (45 cents) doesn\'t count',
+    notesFrom([...silence(4), ...steady(D3, 2), ...at(hz(D3 + 0.45), 1, 0.7), ...silence(6)]) === '');
+  // Mid-bend, the gliding pitch passes other note names; a blurry reading there isn't a new note.
+  const blurredBend = [...pick(62), ...glide(62, 64, 10).map(([f, c, v], i) => [f, i === 6 ? 0.7 : c, v]), ...hold(64, 20)];
+  check('distortion: a blurry reading in the middle of a bend doesn\'t make a new note', tabOf(blurredBend) === 'B3b5', tabOf(blurredBend));
+  // A note change right after a break in the pitch is a new attack, even with no volume jump.
+  const F2 = 42;
+  check('distortion: after a break in the pitch, a new note needs 3 readings, like a picked one',
+    notesFrom([...steady(F2, 20), ...at(24.4, 2, 0.5), ...steady(D3, 3), ...silence(6)]) === 'F#2 D3', notesFrom([...steady(F2, 20), ...at(24.4, 2, 0.5), ...steady(D3, 3), ...silence(6)]));
+  check('distortion: without a break or a pick, a note change still needs 4 readings (a hammer-on)',
+    notesFrom([...steady(F2, 20), ...steady(D3, 3), ...steady(F2, 6)]) === 'F#2' && notesFrom([...steady(F2, 20), ...steady(D3, 4), ...silence(6)]) === 'F#2 D3',
+    `${notesFrom([...steady(F2, 20), ...steady(D3, 3), ...steady(F2, 6)])} / ${notesFrom([...steady(F2, 20), ...steady(D3, 4), ...silence(6)])}`);
+}
+
 // --- Where the last note ends (that sets its note value) ---
 // Like app.js: the last note lasts while its own pitch is still heard, RINGING_READINGS in a row.
 // Readings are [frequency, clarity, volume] at 60 a second, or [..., time] from a real recording.

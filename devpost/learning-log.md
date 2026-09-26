@@ -207,3 +207,11 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - To know which string line the finger is over, the app turns the screen position into the tab picture's own coordinates and picks the closest line.
 - On a phone, dragging down normally scrolls the page. `touch-action: none` on the notes tells the browser a drag there is ours.
 - Testing kept breaking in a confusing way: the page loaded a new file next to an old saved copy of another file, so it couldn't start. The fix was a small test server that tells the browser never to keep old copies. When a test fails, check the test before blaming the code.
+
+## Sep 26, 2026: Making real-time work better with distortion
+- First I found out exactly which notes were missed, by lining up what Riff Boi heard against my answer keys, with times. All 5 misses were in distorted, fast playing (Crazy Train) or a soft first note.
+- Looking at the raw readings showed why. With distortion, Pitchy often hears a short note's pitch blurry, or hears a whole fraction of it: a D3 (147 Hz) came out as 73 Hz (half), 37 Hz (a quarter) or 24.5 Hz (a sixth). The note only got 2 clear readings, and it needs 3.
+- The fix: once a note has 2 clear readings, a blurry-but-in-tune reading, or a whole fraction of its pitch, can be its third. Those readings can never start a note by themselves, so noise can't make fake notes.
+- Distortion also squashes the volume jump that shows a pick, so fast picked notes were treated like hammer-ons (4 readings). But a pick breaks the pitch up for a moment, so a break now counts as a new attack.
+- 110 → 113 of 115 notes, with 0 wrong and no new extra notes, and notes land closer to when I played them. I kept the changes only because the numbers proved them, and I left the last 2 misses alone because fixing them risked fake notes.
+- A test is only useful if it can fail: I checked that the new tests fail on the old code, and broke each new rule on purpose to make sure a test notices.

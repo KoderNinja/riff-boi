@@ -74,6 +74,26 @@ const SETTLE_READINGS = 3;         // readings the pitch must hold still to coun
 // about 0.4 s for a whole step can come out as separate notes.)
 const BASE_READINGS = 3;           // the note's own pitch = the middle of its first 3 clear readings
 
+// Support for a new note that's already been heard clearly twice. With distortion, Pitchy often
+// hears a fast note less clearly, or locks onto a whole fraction of its pitch (1/2 to 1/6 of it,
+// often below the guitar's range). Readings like that can't start a note on their own, but right
+// after 2 clear readings of a note they count as one more (see update).
+export const WEAK_CLARITY = 0.6;   // an unclear reading must still be this clear to count
+export const SUPPORT_CENTS = 40;   // ...and this close to the note (or the fraction of it)
+const SUPPORT_AFTER = 2;           // clear readings a note needs before support counts
+
+function supports(freq, clarity, volume, midi) {
+  if (!(freq > 0) || clarity < WEAK_CLARITY || volume < VOLUME_MIN) return false;
+  const pitch = 69 + 12 * Math.log2(freq / 440);
+  // The same note name (in any octave), just not clear enough, but in tune.
+  if (Math.round(pitch) % 12 === midi % 12 && Math.abs(pitch - Math.round(pitch)) * 100 <= SUPPORT_CENTS) return true;
+  // A whole fraction of the note's pitch: 1/2, 1/3, 1/4, 1/5 or 1/6 of it.
+  for (let k = 2; k <= 6; k++) {
+    if (Math.abs(pitch + 12 * Math.log2(k) - midi) * 100 <= SUPPORT_CENTS) return true;
+  }
+  return false;
+}
+
 // Is this pitch probably a harmonic of the ringing note, not a new note?
 // Distortion and strong picking make a note's overtones loud. The ones with a DIFFERENT
 // note name are the fifth (in any octave above, e.g. C over F) and two octaves + a major
@@ -101,7 +121,8 @@ export function createNoteTracker() {
   let current = null;       // the note ringing now: { midi, name, t, peak } (null = nothing)
   let sinceStart = 0;       // readings since the current note started
   let candidate = null;     // a note name we're hearing but haven't confirmed yet (0-11)
-  let candidateCount = 0;   // how many times we've heard it
+  let candidateCount = 0;   // how many times we've heard it (clear readings plus support)
+  let candidateClear = 0;   // ...how many of those were clear
   let candidateLow = null;  // the lowest MIDI number heard for it
   let repickCount = 0;      // readings of the same note since a re-pick (0 = no re-pick)
   let repickLow = null;     // the lowest MIDI number heard during the re-pick
@@ -263,6 +284,13 @@ export function createNoteTracker() {
     }
     if (!note) {
       lowerCount = 0;
+      // An unclear reading of a new note that's already been heard clearly twice, or a whole
+      // fraction of its pitch, counts as one more reading of it (not while a note is bending).
+      const midBend = current && (bendMove === 'moving' || bendMove === 'bent');
+      if (candidate !== null && candidateClear >= SUPPORT_AFTER && !midBend && supports(freq, clarity, volume, candidateLow)) {
+        candidateCount++;
+        return confirm(t, volume, picked);
+      }
       // A few junk readings don't interrupt anything; more than that resets the candidate.
       if (++junk > GLITCH_READINGS) {
         candidate = null;
@@ -327,21 +355,28 @@ export function createNoteTracker() {
     lowerCount = 0;
     if (name === candidate) {
       candidateCount++;
+      candidateClear++;
       candidateLow = Math.min(candidateLow, note.midi);
     } else {
       candidate = name;
       candidateCount = 1;
+      candidateClear = 1;
       candidateLow = note.midi;
       candidateBreak = pitchBreak;
     }
     if (bending) return null; // the bent pitch isn't a new note
-    const needed = !current || picked ? STABLE_READINGS : LEGATO_READINGS;
+    return confirm(t, volume, picked);
+  };
+
+  // Has the candidate been heard enough to be a new note? Then start it.
+  function confirm(t, volume, picked) {
+    const needed = !current || picked || candidateBreak ? STABLE_READINGS : LEGATO_READINGS;
     if (candidateCount < needed) return null;
     // Unpicked, no break in the pitch, and exactly a harmonic of the ringing note?
     // Probably not a new note. (A pitch break means a new attack, even if the pick was missed.)
     if (current && !picked && !candidateBreak && isLikelyHarmonic(candidateLow, current.midi)) return null;
     return start(candidateLow, t, volume);
-  };
+  }
 }
 
 // Is this reading still the note that's ringing (in any octave, or at its bent pitch)?

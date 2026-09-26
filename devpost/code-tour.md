@@ -48,12 +48,14 @@ It turns readings into notes.
 
 **The note tracker** (`createNoteTracker`) follows the note's *name* (like F#) and works out the octave separately. With distortion, Pitchy often hears the octave above for a moment, and a guitar note's real pitch is its lowest one. A new note starts when:
 - a note name is heard for 3 readings after quiet,
-- the name changes and holds: 3 readings if you picked, 4 if you didn't (a hammer-on or pull-off),
+- the name changes and holds: 3 readings if you picked (or the pitch broke up first, like a new attack does), 4 if you didn't (a hammer-on or pull-off),
 - or you pick the same note again: the volume jumps (1.8 times louder than just before) to at least 75% of the note's loudest moment, and the pitch then holds for 7 readings.
 
 It also says no to a few things:
 - an unpicked jump that's exactly a harmonic of the ringing note (a fifth up, in any octave, or two octaves and a major third),
 - and if the lower octave shows up twice right after a note starts, the note was a harmonic, so it gets fixed an octave down.
+
+With distortion, a fast note can get only 2 clear readings, because Pitchy hears the rest blurry, or as a whole fraction of its pitch (1/2 to 1/6). So after 2 clear readings, one of those can count as the third (`supports`). They can never start a note by themselves.
 
 **Bends** (`followBend`): it follows the pitch with decimals, measured from the note's own pitch (the middle of its first 3 clear readings). A bend glides smoothly through the pitches in between. A hammer-on or slide jumps. Once the pitch settles (3 readings within 0.15 of a semitone), a glide that lands on a whole semitone is written `7b9`, a glide back is `7b9r7`, and a glide *down* from the picked pitch is a pre-bend, `7pb9r7`.
 
@@ -114,7 +116,7 @@ Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs`
 
 ## `tools/`: the tests
 
-- `check.mjs`: 167 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
+- `check.mjs`: 175 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
 - `score.mjs`: the scoreboard. It replays my 8 real recordings and compares them to what I really played (the `.txt` answer files): 110 of 115 notes, and 83 of 83 on the right string.
 - `replay.mjs`: replays one `?debug` recording through the current code, to compare before and after a change.
 

@@ -113,6 +113,7 @@ Turns Pitchy's results into a list of notes:
 - **Frequency → note:** convert to the nearest note number, e.g. A2 = 110 Hz.
 - **New note or the same one?** A new note starts when a clear pitch appears after quiet, when the pitch changes to a different note and stays for a few readings, or when the volume jumps sharply (picking the same note again). A held note stays one note.
 - Only notes in guitar range (low E ≈ 82 Hz up to about the 22nd fret on the high E) are accepted.
+- **Distortion and fast notes** *(added after the build, from the learner's Crazy Train and pentatonic recordings)*: with distortion, Pitchy often hears a short note less clearly, or locks onto a whole fraction of its pitch (1/2 to 1/6, often below the guitar's range). So once a new note has 2 clear readings, one more reading can complete it if it's the same note name in tune (within 40 cents) with clarity 0.6 or more, or a whole fraction of its pitch (within 40 cents). Those readings can never start a note on their own, and they don't count while a note is bending. And a note change right after a break in the pitch (2+ junk readings) counts as a new attack, so it needs 3 readings like a picked note, not 4 like a hammer-on (distortion squashes the volume jump of a pick). On the scoreboard: 110/115 → 113/115, with 0 wrong, no new extra notes, the clean fret runs unchanged, and notes caught closer to when they were played.
 PRD ref: `prd.md > Live Note-to-Tab`.
 
 ### Position Rule and Tab Drawing (`tab.js`)
