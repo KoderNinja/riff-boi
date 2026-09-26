@@ -16,8 +16,7 @@ Where we left off (Sep 26, 2026, late evening):
 - Next with Claude: detecting hammer-ons, pull-offs and slides, and trying string detection, with my recordings. Then more ease of use.
 - Still mine: test on my iPhone and with my guitar, the Devpost description and AI part (my words), screenshots, the demo video and submitting.
 
-### A new question for me
-- The lag: the only part Riff Boi controls is waiting for 3 clear readings (33 ms), and cutting it let fake notes in. What it could do instead: show the note name the moment it's heard (like the tuner does), while the tab still waits until it's sure. Want that?
+- The lag (my answer: yes): the Recording screen now shows the note name as soon as it's heard, in gray until the tab is sure of it, then red.
 
 ### My answers to Claude's questions (Sep 26)
 1. Dragging keeps the same note and tapping changes the fret: that's right.

@@ -2,7 +2,7 @@
 
 import { startListening, stopListening, listInputs, onInputsChange, soundInfo, recordedSound } from './audio.js';
 import { wavFile } from './wav.js';
-import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS } from './notes.js';
+import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS, readNote, midiToName } from './notes.js';
 import { placeNotes, otherSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken, linkMark } from './tab.js';
 import { tabSvg } from './tabsvg.js';
 import { METERS, detectTempo, barStarts, meterOf, countInClicks, countInOrigin } from './rhythm.js';
@@ -42,6 +42,7 @@ let trackNote = null;
 let volumes = []; // every reading's volume, to measure background noise for the confidence bar
 let lastSound = 0; // when the last note could last be heard (seconds): where it ends
 let ringing = 0;   // readings in a row that still sound like the last note
+let heard = { run: 0, name: null, low: 0 }; // the note being heard right now (see handleReading)
 let heardNote = false; // has a note shown up in the tab yet? (until then, "Can't hear your guitar" can show)
 
 // The confidence bar moves slowly, so it's updated 4 times a second (every 15 readings).
@@ -447,6 +448,20 @@ function handleReading(freq, clarity, volume) {
     showConfidence(liveConfidence, riffConfidence(cleanUpRiff(riffNotes), volumes));
     if (DEBUG) showMicNumbers($('debug-info'), freq, clarity, volume);
   }
+  // Show the note's name as soon as it's heard (2 clear readings of that name in a row, in its
+  // lowest octave heard), in gray until the tab is sure of it, then red. It can flash a wrong name
+  // for a moment (on the learner's recordings about 1 name in 6, like a tuner flickering), and it
+  // shows the right note about 17 ms before the tab does. The tab itself still waits until it's sure.
+  const now = readNote(freq, clarity, volume);
+  heard = now && now.midi % 12 === heard.name
+    ? { run: heard.run + 1, name: heard.name, low: Math.min(heard.low, now.midi) }
+    : { run: now ? 1 : 0, name: now ? now.midi % 12 : null, low: now ? now.midi : 0 };
+  if (heard.run >= 2) {
+    const name = midiToName(heard.low);
+    noteName.textContent = name;
+    noteName.classList.toggle('hearing', riffNotes[riffNotes.length - 1]?.name !== name);
+  }
+
   // Redraw only when something changed: a new note, an octave fix, or the last note
   // getting louder (that can change whether it counts as a quiet "ghost" note).
   if (!result && riffNotes[riffNotes.length - 1]?.peak === peakBefore) return;
@@ -454,6 +469,7 @@ function handleReading(freq, clarity, volume) {
   const shown = currentRiff();
   drawLiveTab(shown);
   noteName.textContent = shown.length ? shown[shown.length - 1].name : '–';
+  noteName.classList.remove('hearing'); // the tab is sure of this one
   noteFreq.textContent = noteCount(shown.length);
   if (shown.length && !heardNote) {
     heardNote = true;
@@ -472,6 +488,8 @@ $('new-riff-btn').addEventListener('click', async () => {
   lastSound = 0;
   ringing = 0;
   heardNote = false;
+  heard = { run: 0, name: null, low: 0 };
+  noteName.classList.remove('hearing');
   $('debug-info').textContent = '';
   countedIn = countInReady();
   if (countedIn) wakeSound(); // the clicks come later, but phones only allow sound in the tap

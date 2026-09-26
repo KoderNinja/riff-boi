@@ -239,3 +239,7 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 ## Sep 26, 2026: Hammer-ons, pull-offs and slides in the tab
 - The tab can show them now, like real tab: an arc with h or p, or a slanted line for a slide, and Copy writes `5h7` or `7/9`. For now I mark them by hand on a saved riff.
 - Riff Boi already knows when a note started without a pick, so I measured whether that could mark them: it would have marked 5 of 114 notes on recordings where I (I think) picked everything, so about 1 mark in 23 would be wrong, and it can't tell a hammer-on from a slide. Detecting them for real needs recordings where I write down what I played (`devpost/test-recordings.md`).
+
+## Sep 26, 2026: Showing the note right away
+- The tab can't safely confirm notes faster, so the Recording screen now shows the note name as soon as it's heard, in gray, and it turns red when the tab is sure.
+- I measured 6 ways to decide when to show the name, on my recordings: how early the right name shows up vs how often a wrong name flashes. The fastest was wrong 1 time in 3; the strictest was barely faster than the tab. The one I kept is 17 ms ahead and wrong about 1 time in 6, and gray makes it clear it isn't in the tab yet.

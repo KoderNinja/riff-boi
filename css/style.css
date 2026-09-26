@@ -485,6 +485,11 @@ body {
   color: var(--red);
 }
 
+/* A note that's just been heard, before the tab is sure of it (then it turns red). */
+.note-name.hearing {
+  color: var(--muted);
+}
+
 /* The tab: six lines in a monospace font so the fret numbers line up like real tab.
    Scrolls sideways when the riff gets long. */
 .tab {
