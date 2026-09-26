@@ -8,6 +8,7 @@ import { METERS, detectTempo } from './rhythm.js';
 import { loadRiffs, saveRiff, updateRiff, deleteRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
 import { riffConfidence } from './confidence.js';
 import { writtenRiff, retime, EDITOR_MAX_FRET } from './editor.js';
+import { playNotes } from './playback.js';
 
 const screens = {
   home: document.getElementById('screen-home'),
@@ -62,6 +63,7 @@ function showMicNumbers(element, freq, clarity, volume) {
 
 // Show one screen and hide the others.
 function showScreen(name) {
+  stopPlayback(); // leaving a screen stops a riff that's playing
   for (const [key, el] of Object.entries(screens)) {
     el.hidden = key !== name;
   }
@@ -295,6 +297,7 @@ function showRiff(riff) {
 // The riff's tab and its tempo. The tempo is hidden if rhythm was off (the tab has no tempo then),
 // and "auto" shows if Riff Boi worked it out.
 function drawRiff(riff) {
+  stopPlayback();
   const timing = riffTiming(riff, settings.bpm);
   $('riff-tab').innerHTML = tabSvg(riff.notes, timing);
   $('riff-tempo').hidden = !timing.timing;
@@ -465,6 +468,41 @@ stopBtn.addEventListener('click', async () => {
   showHome();
 });
 
+// --- Playback: hear a riff ---
+
+let stopPlaying = null; // stops the riff that's playing, if there is one
+
+function stopPlayback() {
+  if (stopPlaying) stopPlaying(); // its onEnd puts everything back
+}
+
+// Play the notes of a tab on screen, turning each one red as it plays. The button says Stop
+// while it plays, and tapping it again stops. `afterEnd` runs when it's done.
+function play(button, container, notes, options, afterEnd = null) {
+  if (stopPlaying) return stopPlayback();
+  const frets = container.querySelectorAll('.t-fret');
+  button.textContent = 'Stop';
+  stopPlaying = playNotes(notes, options, (i) => {
+    frets.forEach((fret, j) => fret.classList.toggle('t-now', j === i));
+    keepInView(container, frets[i]);
+  }, () => {
+    stopPlaying = null;
+    button.textContent = 'Play';
+    frets.forEach((fret) => fret.classList.remove('t-now'));
+    afterEnd?.();
+  });
+}
+
+// Scroll a tab sideways so this note is in view.
+function keepInView(container, element) {
+  if (!element) return;
+  const box = container.getBoundingClientRect();
+  const spot = element.getBoundingClientRect();
+  if (spot.left < box.left + 20 || spot.right > box.right - 20) container.scrollLeft += spot.left - box.left - box.width / 3;
+}
+
+$('riff-play-btn').addEventListener('click', () => play($('riff-play-btn'), $('riff-tab'), shownRiff.notes, riffTiming(shownRiff, settings.bpm)));
+
 // --- New Tab: write a tab by hand ---
 
 const editor = { written: [], string: 6, beats: 1 }; // the notes so far, and what's picked
@@ -479,10 +517,11 @@ function setFret(fret) {
 }
 
 function drawEditor() {
+  stopPlayback();
   const { notes, endTime } = writtenRiff(editor.written, settings.bpm);
   $('editor-tab').innerHTML = tabSvg(notes, { bpm: settings.bpm, endTime, meter: settings.meter, highlightLast: true });
   $('editor-tab').scrollLeft = $('editor-tab').scrollWidth; // keep the newest notes in view
-  $('undo-note-btn').disabled = $('save-tab-btn').disabled = editor.written.length === 0;
+  $('undo-note-btn').disabled = $('save-tab-btn').disabled = $('editor-play-btn').disabled = editor.written.length === 0;
   $('editor-hint').textContent = editor.written.length
     ? noteCount(editor.written.length)
     : `Pick a string, a fret and how long the note lasts, then Add note. ${settings.meter} at ${settings.bpm} BPM, from the home screen.`;
@@ -529,6 +568,11 @@ $('add-note-btn').addEventListener('click', () => {
   const beats = editor.beats * ($('dotted-input').checked ? 1.5 : 1);
   editor.written.push({ string: editor.string, fret: Number($('fret-input').value), beats });
   drawEditor();
+});
+
+$('editor-play-btn').addEventListener('click', () => {
+  const { notes, endTime } = writtenRiff(editor.written, settings.bpm);
+  play($('editor-play-btn'), $('editor-tab'), notes, { bpm: settings.bpm, endTime }, drawEditor);
 });
 
 $('undo-note-btn').addEventListener('click', () => {

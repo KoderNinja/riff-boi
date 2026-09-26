@@ -11,6 +11,7 @@ import { tabSvg } from '../js/tabsvg.js';
 import { openInput, listInputs } from '../js/audio.js';
 import { saveRiff, loadRiffs, updateRiff, deleteRiff, riffTiming } from '../js/storage.js';
 import { writtenRiff, retime } from '../js/editor.js';
+import { playbackPlan, pitchPoints, pluckSamples, loopFor } from '../js/playback.js';
 
 let allOk = true;
 function check(label, ok, detail = '') {
@@ -524,6 +525,49 @@ deleteRiff('b');
 check('delete: only that riff is gone, the rest stay in order', loadRiffs().map((riff) => riff.id).join(' ') === 'a c', loadRiffs().map((riff) => riff.id).join(' '));
 deleteRiff('gone');
 check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().map((riff) => riff.id).join(' ') === 'a c');
+
+// --- Playback ---
+{
+  const round = (x) => Math.round(x * 1000) / 1000;
+  const describe = (plan) => plan.map(({ start, length }) => `${round(start)}+${round(length)}`).join(' ');
+  const { notes, endTime } = writtenRiff([
+    { string: 6, fret: 0, beats: 1 }, { string: 6, fret: 3, beats: 0.5 }, { string: 5, fret: 2, beats: 0.5 }, { string: 5, fret: 5, beats: 2 },
+  ], 120);
+  const plan = playbackPlan(notes, { bpm: 120, endTime });
+  check('playback: follows the tab (a quarter, two eighths and a half at 120 BPM)', describe(plan) === '0+0.5 0.5+0.25 0.75+0.25 1+1', describe(plan));
+  // 2½ beats between two notes: the tab shows a half note, so the last half beat is silence.
+  const gap = playbackPlan([{ t: 0 }, { t: 1.25 }], { bpm: 120, endTime: 1.75 });
+  check('playback: a note lasts its note value, and the leftover time is silence', describe(gap) === '0+1 1.25+0.5', describe(gap));
+  const loose = playbackPlan([{ t: 2 }, { t: 2.3 }, { t: 3.1 }], { bpm: 120, endTime: 3.6, timing: false });
+  check('playback: with rhythm off, the notes play when they were played', describe(loose) === '0+0.3 0.3+0.8 1.1+0.5', describe(loose));
+  check('playback: a bend glides up, and a release glides back down',
+    JSON.stringify(pitchPoints({ bend: 2, release: true }, 1)) === '[[0,0],[0.12,2],[0.6,2],[0.72,0]]', JSON.stringify(pitchPoints({ bend: 2, release: true }, 1)));
+  check('playback: a pre-bend starts up; a plain note stays put',
+    JSON.stringify(pitchPoints({ bend: 1, prebend: true }, 0.5)) === '[[0,1]]' && JSON.stringify(pitchPoints({}, 0.5)) === '[[0,0]]');
+  // The plucked string's pitch: a loop of 200 samples sounds once every 200.5 samples.
+  let seed = 1;
+  const random = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const sound = pluckSamples(44100, 200, 1, random);
+  const slice = sound.subarray(4410, 4410 + 4096);
+  let bestLag = 0;
+  let best = -Infinity;
+  for (let lag = 150; lag <= 250; lag++) {
+    let sum = 0;
+    for (let i = 0; i + lag < slice.length; i++) sum += slice[i] * slice[i + lag];
+    if (sum > best) [best, bestLag] = [sum, lag];
+  }
+  const loudness = (a) => Math.sqrt(a.reduce((sum, x) => sum + x * x, 0) / a.length);
+  check('playback: the plucked string repeats every 200.5 samples (its pitch)', Math.abs(bestLag - 200.5) <= 0.5, bestLag);
+  // A4 at 48 kHz: a loop of 109 samples sounds at 48000 / 109.5 = 438.4 Hz, so it plays a bit faster.
+  const a4 = loopFor(48000, 69);
+  check('playback: each note\'s loop and speed land exactly on its pitch',
+    a4.period === 109 && Math.abs((48000 / (a4.period + 0.5)) * a4.rate - 440) < 1e-9 && [40, 64, 88].every((m) => Math.abs(loopFor(44100, m).rate - 1) < 0.02), JSON.stringify(a4));
+  // Real numbers: the end is about 0.32 as loud as 0.1 to 0.3 s in, and about 0.6 without the fade.
+  const fade = loudness(sound.subarray(35280)) / loudness(sound.subarray(4410, 13230));
+  check('playback: the plucked string fades like a real one', fade < 0.45, fade.toFixed(3));
+  const offset = sound.subarray(0, 200).reduce((sum, x) => sum + x, 0) / 200;
+  check('playback: the pick has no steady offset (it would never fade)', Math.abs(offset) < 1e-6, offset);
+}
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');
 process.exit(allOk ? 0 : 1);

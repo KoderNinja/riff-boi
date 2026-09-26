@@ -165,3 +165,10 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - A button can't go inside another button. Each riff card is one big button, so Rename and Delete sit under it instead, and the name box replaces them while I type.
 - Renaming saves a separate `name` and keeps the original date, so nothing is lost, and clearing the name brings the date back.
 - Names are shown as plain text (`textContent`), never as HTML, so a name with `<` or `>` in it can't mess up the page.
+
+## Sep 26, 2026: Playing a riff back
+- The plucked-string sound is an old trick called Karplus-Strong. Start with a burst of random noise one loop long. Then each new sample is the average of the two samples from one loop back. Averaging smooths the noise, so it turns into a clean tone that fades like a real string, and the loop's length sets the pitch.
+- A check measured the pitch and caught a bug: my loop averaged the wrong two samples, so it sounded half a sample short. That's tiny for low notes but about 24 cents flat on a high E, which you'd hear. Now every note is within 0.1 cents (measured in the browser with Pitchy, the same pitch detector Riff Boi uses).
+- A loop can only be a whole number of samples long, so each note's loop plays a tiny bit faster or slower to land exactly in tune. Bends glide that speed up and down.
+- The red "now playing" note first used animation frames, which browsers pause when the page isn't showing. The test caught it: the riff never finished. Timers keep running, so now it always finishes.
+- Mutation testing showed two checks were too loose (turning off the fade, or leaving a steady offset in the sound, went unnoticed). I measured the real numbers and tightened them.

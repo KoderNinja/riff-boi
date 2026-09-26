@@ -90,13 +90,17 @@ They're mixed 35% tone, 25% steadiness, 20% tuning, 20% noise. If Riff Boi had t
 
 New Tab lets you write a tab note by note: a string, a fret and a note value. `writtenRiff` turns that into the same kind of riff Riff Boi saves when it hears you (each note starts where the one before ended, in seconds at your tempo), so drawing, saving and the Latest Riffs list all just work. `retime` changes a written tab's tempo but keeps its note values. `app.js` has the buttons: the string and note value rows, the fret box, Add note, Undo and Save.
 
+## `js/playback.js`: hearing a tab
+
+Play plays a tab back. `playbackPlan` works out when each note starts and how long it lasts, following the tab (its beats and note values at the riff's tempo). The sound is the Karplus-Strong trick (`pluckSamples`): a burst of noise, then each new sample is the average of the two from one loop back, so it smooths into a tone that fades like a real string. The loop's length sets the pitch, and `loopFor` speeds it up or slows it down a tiny bit so every note is exactly in tune. Bends glide the speed up and down (`pitchPoints`). Timers turn each note red as it's heard.
+
 ## `js/storage.js`: the notebook
 
 Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs` (the riffs), `riffboi.settings` (tempo and rhythm) and `riffboi.inputDeviceId` (your input). A riff keeps only what's needed to draw it again: each note's pitch, string, fret, time and bend, plus the confidence, the tempo, when the last note ended, whether rhythm was on, the time signature and whether the tempo was worked out. `riffTiming` reads those back, so a saved riff is always drawn the way it was recorded, `updateRiff` saves a change, like a tempo you typed or a new name, and `deleteRiff` removes a riff. Every save is wrapped in `try`, because some private windows block storage.
 
 ## `tools/`: the tests
 
-- `check.mjs`: 138 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
+- `check.mjs`: 147 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
 - `score.mjs`: the scoreboard. It replays my 8 real recordings and compares them to what I really played (the `.txt` answer files): 110 of 115 notes, and 83 of 83 on the right string.
 - `replay.mjs`: replays one `?debug` recording through the current code, to compare before and after a change.
 

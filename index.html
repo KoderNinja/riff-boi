@@ -109,13 +109,16 @@
     <button id="back-btn" class="back-btn">← Latest Riffs</button>
     <h2 id="riff-title" class="screen-title"></h2>
     <div id="riff-tab" class="tab"></div>
-    <!-- This riff's tempo: type a new one to fix it (like an Auto guess that came out double or half speed) -->
-    <label id="riff-tempo" class="riff-tempo">
+    <div class="riff-controls">
+      <button id="riff-play-btn" class="secondary-btn play-btn">Play</button>
+      <!-- This riff's tempo: type a new one to fix it (like an Auto guess that came out double or half speed) -->
+      <label id="riff-tempo" class="riff-tempo">
       <span class="setting-label">Tempo</span>
       <input id="riff-bpm-input" class="bpm-input" type="number" inputmode="numeric" min="40" max="240" step="1" aria-label="This riff's tempo in beats per minute">
       <span class="setting-unit">BPM</span>
       <span id="riff-auto-tag" class="muted">auto</span>
-    </label>
+      </label>
+    </div>
     <!-- Same confidence bar, for the saved riff (hidden for riffs saved before it existed) -->
     <div id="riff-confidence" class="confidence" hidden>
       <div class="confidence-label"><span>Confidence</span><span class="confidence-pct">–</span></div>
@@ -131,6 +134,7 @@
     <h2 class="screen-title">New Tab</h2>
     <div id="editor-tab" class="tab"></div>
     <div class="editor-controls">
+      <button id="editor-play-btn" class="secondary-btn play-btn" disabled>Play</button>
       <!-- The string, high e first like the lines on the tab -->
       <div class="choice-row" id="string-picker" role="group" aria-label="String">
         <span class="setting-label">String</span>

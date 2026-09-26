@@ -77,7 +77,7 @@ Ranked by how much each one helps Riff Boi before the deadline, for how much wor
 
 ### Before the deadline, in this order
 1. [x] Rename or delete riffs. Size: small. Done: Rename and Delete under every riff card (my pick).
-2. Play a riff back so I can hear it. Size: small to medium. It works for riffs I recorded and for tabs I wrote in New Tab.
+2. [x] Play a riff back so I can hear it. Size: small to medium. Done: a Play button on saved riffs and in New Tab, with a plucked-string sound (my pick). Each note turns red as it plays.
 3. Upload a recording (like an mp3) and get its tab, not in real time (my idea). Most of the pieces exist: my pentatonic test recording was made from an mp3 with the same Pitchy steps. Size: medium. Judges without a guitar could try Riff Boi this way.
 4. Tap a note to move it to another string. Size: small to medium. It fixes a wrong string guess by hand, and goes with the accuracy work.
 5. Copy a riff as text tab, part of the export idea. Size: small. The text tab code already exists.

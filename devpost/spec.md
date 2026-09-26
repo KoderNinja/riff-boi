@@ -132,7 +132,7 @@ Shows "Saving…", then the riff's label, its note count and "Saved to Latest Ri
 PRD ref: `prd.md > Stopping and Saving`, `prd.md > Open Questions` (where it's saved = the Latest Riffs list).
 
 ### Riff View
-Draws a saved riff's tab with the same drawing code as Recording, plus a back button.
+Draws a saved riff's tab with the same drawing code as Recording, plus a back button, a **Play** button and the riff's tempo.
 PRD ref: `prd.md > Latest Riffs List` (tap to view).
 
 ### "Can't Hear Your Guitar" Message
@@ -173,6 +173,13 @@ The tab is drawn as a picture (SVG) like a Songsterr tab, the learner's pick fro
 - **Rhythm switch:** with rhythm off, the tab is just the notes, evenly spaced, with no bars, tempo or stems. It only changes the riff being recorded: each riff saves whether rhythm was on and is always drawn that way. *(Changed after the build, learner request: it used to redraw every saved riff too.)*
 - The newest note is red while recording. The old text tab (`drawTab`) stays for the checks and a future "copy as text".
 PRD ref: `prd.md > What We're Building` (note values).
+
+### Playback (`playback.js`) *(added after the build, learner request)*
+A **Play** button on the Riff View and in New Tab plays the tab back with a plucked-string sound (the learner's pick over a simple tone). Each note turns red as it plays and the tab scrolls to keep it in view; the button says Stop while it plays. Leaving the screen, changing the tempo or adding a note stops it.
+- **What it plays:** what the tab shows. With rhythm on, each note starts on its beat and lasts its note value at the riff's tempo, and leftover time is silence. With rhythm off, the notes play when they were played. Bends glide up, releases glide back down (after 60% of the note), pre-bends start up. A note is cut (a 40 ms fade) when its time is up, and rings at most 2.9 s.
+- **The sound:** Karplus-Strong. A burst of noise one loop long, then each new sample is the average of the two from one loop back, times 0.996, so it smooths into a tone that fades like a string. A loop of N samples sounds once every N + 0.5 samples, so each note's loop is played a little faster or slower to land exactly on its pitch (checked with Pitchy in the browser: within 0.1 cents from E2 to E6, bends too).
+- **Following along** uses timers set to when each note is heard (after the start delay and the speakers' own delay), not animation frames, because a page in the background gets no frames and would never finish.
+- Its own sound system (`AudioContext`), made and resumed in the tap, because phones only allow sound after one. On an iPhone, the silent switch can mute it.
 
 ### New Tab (`editor.js` + `app.js`) *(added after the build, learner request)*
 Write a tab by hand. A "New Tab" button on the home screen (top left, across from Tuner) opens the editor. Tap one of 6 string buttons (e B G D A E, high e first like the tab), set the fret (0 to 24) with − / + or by typing, pick how long the note lasts (whole, half, quarter, 8th or 16th, and Dotted, which isn't offered for whole or 16th), then Add note. Undo takes the last note off. It uses the tempo and time signature from the home screen, and the tab is drawn as you go, newest note in red.
@@ -235,6 +242,7 @@ beginners-paradise/          # the project folder = the GitHub repo
 │   ├── rhythm.js            # note starts → beats and note values at your tempo
 │   ├── tabsvg.js            # draws the tab picture (Songsterr style)
 │   ├── editor.js            # New Tab: turns a tab written by hand into a riff
+│   ├── playback.js          # plays a tab back with a plucked-string sound
 │   └── storage.js           # save/load riffs and the chosen input (localStorage)
 ├── manifest.webmanifest     # (polish) home-screen app name, colors, icon
 ├── icons/                   # (polish) app icon for "Add to Home Screen"
