@@ -1,7 +1,7 @@
 // app.js — starts Riff Boi, switches screens and wires up the buttons.
 
 import { startListening, stopListening } from './audio.js';
-import { createNoteTracker, cleanUpRiff } from './notes.js';
+import { createNoteTracker, cleanUpRiff, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN } from './notes.js';
 import { placeNotes, drawTab } from './tab.js';
 import { loadRiffs, saveRiff } from './storage.js';
 
@@ -9,6 +9,7 @@ const screens = {
   home: document.getElementById('screen-home'),
   recording: document.getElementById('screen-recording'),
   saving: document.getElementById('screen-saving'),
+  tuner: document.getElementById('screen-tuner'),
   riff: document.getElementById('screen-riff'),
 };
 const $ = (id) => document.getElementById(id);
@@ -167,6 +168,63 @@ stopBtn.addEventListener('click', async () => {
   $('saving-details').textContent = `${riff.label} · ${noteCount(riff.notes.length)}`;
   $('saving-where').textContent = 'Saved to Latest Riffs';
   await wait(1500);
+  showHome();
+});
+
+// --- Tuner ---
+
+let tunerFreqs = []; // the last few clear frequencies (the middle one steadies the needle)
+let unclear = 0;     // unclear readings in a row
+
+function handleTunerReading(freq, clarity, volume) {
+  if (clarity >= TUNER_CLARITY && volume >= VOLUME_MIN && freq > 30 && freq < 1400) {
+    tunerFreqs = [...tunerFreqs.slice(-4), freq];
+    unclear = 0;
+    const steady = median(tunerFreqs);
+    showTuning(tuningOf(steady), steady);
+  } else if (++unclear > 30) {
+    // Half a second without a clear note: go back to waiting.
+    tunerFreqs = [];
+    showTuning(null);
+  }
+}
+
+function showTuning(tuning, freq) {
+  const needle = $('tuner-needle');
+  const inTune = tuning && Math.abs(tuning.cents) <= IN_TUNE_CENTS;
+  document.querySelector('.tuner').classList.toggle('in-tune', Boolean(inTune));
+  if (!tuning) {
+    $('tuner-note').textContent = '–';
+    $('tuner-status').textContent = 'Play one string';
+    $('tuner-freq').textContent = '';
+    needle.hidden = true;
+    return;
+  }
+  $('tuner-note').textContent = tuning.name.replace(/-?\d+$/, ''); // "E2" → "E"
+  $('tuner-freq').textContent = `${tuning.name} · ${freq.toFixed(1)} Hz`;
+  needle.hidden = false;
+  needle.style.left = `${50 + tuning.cents}%`; // -50 cents = left edge, +50 = right edge
+  if (inTune) $('tuner-status').textContent = 'In tune';
+  else if (tuning.cents < 0) $('tuner-status').textContent = `${-tuning.cents} cents flat — tune up`;
+  else $('tuner-status').textContent = `${tuning.cents} cents sharp — tune down`;
+}
+
+$('tuner-btn').addEventListener('click', async () => {
+  tunerFreqs = [];
+  unclear = 0;
+  showTuning(null);
+  $('tuner-msg').textContent = '';
+  showScreen('tuner');
+  try {
+    await startListening(handleTunerReading);
+  } catch (err) {
+    console.error(err);
+    $('tuner-msg').textContent = "Can't hear your guitar";
+  }
+});
+
+$('tuner-done-btn').addEventListener('click', () => {
+  stopListening();
   showHome();
 });
 

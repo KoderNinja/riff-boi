@@ -33,6 +33,18 @@ export function readNote(freq, clarity, volume) {
   return { midi, name: midiToName(midi), freq };
 }
 
+// --- Tuner ---
+export const TUNER_CLARITY = 0.9;  // the tuner only trusts very clear readings
+export const IN_TUNE_CENTS = 5;    // within this many cents (hundredths of a semitone) = in tune
+
+// Frequency → the nearest note and how far off it is, in cents (-50 = a quarter-tone flat,
+// +50 = a quarter-tone sharp). 100 cents = one semitone = one fret.
+export function tuningOf(freq) {
+  const exact = 69 + 12 * Math.log2(freq / 440);
+  const midi = Math.round(exact);
+  return { midi, name: midiToName(midi), cents: Math.round((exact - midi) * 100) };
+}
+
 // More tunable numbers, for deciding when a NEW note starts.
 // (One "reading" is one check of the sound, about 1/60 of a second.)
 export const STABLE_READINGS = 3;   // a new note name must be heard this many times (in a short window)
@@ -221,7 +233,7 @@ export function cleanUpRiff(notes) {
   });
 }
 
-function median(values) {
+export function median(values) {
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;

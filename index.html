@@ -17,6 +17,7 @@
   <section id="screen-home" class="screen">
     <h1 class="logo">Riff Boi</h1>
     <button id="new-riff-btn" class="big-btn">New Riff</button>
+    <button id="tuner-btn" class="secondary-btn">Tuner</button>
     <!-- Only shown when the address ends in ?debug (for tuning note detection) -->
     <button id="save-readings-btn" class="small-btn" hidden>Save last recording's readings</button>
     <h2 class="screen-title">Latest Riffs</h2>
@@ -34,6 +35,23 @@
     </div>
     <p id="status-msg" class="status-msg"></p>
     <button id="stop-btn" class="big-btn">Stop</button>
+  </section>
+
+  <!-- Tuner -->
+  <section id="screen-tuner" class="screen" hidden>
+    <h2 class="screen-title">Tuner</h2>
+    <div class="tuner">
+      <div id="tuner-note" class="tuner-note">–</div>
+      <div class="tuner-meter">
+        <div class="tuner-center"></div>
+        <div id="tuner-needle" class="tuner-needle" hidden></div>
+      </div>
+      <div class="tuner-scale"><span>♭ flat</span><span>sharp ♯</span></div>
+      <div id="tuner-status" class="tuner-status">Play one string</div>
+      <div id="tuner-freq" class="muted"></div>
+    </div>
+    <p id="tuner-msg" class="status-msg"></p>
+    <button id="tuner-done-btn" class="big-btn">Done</button>
   </section>
 
   <!-- Saving confirmation -->

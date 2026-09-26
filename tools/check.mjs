@@ -2,7 +2,7 @@
 // Usage: node tools/check.mjs
 // Uses made-up readings (no guitar needed). Run it after changing notes.js or tab.js.
 
-import { readNote, createNoteTracker, cleanUpRiff } from '../js/notes.js';
+import { readNote, createNoteTracker, cleanUpRiff, tuningOf } from '../js/notes.js';
 import { placeNotes, positionsFor, drawTab } from '../js/tab.js';
 
 let allOk = true;
@@ -18,6 +18,13 @@ for (const [freq, name] of [[110, 'A2'], [82.41, 'E2'], [329.63, 'E4'], [196, 'G
 check('46 Hz (an octave below the low E) is moved up to F#2', readNote(46.25, 0.95, 0.1)?.name === 'F#2');
 check('unclear, quiet, too low and too high sounds are ignored',
   [[110, 0.5, 0.1], [110, 0.95, 0.001], [24.5, 0.95, 0.1], [1500, 0.95, 0.1]].every((r) => readNote(...r) === null));
+
+// --- Tuner math ---
+// (80 Hz is more than half a semitone below E2, so its nearest note is D#2, 49 cents sharp.)
+for (const [freq, name, cents] of [[440, 'A4', 0], [446, 'A4', 23], [82.41, 'E2', 0], [81, 'E2', -30], [80, 'D#2', 49]]) {
+  const t = tuningOf(freq);
+  check(`tuner: ${freq} Hz is ${name} ${cents >= 0 ? '+' : ''}${cents} cents`, t.name === name && t.cents === cents, `${t.name} ${t.cents}`);
+}
 
 // --- When does a new note start? ---
 // Fake readings, 60 per second: [frequency, clarity, volume]
