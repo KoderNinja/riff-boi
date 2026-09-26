@@ -12,7 +12,7 @@ Where we left off (Sep 26, 2026, morning):
 - The cloud session's commits are on GitHub now (I brought them to my Mac from the zip and pushed), so riffboi.com has the iPhone fix. My Mac's bar line fix went on top of them.
 - The Rhythm switch fix is done: it only changes the riff I'm recording now.
 - The time signature and Auto tempo are done too (merged from the `time-signature` branch).
-- Claude's part, in priority order: start the manual tab editor (we need to design it first), then update the GitHub descriptions and README, then a quick codebase check (my requests).
+- Claude's part, in priority order: the GitHub About box, README and codebase check are done. Next is the manual tab editor (designed: a New Tab button on the home screen, tap a string then set the fret, a note value for each note). Then rank my ideas list by priority, then work on accuracy and on ways to tell which string I played (my requests).
 - My part: test on my iPhone and with my guitar, including the time signature and Auto tempo.
 
 ## Before the deadline
@@ -42,13 +42,15 @@ In order of priority. "Me" is stuff only I can do, "Claude" is building with Cla
 - [x] Claude: a code tour, a plain-words walk through each file, so I can explain my own code in the video (`devpost/code-tour.md`)
 - [ ] Me + Claude: precision test (slice 7). I play a known riff slow, fast and distorted, and we count the right, missed and extra notes. Real numbers for the demo. The steps and the table to fill in are in `devpost/precision-test.md`
 - [x] Claude: fix the Rhythm switch (my request). Turning rhythm on or off used to change how every saved riff is drawn. Now it only changes the riff I'm recording: each riff saves whether rhythm was on, and riffs from before that show with rhythm on
-- [ ] Claude: update all the GitHub descriptions (the About box: description, riffboi.com and topics) and the README (my request, after the to-do list)
-- [ ] Claude: a quick codebase check, last (my request)
+- [x] Claude: update all the GitHub descriptions (the About box: description, riffboi.com and topics) and the README (my request, after the to-do list)
+- [x] Claude: a quick codebase check (my request). Nothing unused or left over; the new code looked right
 
 ### 3. If there's time
 - [x] Claude: change the time signature (like 3/4, 6/8 or 7/8), not just 4/4
 - [x] Claude: tempo detection (my idea). A choice to let Riff Boi work out the tempo from how I play, instead of setting the BPM myself (the Auto switch)
 - [ ] Claude: start a manual tab editor, to write my own tabs from scratch (my request: start it after the tasks above)
+- [ ] Claude: rank my ideas list below by priority (my request)
+- [ ] Me + Claude: better accuracy, and ways to tell which string I played (my request, after everything else)
 
 ### Later, after the hackathon
 - [ ] Upload a tab (a file, or paste it in) and Riff Boi turns it into sheet music (my idea). Tab says the exact string and fret, so the notes are easy. The rhythm only comes along if the tab has it, like a Guitar Pro file
