@@ -114,3 +114,19 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - A cloud session runs on a computer in the cloud. A local session runs on my Mac, with the files in my own folder.
 - GitHub wouldn't let the cloud session push to my new org, because the Claude GitHub App isn't installed there. So my newest commits came to my Mac in a zip, with the whole history inside the hidden `.git` folder, and I push them to GitHub from my Mac with my own login.
 - A new session doesn't remember the old one. Claude Code reads `CLAUDE.md` at the start of every session, so I gave it a "Starting a session" part, and the to-do list has a "Next up" part that says where we left off.
+
+## Sep 26, 2026: Getting the cloud work onto my Mac and up to GitHub
+- The zip had a newer copy of the whole project, history and all (in `.git`). Instead of copying files over, git fetched the 11 new commits straight from the unzipped folder and fast-forwarded my `main`. The zip's history started at my last commit, so there was nothing to merge.
+- My unsaved changes were an early copy of the confidence bar. They went on the stash shelf (`git stash list`), not in the trash, just in case.
+- Committing and pushing are different. A commit is saved on my Mac. A push sends it to GitHub, and GitHub has to know it's really me.
+- Being logged in to GitHub in Chrome doesn't log git in. The Terminal asked for a username and password, and GitHub won't take my real password there, only a token.
+- The error tells you what's wrong. "Invalid username or token" meant GitHub didn't recognize what I pasted. "Permission denied" (403) meant it knew it was me, but the token wasn't allowed to change the repo. A token made for my own account can't push to my org's repo: its resource owner has to be the org.
+- What finally worked was GitHub's own command-line tool, `gh`. I approved it in the browser with a one-time code, so there was no token to copy, and now pushing from my Mac just works.
+- A pull request asks to merge a branch into `main`. My 9 commits went on a branch called `input-picker`, I opened pull request #1 and merged it, and Vercel saw the new `main` and updated riffboi.com by itself.
+
+## Sep 26, 2026: Input picker and "Can't hear your guitar" (slice 4)
+- Browsers keep the names of your mics and interfaces secret until you allow the mic once, so the dropdown says "Default input" until my first riff.
+- If my interface is unplugged, Riff Boi uses the default input instead of failing, and picks the interface again when it's back.
+- The 5-second check counts readings (60 a second) instead of watching the clock, so time spent on the mic permission popup doesn't count.
+- Different problems get different messages: a blocked mic, an input that won't open, silence, or no internet for the pitch detector. Each one says what to try.
+- Claude tested it without a guitar by giving the browser a pretend mic that plays a test tone. The automatic checks do the same in Node (91 checks now).

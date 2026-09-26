@@ -8,18 +8,18 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 
 ## Next up
 
-Where we left off (Sep 25, 2026, late):
-- My `beginners-paradise` folder has everything from the cloud session and is linked to GitHub. Riff Boi is live at https://riffboi.com, and Vercel updates it whenever I push to GitHub.
-- My newest commits aren't on GitHub yet. The first `git push` from my Mac asks for my GitHub username and a token (a password made just for pushing).
+Where we left off (Sep 26, 2026, just after midnight):
+- Everything is on GitHub and live at https://riffboi.com (pull request #1, merged). Vercel updates the site whenever `main` changes on GitHub.
+- Pushing from my Mac works now: this project's git signs in with GitHub's `gh` tool (in `~/.local/bin`), which I approved in Chrome.
 - Built and waiting for my guitar test: the input picker and "Can't hear your guitar" message (slice 4), the confidence bar, string bends and note values.
-- Next: a quick code review to check for bugs, then the time signature if there's time.
+- Next: one guitar session to test all of those (and my iPhone), then a quick code review, then the time signature and tempo detection if there's time.
 
 ## Before the deadline
 
 ### Stuff only I can do
 - [x] Make a free GitHub org (`riff-boi`) and move the repo there: https://github.com/riff-boi/riff-boi
 - [x] Give Matt access (Matt is a collaborator on GitHub)
-- [ ] Push my newest commits to GitHub from my Mac (`git push` in Terminal, with my username and a token the first time)
+- [x] Push my newest commits to GitHub from my Mac (with GitHub's `gh` tool, approved in Chrome)
 - [ ] Only if I want cloud sessions on Riff Boi again: give the Claude GitHub App access to the org (https://github.com/apps/claude/installations/select_target, then the `riff-boi` org, then the `riff-boi` repo)
 - [x] Get a live link: https://riffboi.com, on Vercel. It updates whenever I push to GitHub
 - [ ] Put the live link in the repo's About box on GitHub and in Devpost's "Try it out" field (the README has it now)
