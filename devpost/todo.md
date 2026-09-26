@@ -8,18 +8,19 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 
 ## Next up
 
-Where we left off (Sep 26, 2026, about 1:30am):
-- The code review is done. In the cloud session, Claude fixed my iPhone not hearing notes (the phone started the sound system paused) and 2 bugs the review found. Those commits aren't on GitHub yet, so riffboi.com doesn't have them until I push (the first "must do" below).
-- Claude's part, in priority order: fix the Rhythm switch so it only changes the riff I'm recording, finish the time signature and Auto tempo, start the manual tab editor, then update the GitHub descriptions and README, then a quick codebase check (my requests).
-- Stopped for the night (Sep 26): the code tour and the precision test steps are done. The time signature and Auto tempo are half built, saved on the `time-signature` branch (not merged into `main`, so riffboi.com doesn't get a half-built screen). Next: wire them up in `app.js`, then styles, checks and a browser test.
-- My part: push the new commits, then test on my iPhone and with my guitar.
+Where we left off (Sep 26, 2026, morning):
+- The cloud session's commits are on GitHub now (I brought them to my Mac from the zip and pushed), so riffboi.com has the iPhone fix. My Mac's bar line fix went on top of them.
+- The Rhythm switch fix is done: it only changes the riff I'm recording now.
+- Claude's part, in priority order: finish the time signature and Auto tempo, start the manual tab editor, then update the GitHub descriptions and README, then a quick codebase check (my requests).
+- The time signature and Auto tempo are half built on the `time-signature` branch (not merged into `main`, so riffboi.com doesn't get a half-built screen). Next: merge `main` into it (it will conflict in `tabsvg.js` and `storage.js`, because of the bar line and Rhythm fixes; keep both sides), then wire them up in `app.js`, then styles, checks and a browser test.
+- My part: test on my iPhone and with my guitar.
 
 ## Before the deadline
 
 In order of priority. "Me" is stuff only I can do, "Claude" is building with Claude.
 
 ### 1. Must do, to submit
-- [ ] Me: get the new commits from the cloud session onto GitHub (bring them to my Mac from the zip and push, like last time), so riffboi.com updates. Or give the Claude GitHub App access to the org, so the cloud session can push by itself: https://github.com/apps/claude/installations/select_target, then the `riff-boi` org, then the `riff-boi` repo
+- [x] Me: get the new commits from the cloud session onto GitHub (bring them to my Mac from the zip and push, like last time), so riffboi.com updates. Or give the Claude GitHub App access to the org, so the cloud session can push by itself: https://github.com/apps/claude/installations/select_target, then the `riff-boi` org, then the `riff-boi` repo
 - [ ] Me: test Riff Boi on my iPhone at https://riffboi.com (reload the page first). If it still can't hear, open https://riffboi.com/?debug and send Claude a screenshot of the numbers on the Recording screen
 - [ ] Me: test each new feature with my guitar:
   - [ ] Input picker and the "Can't hear your guitar" message (slice 4)
