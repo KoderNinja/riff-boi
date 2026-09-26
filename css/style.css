@@ -108,7 +108,7 @@ body {
   background: var(--text);
 }
 
-/* Upload a recording and Try a sample, under New Riff. */
+/* Upload a recording, under New Riff. */
 .file-row {
   display: flex;
   flex-wrap: wrap;

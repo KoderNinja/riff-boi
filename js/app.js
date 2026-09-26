@@ -664,20 +664,6 @@ $('upload-input').addEventListener('change', () => {
   if (file) tabFromRecording(file, file.name.replace(/\.[^.]+$/, '').slice(0, 40));
 });
 
-// The sample is my pentatonic scale, so people without a guitar can see Riff Boi work.
-$('sample-btn').addEventListener('click', async () => {
-  let file;
-  try {
-    const response = await fetch('samples/pentatonic.mp3');
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    file = await response.blob();
-  } catch (err) {
-    console.error(err);
-    return showProblem("Couldn't load the sample", 'Check your internet and try again');
-  }
-  tabFromRecording(file, 'Sample: pentatonic scale');
-});
-
 // Read a recording, save its riff (named `name`) and show it. Uses the tempo, time signature,
 // Auto detect tempo and Show note lengths settings, like a riff you record.
 async function tabFromRecording(file, name) {

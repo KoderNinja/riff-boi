@@ -179,9 +179,9 @@ The tab is drawn as a picture (SVG) like a Songsterr tab, the learner's pick fro
 PRD ref: `prd.md > What We're Building` (note values).
 
 ### Upload a Recording (`upload.js`) *(added after the build, learner idea)*
-"Upload a recording" and "Try a sample" sit under New Riff (the learner chose both). Upload opens the file picker for a sound file (mp3, wav, m4a and so on, up to 5 minutes); Try a sample uses `samples/pentatonic.mp3`, the learner's own recording of a pentatonic scale, so judges without a guitar can see it work (the learner agreed to put it in the public repo).
+"Upload a recording" sits under New Riff. It opens the file picker for a sound file (mp3, wav, m4a and so on, up to 5 minutes). *(A "Try a sample" button with the learner's pentatonic recording was added with it, then taken out at the learner's request.)*
 - **The same steps as live, all at once:** the file is decoded at 48 kHz and mixed to one channel, then read like the live input: 60 readings a second, each from the latest 2048 samples (timed where the slice ends), with Pitchy and the same loudness math as `audio.js`. `notesFromReadings` in `notes.js` runs the same steps as `app.js` while recording, and the last note ends where it stopped ringing. The riff then gets strings, a confidence score, and the tempo, time signature, Auto detect tempo and Show note lengths settings like a recorded riff.
-- It's saved with the file's name (the sample is "Sample: pentatonic scale") and opens straight away on the Riff View, where Play works.
+- It's saved with the file's name and opens straight away on the Riff View, where Play works.
 - **Checked:** the made-up bend readings and every real recording give the same notes, strings and end through `notesFromReadings` as the scoreboard's replay; and in the browser the sample mp3 gives exactly the tab the saved readings of it give (11 of 12 notes, 85% confidence, the same as the scoreboard). Reading the 6-second sample takes about 0.1 s.
 - **Problems:** "Couldn't read that file" (not a sound file the browser can read), "That recording is too long" (over 5 minutes), "No notes found", or "Couldn't load the pitch detector" (no internet). Each shows for 3 seconds, then home.
 
@@ -261,7 +261,6 @@ beginners-paradise/          # the project folder = the GitHub repo
 │   └── storage.js           # save/load riffs and the chosen input (localStorage)
 ├── manifest.webmanifest     # (polish) home-screen app name, colors, icon
 ├── icons/                   # (polish) app icon for "Add to Home Screen"
-├── samples/pentatonic.mp3   # my pentatonic scale, for Try a sample
 ├── README.md                # what Riff Boi is, how to run it, tech used, AI disclosure
 ├── .gitignore               # keeps learner-profile.md and .env files out of git
 ├── CLAUDE.md                # instructions for Claude in this project

@@ -94,7 +94,7 @@ New Tab lets you write a tab note by note: a string, a fret and a note value. `w
 
 ## `js/upload.js`: tabs from a recording
 
-Upload a recording (or Try a sample) reads a sound file with the same steps as listening live, just all at once. `riffFromRecording` decodes the file and mixes it to one channel, `readingsFrom` takes a reading 60 times a second from the latest 2048 samples, like the live input, and `notesFromReadings` in `notes.js` turns the readings into notes the same way `app.js` does while you play. The check makes sure it gives the same notes as the scoreboard on every recording.
+Upload a recording reads a sound file with the same steps as listening live, just all at once. `riffFromRecording` decodes the file and mixes it to one channel, `readingsFrom` takes a reading 60 times a second from the latest 2048 samples, like the live input, and `notesFromReadings` in `notes.js` turns the readings into notes the same way `app.js` does while you play. The check makes sure it gives the same notes as the scoreboard on every recording.
 
 ## `js/playback.js`: hearing a tab
 

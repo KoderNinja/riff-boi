@@ -21,7 +21,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 - Copies a riff as text tab (with bar lines), to paste into a message or a forum.
 - Says which key and scale a riff sounds like, like E minor pentatonic.
 - Shares a riff with a link: the riff is packed into the link itself, so nothing is uploaded anywhere.
-- Gets the tab of a recording too: upload an mp3, wav or m4a, or tap Try a sample (my pentatonic scale) if there's no guitar around.
+- Gets the tab of a recording too: upload an mp3, wav or m4a.
 - Has a tuner built in.
 - Lets you pick your mic or audio interface, remembers it, and tells you when it can't hear your guitar.
 
@@ -41,7 +41,7 @@ Then open http://localhost:8000 in Chrome, click New Riff, allow the mic and pla
 
 The server is needed because browsers block the mic and JavaScript modules on a page opened straight from a file. On localhost they're allowed.
 
-No guitar around? Tap Try a sample to see Riff Boi write the tab of my pentatonic scale recording, or play single notes on a piano or keyboard app.
+No guitar around? A piano or keyboard app playing single notes should work too, or upload a recording of single notes.
 
 If it can't hear your guitar, add `?debug` to the address (like https://riffboi.com/?debug). The Recording and Tuner screens then show what the mic is picking up: how loud and how clear the sound is, its pitch, and whether the browser's sound is running.
 

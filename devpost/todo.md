@@ -10,11 +10,12 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 
 Where we left off (Sep 26, 2026, early afternoon):
 - On GitHub and riffboi.com: the cloud session's work, my bar line fix and the Rhythm switch fix.
-- Only on my Mac, on the `ideas` branch (I asked Claude not to push until I'm back): the time signature, Auto detect tempo, New Tab, Rename and Delete, Play, Upload a recording and Try a sample, moving a note to another string, Copy, the key and scale finder, Share, Practice (speed, loop, click), and clearer switch labels. 163 checks pass and the scoreboard is unchanged (110/115, 83/83).
+- Only on my Mac, on the `ideas` branch (I asked Claude not to push until I'm back): the time signature, Auto detect tempo, New Tab, Rename and Delete, Play, Upload a recording, moving a note to another string, Copy, the key and scale finder, Share, Practice (speed, loop, click), and clearer switch labels. 163 checks pass and the scoreboard is unchanged (110/115, 83/83).
 - My part first: test those at http://localhost:8000 (Cmd+Shift+R first). When they work, Claude fast-forwards `main` to `ideas` and pushes, and riffboi.com updates.
 - Claude built ideas 4, 5, 6, 10 and 14 while I was away, using its recommended choices. They're listed in `checklist.md` so I can change any of them.
 - Skipped for now, to do with me: ideas 7 to 9 (Drop D, dimming unsure notes, hammer-ons/pull-offs/slides) change how notes are heard, so they need my decisions and my guitar. 11 to 13 and 16 need decisions too.
-- Next with Claude: accuracy, and ways to tell which string I played (my request).
+- Ideas list: on hold for now (it's ranked at the bottom of this list).
+- Next with Claude, in this order (my request): 1. editing a saved riff's tab (drag a note to another string, tap a note to change its fret or delete it), 2. real-time accuracy and features, including ways to tell which string I played, 3. ease of use.
 - Still mine: test on my iPhone and with my guitar, the Devpost description and AI part (my words), screenshots, the demo video, and submitting.
 
 ## Before the deadline
@@ -79,7 +80,7 @@ Ranked by how much each one helps Riff Boi before the deadline, for how much wor
 ### Before the deadline, in this order
 1. [x] Rename or delete riffs. Size: small. Done: Rename and Delete under every riff card (my pick).
 2. [x] Play a riff back so I can hear it. Size: small to medium. Done: a Play button on saved riffs and in New Tab, with a plucked-string sound (my pick). Each note turns red as it plays.
-3. [x] Upload a recording (like an mp3) and get its tab, not in real time (my idea). Size: medium. Done: Upload a recording and Try a sample (my pentatonic scale) under New Riff. The sample gives the same tab as the scoreboard.
+3. [x] Upload a recording (like an mp3) and get its tab, not in real time (my idea). Size: medium. Done: Upload a recording under New Riff. (Try a sample was taken out: my call.)
 4. [x] Tap a note to move it to another string. Size: small to medium. Done: tap a note on a saved riff, then pick another string (built while I was away, so check it).
 5. [x] Copy a riff as text tab, part of the export idea. Size: small. Done: a Copy button on saved riffs, with bar lines (built while I was away, so check it).
 6. [x] A key and scale finder that shows what key or scale a riff is in, like E minor pentatonic. Size: small to medium. Done: "Sounds like ..." under a saved riff (built while I was away, so check it).
