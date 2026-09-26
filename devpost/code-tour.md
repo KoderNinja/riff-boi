@@ -98,7 +98,7 @@ Upload a recording (or Try a sample) reads a sound file with the same steps as l
 
 ## `js/playback.js`: hearing a tab
 
-Play plays a tab back. `playbackPlan` works out when each note starts and how long it lasts, following the tab (its beats and note values at the riff's tempo). The sound is the Karplus-Strong trick (`pluckSamples`): a burst of noise, then each new sample is the average of the two from one loop back, so it smooths into a tone that fades like a real string. The loop's length sets the pitch, and `loopFor` speeds it up or slows it down a tiny bit so every note is exactly in tune. Bends glide the speed up and down (`pitchPoints`). Timers turn each note red as it's heard.
+Play plays a tab back. `playbackPlan` works out when each note starts and how long it lasts, following the tab (its beats and note values at the riff's tempo). The sound is the Karplus-Strong trick (`pluckSamples`): a burst of noise, then each new sample is the average of the two from one loop back, so it smooths into a tone that fades like a real string. The loop's length sets the pitch, and `loopFor` speeds it up or slows it down a tiny bit so every note is exactly in tune. Bends glide the speed up and down (`pitchPoints`). Timers turn each note red as it's heard. For practice, `speed` stretches the times (the pitch stays), `clickTimes` puts a click on every beat, and Loop starts it again when it finishes.
 
 ## `js/scale.js`: which key it's in
 
@@ -114,7 +114,7 @@ Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs`
 
 ## `tools/`: the tests
 
-- `check.mjs`: 160 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
+- `check.mjs`: 163 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
 - `score.mjs`: the scoreboard. It replays my 8 real recordings and compares them to what I really played (the `.txt` answer files): 110 of 115 notes, and 83 of 83 on the right string.
 - `replay.mjs`: replays one `?debug` recording through the current code, to compare before and after a change.
 

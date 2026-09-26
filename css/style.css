@@ -893,3 +893,17 @@ body {
   margin-top: -8px;
   text-align: center;
 }
+
+/* Practice, under Play: speed, loop and click. */
+.practice-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 10px 20px;
+  margin-top: 12px;
+}
+
+.practice-row .rhythm-switch[hidden] {
+  display: none;
+}

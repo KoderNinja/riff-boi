@@ -132,6 +132,12 @@
       <span id="riff-auto-tag" class="muted">auto</span>
       </label>
     </div>
+    <!-- Practice: slow it down, play it over and over, and hear a click on the beat -->
+    <div class="practice-row">
+      <label class="meter-picker"><span class="setting-label">Speed</span> <select id="speed-select" class="input-select"><option value="1">100%</option><option value="0.75">75%</option><option value="0.5">50%</option></select></label>
+      <label class="rhythm-switch"><input id="loop-input" type="checkbox"> <span class="setting-label">Loop</span></label>
+      <label id="click-switch" class="rhythm-switch"><input id="click-input" type="checkbox"> <span class="setting-label">Click</span></label>
+    </div>
     <!-- Same confidence bar, for the saved riff (hidden for riffs saved before it existed) -->
     <div id="riff-confidence" class="confidence" hidden>
       <div class="confidence-label"><span>Confidence</span><span class="confidence-pct">–</span></div>

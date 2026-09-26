@@ -319,6 +319,7 @@ function drawRiff(riff) {
     fret.dataset.index = i;
   });
   $('riff-tempo').hidden = !timing.timing;
+  $('click-switch').hidden = !timing.timing; // no beat to click along to without rhythm
   $('riff-bpm-input').value = timing.bpm;
   $('riff-auto-tag').hidden = !riff.autoTempo;
 }
@@ -730,20 +731,25 @@ function stopPlayback() {
 }
 
 // Play the notes of a tab on screen, turning each one red as it plays. The button says Stop
-// while it plays, and tapping it again stops. `afterEnd` runs when it's done.
+// while it plays, and tapping it again stops. If `options.loop()` says so, it goes round again
+// at the end. `afterEnd` runs when it's done.
 function play(button, container, notes, options, afterEnd = null) {
   if (stopPlaying) return stopPlayback();
   const frets = container.querySelectorAll('.t-fret');
   button.textContent = 'Stop';
-  stopPlaying = playNotes(notes, options, (i) => {
-    frets.forEach((fret, j) => fret.classList.toggle('t-now', j === i));
-    keepInView(container, frets[i]);
-  }, () => {
-    stopPlaying = null;
-    button.textContent = 'Play';
-    frets.forEach((fret) => fret.classList.remove('t-now'));
-    afterEnd?.();
-  });
+  const round = () => {
+    stopPlaying = playNotes(notes, options, (i) => {
+      frets.forEach((fret, j) => fret.classList.toggle('t-now', j === i));
+      keepInView(container, frets[i]);
+    }, (finished) => {
+      if (finished && options.loop?.()) return round(); // Loop: again from the top
+      stopPlaying = null;
+      button.textContent = 'Play';
+      frets.forEach((fret) => fret.classList.remove('t-now'));
+      afterEnd?.();
+    });
+  };
+  round();
 }
 
 // Scroll a tab sideways so this note is in view.
@@ -754,7 +760,21 @@ function keepInView(container, element) {
   if (spot.left < box.left + 20 || spot.right > box.right - 20) container.scrollLeft += spot.left - box.left - box.width / 3;
 }
 
-$('riff-play-btn').addEventListener('click', () => play($('riff-play-btn'), $('riff-tab'), shownRiff.notes, riffTiming(shownRiff, settings.bpm)));
+$('riff-play-btn').addEventListener('click', () => play($('riff-play-btn'), $('riff-tab'), shownRiff.notes, {
+  ...riffTiming(shownRiff, settings.bpm),
+  speed: Number($('speed-select').value),
+  click: $('click-input').checked,
+  loop: () => $('loop-input').checked, // checked each time round, so it can be turned off while playing
+}));
+
+// Changing the speed or the click while it plays starts it again with the new setting.
+for (const id of ['speed-select', 'click-input']) {
+  $(id).addEventListener('change', () => {
+    if (!stopPlaying) return;
+    stopPlayback();
+    $('riff-play-btn').click();
+  });
+}
 
 // --- New Tab: write a tab by hand ---
 

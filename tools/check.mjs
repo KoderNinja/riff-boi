@@ -11,7 +11,7 @@ import { tabSvg } from '../js/tabsvg.js';
 import { openInput, listInputs } from '../js/audio.js';
 import { saveRiff, loadRiffs, updateRiff, deleteRiff, riffTiming } from '../js/storage.js';
 import { writtenRiff, retime } from '../js/editor.js';
-import { playbackPlan, pitchPoints, pluckSamples, loopFor } from '../js/playback.js';
+import { playbackPlan, pitchPoints, pluckSamples, loopFor, clickTimes } from '../js/playback.js';
 import { readingsFrom } from '../js/upload.js';
 import { findScale } from '../js/scale.js';
 import { riffToLink, riffFromLink } from '../js/share.js';
@@ -543,6 +543,18 @@ check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().m
   check('playback: a note lasts its note value, and the leftover time is silence', describe(gap) === '0+1 1.25+0.5', describe(gap));
   const loose = playbackPlan([{ t: 2 }, { t: 2.3 }, { t: 3.1 }], { bpm: 120, endTime: 3.6, timing: false });
   check('playback: with rhythm off, the notes play when they were played', describe(loose) === '0+0.3 0.3+0.8 1.1+0.5', describe(loose));
+  const half = playbackPlan(notes, { bpm: 120, endTime, speed: 0.5 });
+  const looseHalf = playbackPlan([{ t: 2 }, { t: 2.3 }, { t: 3.1 }], { bpm: 120, endTime: 3.6, timing: false, speed: 0.5 });
+  check('practice: half speed plays every note twice as long, with or without rhythm',
+    describe(half) === '0+1 1+0.5 1.5+0.5 2+2' && describe(looseHalf) === '0+0.6 0.6+1.6 2.2+1', `${describe(half)} / ${describe(looseHalf)}`);
+  const clicks = (plan, options) => clickTimes(plan, options).map(([at, accent]) => `${round(at)}${accent ? '!' : ''}`).join(' ');
+  const waltz = playbackPlan(Array.from({ length: 4 }, (_, i) => ({ t: i * 0.5 })), { bpm: 120, endTime: 2 });
+  const longWaltz = playbackPlan(Array.from({ length: 7 }, (_, i) => ({ t: i * 0.5 })), { bpm: 120, endTime: 3.5 });
+  check('practice: the click is on every beat, louder on the first beat of each bar (3/4)',
+    clicks(waltz, { bpm: 120, meter: '3/4' }) === '0! 0.5 1 1.5!' && clicks(longWaltz, { bpm: 120, meter: '3/4' }) === '0! 0.5 1 1.5! 2 2.5 3!',
+    `${clicks(waltz, { bpm: 120, meter: '3/4' })} / ${clicks(longWaltz, { bpm: 120, meter: '3/4' })}`);
+  check('practice: at half speed the click slows down with the notes',
+    clicks(playbackPlan(Array.from({ length: 4 }, (_, i) => ({ t: i * 0.5 })), { bpm: 120, endTime: 2, speed: 0.5 }), { bpm: 120, meter: '4/4', speed: 0.5 }) === '0! 1 2 3');
   check('playback: a bend glides up, and a release glides back down',
     JSON.stringify(pitchPoints({ bend: 2, release: true }, 1)) === '[[0,0],[0.12,2],[0.6,2],[0.72,0]]', JSON.stringify(pitchPoints({ bend: 2, release: true }, 1)));
   check('playback: a pre-bend starts up; a plain note stays put',

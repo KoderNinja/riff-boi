@@ -1,6 +1,6 @@
 // playback.js — plays a riff back with a plucked-string sound, so you can hear what the tab says.
 
-import { rhythmOf } from './rhythm.js';
+import { rhythmOf, meterOf } from './rhythm.js';
 
 const LONGEST = 2.9;     // seconds: the longest a note rings (each note's sound is made 3 s long)
 const FADE = 0.04;       // seconds: a note fades out this fast when the next one starts
@@ -9,11 +9,12 @@ const DECAY = 0.996;     // how much of the sound is left each time round the lo
 
 // When each note plays and for how long, in seconds from the first note. With rhythm on, it
 // follows the tab: each note starts on its beat and lasts its note value at the riff's tempo
-// (leftover time is silence). With rhythm off, the notes play when they were played.
-export function playbackPlan(notes, { bpm = 120, endTime = null, timing = true } = {}) {
+// (leftover time is silence). With rhythm off, the notes play when they were played. `speed`
+// slows it down for practice (0.5 = half speed); the notes keep their pitch.
+export function playbackPlan(notes, { bpm = 120, endTime = null, timing = true, speed = 1 } = {}) {
   if (notes.length === 0) return [];
   if (timing) {
-    const secondsPerBeat = 60 / bpm;
+    const secondsPerBeat = 60 / bpm / speed;
     return rhythmOf(notes, bpm, endTime).map(({ beat, value }, i) => ({
       note: notes[i], start: beat * secondsPerBeat, length: Math.min(LONGEST, value.beats * secondsPerBeat),
     }));
@@ -21,8 +22,22 @@ export function playbackPlan(notes, { bpm = 120, endTime = null, timing = true }
   const first = notes[0].t;
   return notes.map((note, i) => {
     const end = i + 1 < notes.length ? notes[i + 1].t : endTime ?? note.t + RING_OFF;
-    return { note, start: note.t - first, length: Math.min(LONGEST, Math.max(0.1, end - note.t)) };
+    return { note, start: (note.t - first) / speed, length: Math.min(LONGEST, Math.max(0.1, end - note.t) / speed) };
   });
+}
+
+// A metronome click on every beat (quarter note) from the first note to the end, louder on the
+// first beat of each bar: [seconds, accent] pairs, at the same speed as the notes.
+export function clickTimes(plan, { bpm = 120, meter = '4/4', speed = 1 } = {}) {
+  if (plan.length === 0) return [];
+  const secondsPerBeat = 60 / bpm / speed;
+  const end = plan.at(-1).start + plan.at(-1).length;
+  const barBeats = meterOf(meter).barBeats;
+  const clicks = [];
+  for (let beat = 0; beat * secondsPerBeat < end - 1e-9; beat++) {
+    clicks.push([beat * secondsPerBeat, Math.abs(beat / barBeats - Math.round(beat / barBeats)) < 1e-9]);
+  }
+  return clicks;
 }
 
 // How a note's pitch moves: [seconds into the note, semitones above its fret] points. A bend
@@ -83,9 +98,10 @@ function pluck(midi) {
   return strings.get(midi);
 }
 
-// Play notes (see playbackPlan for the options). Call it from a tap: phones only let a page
-// make sound after one. `onNote(i)` is called as note i starts, and `onEnd()` once at the end,
-// or when stopped. Returns a function that stops it.
+// Play notes (see playbackPlan for the options, plus `click: true` for a metronome click, which
+// needs `meter`). Call it from a tap: phones only let a page make sound after one. `onNote(i)` is
+// called as note i starts, and `onEnd(finished)` once: finished is true if it played to the end,
+// false if it was stopped. Returns a function that stops it.
 export function playNotes(notes, options, onNote, onEnd) {
   context ??= new AudioContext();
   context.resume();
@@ -110,24 +126,37 @@ export function playNotes(notes, options, onNote, onEnd) {
     source.start(t0 + start);
     source.stop(t0 + start + length + FADE);
   }
+  if (options.click && options.timing !== false) {
+    for (const [at, accent] of clickTimes(plan, options)) {
+      // A short, high blip that dies away fast; the first beat of a bar is higher and louder.
+      const blip = context.createOscillator();
+      const level = context.createGain();
+      blip.frequency.value = accent ? 2000 : 1500;
+      level.gain.setValueAtTime(accent ? 0.5 : 0.3, t0 + at);
+      level.gain.exponentialRampToValueAtTime(0.001, t0 + at + 0.03);
+      blip.connect(level).connect(volume);
+      blip.start(t0 + at);
+      blip.stop(t0 + at + 0.03);
+    }
+  }
 
   // Follow along on screen, and finish after the last note. These are timers, not animation
   // frames, because a page in the background gets no frames and would never finish. They're
   // set to when each note is heard: after the start delay and the speakers' own delay.
   const timers = [];
   let stopped = false;
-  const stop = () => {
+  const stop = (finished = false) => {
     if (stopped) return;
     stopped = true;
     timers.forEach(clearTimeout);
     volume.gain.cancelScheduledValues(context.currentTime);
     volume.gain.setTargetAtTime(0, context.currentTime, 0.01); // quick fade, no click
     setTimeout(() => volume.disconnect(), 100);
-    onEnd();
+    onEnd(finished);
   };
   const heard = (t0 - context.currentTime + (context.outputLatency || 0)) * 1000; // ms until the first note is heard
   plan.forEach(({ start }, i) => timers.push(setTimeout(() => onNote(i), heard + start * 1000)));
   const end = plan.length ? plan.at(-1).start + plan.at(-1).length + FADE : 0;
-  timers.push(setTimeout(stop, heard + end * 1000));
-  return stop;
+  timers.push(setTimeout(() => stop(true), heard + end * 1000));
+  return () => stop(false);
 }

@@ -89,8 +89,8 @@ Ranked by how much each one helps Riff Boi before the deadline, for how much wor
 11. A metronome: play a click while I record. Size: small to medium. Showing a riff's tempo is done (that's Auto). The click could leak into the mic, so it needs care.
 12. An offline version with limited features (my idea): the core live tab works with no internet, and the extras stay online-only. Size: small to medium.
 13. Calibrate to my rig: play each open string once, and Riff Boi tunes its settings to my guitar, amp and mic. Size: medium. It goes with the accuracy work.
-14. Practice loop: play a saved riff back at my tempo with a click, and slow it down to learn it. Size: medium.
-15. Practice mode: the tab scrolls along at my speed so I can learn a riff back. Size: medium.
+14. [x] Practice loop: play a saved riff back at my tempo with a click, and slow it down to learn it. Size: medium. Done: Speed, Loop and Click under Play (built while I was away, so check it).
+15. [x] Practice mode: the tab scrolls along at my speed so I can learn a riff back. Size: medium. Mostly done: Play scrolls the tab and turns each note red, at the practice speed.
 16. Takes: record several takes of the same riff and keep the best one. Size: medium.
 
 ### After the hackathon (big, or needs another kind of app)

@@ -196,3 +196,8 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - The whole riff fits in the link: it's turned into short text (JSON), then into base64, which is letters and digits that are safe in a link. It goes after a `#`, and browsers never send that part to the website, so no server or account is needed and nothing is stored anywhere.
 - Anyone can type any link, so the app treats a link like a stranger's input: it checks every value before using it (a string and fret must really make the note it says, there can't be a string 7, and so on) and turns down anything odd.
 - A test only proves something if it can fail. My first test link happened to have no `+` or `/` in it, so removing the code that makes links safe went unnoticed. A riff name that produces both fixed the test.
+
+## Sep 26, 2026: Practice: speed, loop and click
+- Slowing a riff down only changes when the notes play, not their pitch, because each note's sound is made on its own. Half speed just means every time is doubled.
+- Loop needed playback to say whether a riff finished or was stopped: finished means go round again, stopped means stop.
+- To check the click in the browser, I measured the sound at 1500 and 2000 Hz with and without Click: about 9 dB louder with it. Measuring with and without is the fair test, because the plucked notes have some sound up there too.
