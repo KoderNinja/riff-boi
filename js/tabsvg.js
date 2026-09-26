@@ -49,10 +49,18 @@ export function tabSvg(notes, { bpm = 120, endTime = null, meter = '4/4', timing
     const prev = xs[i - 1];
     const room = (widths[i - 1] + widths[i]) / 2 + 10 + (notes[i - 1].bend && bendArrows ? BEND_ROOM : 0);
     let gap = Math.max(MIN_GAP, room, (beats[i].beat - beats[i - 1].beat) * BEAT_WIDTH);
-    const newBars = barOf(beats[i].beat, time) - barOf(beats[i - 1].beat, time);
-    if (newBars > 0) {
+    const barBefore = barOf(beats[i - 1].beat, time); // 0 = measure 1
+    const barNow = barOf(beats[i].beat, time);
+    if (barNow > barBefore) {
       gap += 2 * BAR_PAD;
-      bars.push({ x: prev + gap - BAR_PAD - widths[i] / 2 - 6, measure: barOf(beats[i].beat, time) + 1 });
+      // A bar line just before this note. If a long rest skipped whole bars, their lines
+      // go in between, spaced by beats, so no measure goes missing.
+      const lastX = prev + gap - BAR_PAD - widths[i] / 2 - 6;
+      const fromX = prev + widths[i - 1] / 2 + BAR_PAD;
+      for (let bar = barBefore + 1; bar <= barNow; bar++) {
+        const share = (bar * time.barBeats - beats[i - 1].beat) / (barNow * time.barBeats - beats[i - 1].beat);
+        bars.push({ x: fromX + (lastX - fromX) * share, measure: bar + 1 });
+      }
     }
     xs.push(prev + gap);
   });

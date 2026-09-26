@@ -57,7 +57,7 @@ node tools/check.mjs
 node tools/score.mjs
 ```
 
-`check.mjs` runs 99 checks on the note, bend, rhythm, tab, confidence and input picker logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
+`check.mjs` runs 103 checks on the note, bend, rhythm, tab, confidence and input picker logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
 
 ## What it can't do yet
 

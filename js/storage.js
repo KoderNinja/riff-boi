@@ -56,9 +56,9 @@ export function saveInputId(deviceId) {
 
 // Save a new riff at the top of the list and return it.
 // `confidence` is how sure Riff Boi was about it (see confidence.js), or null.
-// `timing` is { bpm, endTime, meter, autoTempo }: the tempo it was played at, when its last
-// note ended (seconds), its time signature, and whether Riff Boi worked the tempo out by
-// itself, so its note values can be drawn again later.
+// `timing` is { bpm, endTime, rhythm, meter, autoTempo }: the tempo it was played at, when its
+// last note ended (seconds), whether rhythm was on, its time signature, and whether Riff Boi
+// worked the tempo out by itself, so its tab can be drawn the same way later.
 // Throws if the browser won't let us save (the app shows a message).
 export function saveRiff(notes, confidence = null, timing = {}) {
   const now = new Date();
@@ -72,6 +72,7 @@ export function saveRiff(notes, confidence = null, timing = {}) {
     confidence: confidence && roundNumbers(confidence),
     bpm: timing.bpm,
     endTime: timing.endTime === undefined ? undefined : Math.round(timing.endTime * 100) / 100,
+    rhythm: timing.rhythm,
     meter: timing.meter,
     autoTempo: timing.autoTempo || undefined, // only saved when it's true
   };
@@ -88,6 +89,14 @@ export function updateRiff(id, changes) {
   Object.assign(riff, changes);
   localStorage.setItem(RIFFS_KEY, JSON.stringify(riffs));
   return riff;
+}
+
+// How to draw a saved riff's tab: at the tempo it was played (riffs from before tempo
+// existed use `bpm`, today's tempo), with rhythm on or off the way it was recorded, so the
+// Rhythm switch only changes new riffs, and in its time signature. Riffs from before those
+// were saved had rhythm on and were in 4/4.
+export function riffTiming(riff, bpm) {
+  return { bpm: riff.bpm ?? bpm, endTime: riff.endTime ?? null, timing: riff.rhythm ?? true, meter: riff.meter ?? '4/4' };
 }
 
 // 0.873456 → 0.87, so saved riffs stay small. Text (like the hint) stays as it is.

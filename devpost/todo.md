@@ -8,17 +8,19 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 
 ## Next up
 
-Where we left off (Sep 26, 2026, about 1:30am):
-- The code review is done. In the cloud session, Claude fixed my iPhone not hearing notes (the phone started the sound system paused) and 2 bugs the review found. Those commits aren't on GitHub yet, so riffboi.com doesn't have them until I push (the first "must do" below).
-- Claude's part, in priority order: a code tour, getting the precision test ready, the time signature, tempo detection, then updating the GitHub descriptions and README, then a quick codebase check (my requests).
-- My part: push the new commits, then test on my iPhone and with my guitar.
+Where we left off (Sep 26, 2026, morning):
+- The cloud session's commits are on GitHub now (I brought them to my Mac from the zip and pushed), so riffboi.com has the iPhone fix. My Mac's bar line fix went on top of them.
+- The Rhythm switch fix is done: it only changes the riff I'm recording now.
+- Claude's part, in priority order: finish the time signature and Auto tempo, start the manual tab editor, then update the GitHub descriptions and README, then a quick codebase check (my requests).
+- The time signature and Auto tempo are half built on the `time-signature` branch (not merged into `main`, so riffboi.com doesn't get a half-built screen). Next: merge `main` into it (it will conflict in `tabsvg.js` and `storage.js`, because of the bar line and Rhythm fixes; keep both sides), then wire them up in `app.js`, then styles, checks and a browser test.
+- My part: test on my iPhone and with my guitar.
 
 ## Before the deadline
 
 In order of priority. "Me" is stuff only I can do, "Claude" is building with Claude.
 
 ### 1. Must do, to submit
-- [ ] Me: get the new commits from the cloud session onto GitHub (bring them to my Mac from the zip and push, like last time), so riffboi.com updates. Or give the Claude GitHub App access to the org, so the cloud session can push by itself: https://github.com/apps/claude/installations/select_target, then the `riff-boi` org, then the `riff-boi` repo
+- [x] Me: get the new commits from the cloud session onto GitHub (bring them to my Mac from the zip and push, like last time), so riffboi.com updates. Or give the Claude GitHub App access to the org, so the cloud session can push by itself: https://github.com/apps/claude/installations/select_target, then the `riff-boi` org, then the `riff-boi` repo
 - [ ] Me: test Riff Boi on my iPhone at https://riffboi.com (reload the page first). If it still can't hear, open https://riffboi.com/?debug and send Claude a screenshot of the numbers on the Recording screen
 - [ ] Me: test each new feature with my guitar:
   - [ ] Input picker and the "Can't hear your guitar" message (slice 4)
@@ -39,15 +41,16 @@ In order of priority. "Me" is stuff only I can do, "Claude" is building with Cla
 - [ ] Me: record a few string bends with `?debug`, so Claude can tune the bends feature
 - [x] Claude: a code tour, a plain-words walk through each file, so I can explain my own code in the video (`devpost/code-tour.md`)
 - [ ] Me + Claude: precision test (slice 7). I play a known riff slow, fast and distorted, and we count the right, missed and extra notes. Real numbers for the demo. The steps and the table to fill in are in `devpost/precision-test.md`
+- [x] Claude: fix the Rhythm switch (my request). Turning rhythm on or off used to change how every saved riff is drawn. Now it only changes the riff I'm recording: each riff saves whether rhythm was on, and riffs from before that show with rhythm on
 - [ ] Claude: update all the GitHub descriptions (the About box: description, riffboi.com and topics) and the README (my request, after the to-do list)
 - [ ] Claude: a quick codebase check, last (my request)
 
 ### 3. If there's time
 - [ ] Claude: change the time signature (like 3/4, 6/8 or 7/8), not just 4/4
 - [ ] Claude: tempo detection (my idea). A choice to let Riff Boi work out the tempo from how I play, instead of setting the BPM myself
+- [ ] Claude: start a manual tab editor, to write my own tabs from scratch (my request: start it after the tasks above)
 
 ### Later, after the hackathon
-- [ ] A manual tab editor, to write my own tabs from scratch
 - [ ] Upload a tab (a file, or paste it in) and Riff Boi turns it into sheet music (my idea). Tab says the exact string and fret, so the notes are easy. The rhythm only comes along if the tab has it, like a Guitar Pro file
 - [ ] The other way too, upload sheet music and Riff Boi turns it into tab (my idea). It would pick the strings and frets with the same rule it already uses. A music file (like MusicXML) is the easy start; a photo or PDF of printed music needs the computer to read the page first, which is much harder
 - [ ] Only if I want cloud sessions on Riff Boi for good: give the Claude GitHub App access to the org (the link is in the first "must do")

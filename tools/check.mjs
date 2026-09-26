@@ -9,6 +9,7 @@ import { riffConfidence } from '../js/confidence.js';
 import { rhythmOf } from '../js/rhythm.js';
 import { tabSvg } from '../js/tabsvg.js';
 import { openInput, listInputs } from '../js/audio.js';
+import { saveRiff, loadRiffs, riffTiming } from '../js/storage.js';
 
 let allOk = true;
 function check(label, ok, detail = '') {
@@ -270,6 +271,11 @@ check('rhythm: two notes very close together never land on the same spot',
   check('tab picture: with rhythm off there are no bars, tempo or stems, just the notes',
     !plain.includes('♩') && !plain.includes('t-time') && !plain.includes('t-stem') && (plain.match(/class="t-bar"/g) || []).length === 2);
   check('tab picture: an empty riff is still a clean empty staff', !tabSvg([]).includes('NaN') && tabSvg([]).includes('t-line'));
+  // A long rest: 5 seconds at 120 BPM is 10 beats, so the second note is in measure 3.
+  const rest = tabSvg([{ string: 6, fret: 0, t: 0 }, { string: 6, fret: 3, t: 5 }], { bpm: 120, endTime: 6 });
+  const measures = [...rest.matchAll(/class="t-measure"[^>]*>(\d+)</g)].map((m) => m[1]).join(' ');
+  check('tab picture: a long rest still draws every bar line and measure number (1 2 3)',
+    measures === '1 2 3' && (rest.match(/class="t-bar"/g) || []).length === 4 && !rest.includes('NaN'), measures);
 }
 
 // --- Where the last note ends (that sets its note value) ---
@@ -384,6 +390,21 @@ check('tab is six lines of equal length', lines.length === 6 && new Set(lines.ma
   check('input picker: lists real inputs only (no "Default" copies, cameras or nameless inputs)',
     inputs.map((input) => input.name).join(' | ') === 'MacBook Air Microphone | Scarlett 2i2 USB', JSON.stringify(inputs));
 }
+
+// --- Saved riffs keep the rhythm they were recorded with ---
+// A pretend localStorage (Node doesn't have one), so riffs can be saved and loaded back.
+const shelf = new Map();
+Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: {
+  getItem: (key) => shelf.get(key) ?? null,
+  setItem: (key, value) => shelf.set(key, String(value)),
+} });
+saveRiff([], null, { bpm: 100, endTime: 2, rhythm: false });
+check('rhythm switch: a riff recorded with rhythm off stays off', riffTiming(loadRiffs()[0], 120).timing === false);
+saveRiff([], null, { bpm: 100, endTime: 2, rhythm: true });
+check('rhythm switch: a riff recorded with rhythm on stays on', riffTiming(loadRiffs()[0], 120).timing === true);
+const oldRiff = riffTiming({ notes: [] }, 90);
+check('rhythm switch: an old riff (saved before this) has rhythm on and today\'s tempo',
+  oldRiff.timing === true && oldRiff.bpm === 90 && oldRiff.endTime === null, JSON.stringify(oldRiff));
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');
 process.exit(allOk ? 0 : 1);

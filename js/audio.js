@@ -39,6 +39,7 @@ export async function startListening(onReading, deviceId = '') {
     // No internet, or the network blocks the CDN. Let the mic go and tell app.js,
     // which shows its own message for this.
     console.error(err);
+    if (mySession !== session) return; // Stop was tapped while it loaded: a newer start may be running, leave it alone
     stopListening();
     const error = new Error("Couldn't load Pitchy");
     error.name = 'PitchyLoadError';
