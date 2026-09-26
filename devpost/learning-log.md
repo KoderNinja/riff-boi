@@ -225,3 +225,7 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - Each note already had a quality score from its first readings (clear, steady, in tune). Notes under 0.4 are now drawn faded, so I know which to check, and dragging or changing one un-fades it.
 - I checked what the scores look like on my recordings before picking the line: 93 of 114 notes score 80 or more, and the 10 under 40 are exactly the hardest ones.
 - The checks on real recordings caught a bad first idea: also fading notes whose octave was fixed made a clean G3 look unsure. An octave fix is routine, so it doesn't count anymore.
+
+## Sep 26, 2026: Easier to read, easier to start
+- Text has to stand out enough from its background to be easy to read: the guideline is a contrast of 4.5 to 1 for normal text. White on my red buttons was 4.43, just under, and small red text on the dark background was 3.5. One red can't do both jobs (dark enough behind white text, light enough as text on black), so there are two now, and the button red changed so little you can't see it.
+- The empty home screen now says how to start, and on a computer, Space starts and stops recording. Space already presses whatever button is picked, so the shortcut stays out of the way when a button or box is in use.

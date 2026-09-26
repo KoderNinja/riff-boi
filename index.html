@@ -25,7 +25,7 @@
       <button id="new-tab-btn" class="secondary-btn new-tab-btn">New Tab</button>
       <button id="tuner-btn" class="secondary-btn tuner-btn">Tuner</button>
     </header>
-    <button id="new-riff-btn" class="record-btn"><span class="record-dot" aria-hidden="true"></span>New Riff</button>
+    <button id="new-riff-btn" class="record-btn" title="New Riff (Space)"><span class="record-dot" aria-hidden="true"></span>New Riff</button>
     <!-- Or get the tab of a recording (a sound file) -->
     <div class="file-row">
       <button id="upload-btn" class="secondary-btn">Upload a recording</button>
@@ -54,7 +54,7 @@
     <button id="save-readings-btn" class="small-btn" hidden>Save last recording's readings</button>
     <button id="save-sound-btn" class="small-btn" hidden>Save last recording's sound (WAV)</button>
     <h2 class="screen-title">Latest Riffs</h2>
-    <p id="no-riffs-msg" class="muted">No riffs yet</p>
+    <p id="no-riffs-msg" class="muted no-riffs">No riffs yet. Tap New Riff, allow the mic, and play single notes.</p>
     <ul id="riff-list" class="riff-list"></ul>
   </section>
 
@@ -79,7 +79,7 @@
     </div>
     <!-- Only shown when the address ends in ?debug: the mic's numbers, to find out why a phone can't hear -->
     <p id="debug-info" class="debug-info" hidden></p>
-    <button id="stop-btn" class="big-btn bottom-btn">Stop</button>
+    <button id="stop-btn" class="big-btn bottom-btn" title="Stop (Space)">Stop</button>
   </section>
 
   <!-- Tuner -->

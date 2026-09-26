@@ -16,16 +16,16 @@ Where we left off (Sep 26, 2026, evening):
 - Next with Claude: my answers to the questions below, then ease of use.
 - My part: test on my iPhone and with my guitar, then the Devpost description and AI part (my words), screenshots, the demo video and submitting.
 
-### Questions for me (Claude saved these while I was away)
-1. Dragging a note to another string keeps it the same note (the fret changes to match), and tapping lets me change the fret. Is that what I meant by "you can fully change the note too"?
-2. In run-3-D, there's a clear second D4 (fret 12, with a little vibrato) after the run ends, at 8.6 s. Did I play fret 12 twice? If so, the answer key should have 13 notes, and the scoreboard's 1 extra note goes away.
-3. The scoreboard is now 113/115 and 84/84 strings. OK to change the target in `CLAUDE.md` (it still says 110/115 and 83/83)?
-4. When I play, does the live tab feel laggy? (A note shows up about 64 ms after its pitch starts.)
-5. For telling strings apart by their sound: can I record a test with `?debug` and save the sound (WAV)? The same 5 or 6 notes on 3 different strings, with the strings written down.
-6. Text on the red buttons is 4.43:1 against the readability guideline's 4.5:1. A red that's a hair darker (#d5141f instead of #d7141f, no visible change) fixes it. And the small red "newest note" number is 3.5:1; a lighter red just for small red text would fix that. OK to change either?
-7. Real-time features that need my decisions: a count-in (clicks before recording starts, so the first note lands on a beat), stopping by itself after some silence, and hammer-ons, pull-offs and slides in the tab (I'd need to record some, with the tab written down).
-8. Ease of use ideas: a short "how to start" line on the empty home screen (like "Tap New Riff, allow the mic, and play single notes"), Space to start and stop recording on a computer, and screen-reader names for each note in a saved riff's tab.
-9. Ready to push everything once I've tested it?
+### My answers to Claude's questions (Sep 26)
+1. Dragging keeps the same note and tapping changes the fret: that's right.
+2. The second D4 at the end of run-3-D: not sure, so the answer key stays as it is.
+3. The scoreboard target in `CLAUDE.md` is now 113/115 and 84/84.
+4. The live tab feels a bit laggy: Claude looks for safe ways to show notes sooner.
+5. I'll record the string test with `?debug` and save the sound (Claude writes down what to play).
+6. Both color fixes: done.
+7. Real-time features: a count-in, and hammer-ons, pull-offs and slides (I'll record some with the tab written down).
+8. Ease of use: the how-to-start line and Space to record: done.
+9. Push after I've tested.
 
 ## Before the deadline
 

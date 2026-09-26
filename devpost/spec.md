@@ -74,7 +74,8 @@ From `prd.md > Look and Feel`: dark, "kinda metal looking," black and red.
 - **Colors** (defined once as CSS variables in `style.css`):
   - background: near-black `#0b0b0b`
   - panels/cards: `#161616`
-  - main red for buttons and highlights: `#d7141f`
+  - main red for buttons, borders and big red text: `#d2131e` *(was `#d7141f`; a hair darker so white text on it passes the 4.5:1 readability guideline, 4.6:1, with no visible change, learner's OK)*
+  - red for small text (the newest note, status lines, Delete on hover): `#f5363f`, lighter so it's 4.7:1 on the panels *(added with the learner's OK)*
   - darker red for pressed states: `#8e0d14`
   - main text: off-white `#ececec`
   - muted text: grey `#8a8a8a`
@@ -91,7 +92,7 @@ Holds the four screens as sections of one page and shows one at a time: Latest R
 PRD ref: `prd.md > Screens and Layout`, `prd.md > The Core Journey`.
 
 ### Latest Riffs Screen
-The list of saved riffs, newest first. Each riff is a card with the date/time label, note count, confidence (if it was saved with one) and a mini tab of its first 12 notes. Tapping a card opens the Riff View. Under each card are **Rename** and **Delete** *(added after the build, learner request: on every card, the learner's pick over the Riff View)*. Rename swaps them for a name box (up to 40 characters; Enter or Save keeps it, Escape or Cancel doesn't, and an empty name goes back to the date). A renamed card shows the date under the name. Delete asks "Delete ...? This can't be undone." first. Shows "No riffs yet" when empty. Holds the **input picker** and the **New Riff** button.
+The list of saved riffs, newest first. Each riff is a card with the date/time label, note count, confidence (if it was saved with one) and a mini tab of its first 12 notes. Tapping a card opens the Riff View. Under each card are **Rename** and **Delete** *(added after the build, learner request: on every card, the learner's pick over the Riff View)*. Rename swaps them for a name box (up to 40 characters; Enter or Save keeps it, Escape or Cancel doesn't, and an empty name goes back to the date). A renamed card shows the date under the name. Delete asks "Delete ...? This can't be undone." first. When empty, it says "No riffs yet. Tap New Riff, allow the mic, and play single notes." *(the how-to-start line, learner request)*. On a computer, **Space** starts recording on the home screen and stops it while recording, but not while you're typing in a box or have a button picked (Space already presses a picked button); New Riff and Stop say "(Space)" when you hover over them *(learner request)*. Holds the **input picker** and the **New Riff** button.
 PRD ref: `prd.md > Latest Riffs List`, `prd.md > States and Boundaries`.
 
 ### Input Picker (`audio.js` + home screen)

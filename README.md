@@ -37,7 +37,7 @@ python3 -m http.server 8000
 
 On Windows, try `py -m http.server 8000` if `python3` doesn't work. No git? Click Code, then Download ZIP on GitHub, unzip it and open a terminal in that folder.
 
-Then open http://localhost:8000 in Chrome, click New Riff, allow the mic and play some single notes. Click Stop to save the riff.
+Then open http://localhost:8000 in Chrome, click New Riff, allow the mic and play some single notes. Click Stop to save the riff. On a computer, Space starts and stops recording too.
 
 The server is needed because browsers block the mic and JavaScript modules on a page opened straight from a file. On localhost they're allowed.
 

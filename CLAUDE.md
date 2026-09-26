@@ -28,7 +28,7 @@ A new session doesn't remember the last one, so start here:
 
 1. Read `devpost/todo.md`. "Next up" at the top says where we left off. Also read `devpost/learner-profile.md` if it's there (it's private, so it's only on my Mac).
 2. Run `git status`. If it says my branch is ahead of `origin/main`, those commits aren't on GitHub yet, so help me push them first.
-3. Before calling a step done, run `node tools/check.mjs` (every check must pass) and `node tools/score.mjs` (keep it at 110/115 notes and 83/83 strings, with no false bends listed, unless we decide to change that).
+3. Before calling a step done, run `node tools/check.mjs` (every check must pass) and `node tools/score.mjs` (keep it at 113/115 notes and 84/84 strings, with no false bends listed, unless we decide to change that; it went up from 110/115 and 83/83 on Sep 26, 2026).
 4. Before the session ends, update "Next up" in the to-do list and add what I learned to `devpost/learning-log.md`.
 
 ## Judging (weights)

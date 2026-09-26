@@ -2,7 +2,8 @@
 :root {
   --bg: #0b0b0b;          /* near-black background */
   --panel: #161616;       /* panels and cards */
-  --red: #d7141f;         /* main red: buttons and highlights */
+  --red: #d2131e;         /* main red: buttons, borders and big red text (white text on it: 4.6:1) */
+  --red-text: #f5363f;    /* red for small text, lighter so it's easy to read on the dark (4.7:1) */
   --red-dark: #8e0d14;    /* pressed buttons */
   --text: #ececec;        /* main text */
   --muted: #8a8a8a;       /* less important text */
@@ -311,7 +312,7 @@ body {
 }
 
 .riff-delete:hover {
-  color: var(--red);
+  color: var(--red-text);
 }
 
 .rename-input {
@@ -524,7 +525,7 @@ body {
 }
 
 .t-now {
-  fill: var(--red); /* the newest note while recording */
+  fill: var(--red-text); /* the newest note while recording */
 }
 
 .t-unsure {
@@ -642,7 +643,7 @@ body {
 }
 
 .status-msg {
-  color: var(--red);
+  color: var(--red-text);
   min-height: 1.5em;
   margin: 0;
   text-align: center;
@@ -764,7 +765,7 @@ body {
 
 .tuner-status {
   font-size: 1.25rem;
-  color: var(--red);
+  color: var(--red-text);
 }
 
 /* Less movement for people who ask their device for it. */
@@ -880,7 +881,7 @@ body {
 }
 
 #riff-tab .t-fret:focus-visible {
-  fill: var(--red);
+  fill: var(--red-text);
   text-decoration: underline;
 }
 
@@ -928,4 +929,10 @@ body {
 
 .practice-row .rhythm-switch[hidden] {
   display: none;
+}
+
+/* The empty Latest Riffs list: how to start. */
+.no-riffs {
+  max-width: 28em;
+  text-align: center;
 }

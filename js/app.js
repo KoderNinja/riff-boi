@@ -817,6 +817,21 @@ $('riff-tab').addEventListener('keydown', (event) => {
   }
 });
 
+// --- Space starts and stops recording (on a computer) ---
+
+// Not while you're typing in a box or have a button picked: Space already presses a picked button.
+document.addEventListener('keydown', (event) => {
+  if (event.code !== 'Space' || event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
+  if (event.target.closest('input, select, textarea, button, a, [tabindex]')) return;
+  if (!screens.home.hidden) {
+    event.preventDefault(); // Space would scroll the page
+    $('new-riff-btn').click();
+  } else if (!screens.recording.hidden && !stopBtn.disabled) {
+    event.preventDefault();
+    stopBtn.click();
+  }
+});
+
 // --- Upload a recording, or try the sample ---
 
 $('upload-btn').addEventListener('click', () => $('upload-input').click());
