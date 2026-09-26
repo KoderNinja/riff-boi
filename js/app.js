@@ -1,7 +1,7 @@
 // app.js — starts Riff Boi, switches screens and wires up the buttons.
 
-import { startListening, stopListening, listInputs, onInputsChange } from './audio.js';
-import { createNoteTracker, cleanUpRiff, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN } from './notes.js';
+import { startListening, stopListening, listInputs, onInputsChange, soundInfo } from './audio.js';
+import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS } from './notes.js';
 import { placeNotes } from './tab.js';
 import { tabSvg } from './tabsvg.js';
 import { loadRiffs, saveRiff, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
@@ -29,7 +29,8 @@ let riffNotes = [];
 let startTime = 0;
 let trackNote = null;
 let volumes = []; // every reading's volume, to measure background noise for the confidence bar
-let lastSound = 0; // when the guitar was last loud enough to hear (seconds): where the last note ends
+let lastSound = 0; // when the last note could last be heard (seconds): where it ends
+let ringing = 0;   // readings in a row that still sound like the last note
 let heardNote = false; // has a note shown up in the tab yet? (until then, "Can't hear your guitar" can show)
 
 // The confidence bar moves slowly, so it's updated 4 times a second (every 15 readings).
@@ -37,9 +38,24 @@ const CONFIDENCE_EVERY = 15;
 
 // Debug recorder: open Riff Boi as http://localhost:8000/?debug to record every raw
 // reading, then save them as a file. Lets us replay real playing while tuning notes.js.
+// It also shows the mic's numbers on the Recording and Tuner screens.
 const DEBUG = new URLSearchParams(location.search).has('debug');
 const saveReadingsBtn = $('save-readings-btn');
 let readings = [];
+$('debug-info').hidden = !DEBUG;
+$('tuner-debug').hidden = !DEBUG;
+
+// ?debug: what the mic is really giving Riff Boi, on screen. For finding out why a phone
+// can't hear notes: a paused sound system, a muted mic, the phone's voice clean-up, or
+// just too quiet or unclear.
+function showMicNumbers(element, freq, clarity, volume) {
+  const sound = soundInfo();
+  const onOff = (setting) => (setting === undefined ? '?' : setting ? 'on' : 'off');
+  element.textContent =
+    `Sound ${sound.state} · ${sound.sampleRate} Hz · mic ${sound.mic}\n` +
+    `Echo cancel ${onOff(sound.echoCancellation)} · noise cut ${onOff(sound.noiseSuppression)} · auto volume ${onOff(sound.autoGainControl)}\n` +
+    `Volume ${volume.toFixed(3)} · clarity ${clarity.toFixed(2)} · pitch ${freq.toFixed(1)} Hz`;
+}
 
 // Show one screen and hide the others.
 function showScreen(name) {
@@ -217,7 +233,6 @@ function handleReading(freq, clarity, volume) {
   const t = (performance.now() - startTime) / 1000; // seconds since New Riff
   if (DEBUG) readings.push([round(freq, 2), round(clarity, 3), round(volume, 4), round(t, 3)]);
   volumes.push(volume);
-  if (volume >= VOLUME_MIN) lastSound = t;
   // volumes has one entry per reading, so this is 5 seconds after listening started.
   if (!heardNote && volumes.length === CANT_HEAR_READINGS) showMessage(statusMsg, statusHint, CANT_HEAR);
   const time = formatTime(t);
@@ -234,8 +249,13 @@ function handleReading(freq, clarity, volume) {
     result.t = round(result.t, 2);
     riffNotes.push(result); // the tracker keeps updating this note's peak loudness
   }
+  // The last note lasts while its own pitch can still be heard. Just checking the volume isn't
+  // enough: amp hiss can be louder than a note that's dying away, and then it would last until Stop.
+  ringing = stillRinging(riffNotes[riffNotes.length - 1], freq, clarity, volume) ? ringing + 1 : 0;
+  if (ringing >= RINGING_READINGS) lastSound = t;
   if (volumes.length % CONFIDENCE_EVERY === 0) {
     showConfidence(liveConfidence, riffConfidence(cleanUpRiff(riffNotes), volumes));
+    if (DEBUG) showMicNumbers($('debug-info'), freq, clarity, volume);
   }
   // Redraw only when something changed: a new note, an octave fix, or the last note
   // getting louder (that can change whether it counts as a quiet "ghost" note).
@@ -260,7 +280,9 @@ $('new-riff-btn').addEventListener('click', async () => {
   readings = [];
   volumes = [];
   lastSound = 0;
+  ringing = 0;
   heardNote = false;
+  $('debug-info').textContent = '';
   startTime = performance.now();
   trackNote = createNoteTracker();
   drawLiveTab([]); // an empty staff, ready for notes
@@ -283,7 +305,7 @@ $('new-riff-btn').addEventListener('click', async () => {
 
 stopBtn.addEventListener('click', async () => {
   stopBtn.disabled = true; // one tap is enough
-  // The last note lasts until the guitar went quiet (or until Stop, if it was still ringing).
+  // The last note lasts until it couldn't be heard any more (or until Stop, if it was still ringing).
   const endTime = Math.min((performance.now() - startTime) / 1000, lastSound);
   stopListening();
   saveReadingsBtn.hidden = !DEBUG;
@@ -323,8 +345,10 @@ stopBtn.addEventListener('click', async () => {
 
 let tunerFreqs = []; // the last few clear frequencies (the middle one steadies the needle)
 let unclear = 0;     // unclear readings in a row
+let tunerReadings = 0;
 
 function handleTunerReading(freq, clarity, volume) {
+  if (DEBUG && ++tunerReadings % CONFIDENCE_EVERY === 0) showMicNumbers($('tuner-debug'), freq, clarity, volume);
   if (clarity >= TUNER_CLARITY && volume >= VOLUME_MIN && freq > 30 && freq < 1400) {
     tunerFreqs = [...tunerFreqs.slice(-4), freq];
     unclear = 0;
@@ -360,6 +384,8 @@ function showTuning(tuning, freq) {
 $('tuner-btn').addEventListener('click', async () => {
   tunerFreqs = [];
   unclear = 0;
+  tunerReadings = 0;
+  $('tuner-debug').textContent = '';
   showTuning(null);
   showMessage($('tuner-msg'), $('tuner-hint'));
   showScreen('tuner');

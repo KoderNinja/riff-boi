@@ -19,8 +19,10 @@ let session = 0; // goes up every time listening stops, so a start that's still 
 export async function startListening(onReading, deviceId = '') {
   const mySession = ++session;
   // Create the audio context right away, while we're still inside the button tap
-  // (browsers only allow sound to start from something the user did).
+  // (browsers only allow sound to start from something the user did). iPhones often
+  // start it paused anyway, so ask it to start now, while it's still the tap.
   audioContext = new AudioContext();
+  wake(audioContext);
 
   const micStream = await openInput(deviceId);
   // Stop was tapped while we waited (e.g. during the permission prompt)? Let the mic go.
@@ -44,6 +46,12 @@ export async function startListening(onReading, deviceId = '') {
   }
   if (mySession !== session) return; // stopped while Pitchy was loading
   const detector = PitchDetector.forFloat32Array(BUFFER_SIZE);
+
+  // Ask again now that the mic is open (an open mic lets it start without a tap), and every
+  // time the phone pauses it (a call, Siri, another app). While it's paused, Pitchy only
+  // gets silence, so no notes show up.
+  audioContext.addEventListener('statechange', (event) => wake(event.target));
+  wake(audioContext);
 
   // Connect mic → analyser. The analyser lets us grab the latest slice of sound.
   const source = audioContext.createMediaStreamSource(stream);
@@ -69,6 +77,27 @@ export function stopListening() {
   loopId = null;
   stream = null;
   audioContext = null;
+}
+
+// Start an audio context that's paused ("suspended", or "interrupted" on iPhones).
+// A closed one stays closed.
+function wake(context) {
+  if (context.state !== 'running' && context.state !== 'closed') context.resume().catch(() => {});
+}
+
+// For ?debug: is the sound running, and what did the mic really give us? Phones can
+// quietly ignore the settings in GUITAR_SOUND, so this shows the ones they actually used.
+export function soundInfo() {
+  const track = stream?.getAudioTracks()[0];
+  const settings = track?.getSettings ? track.getSettings() : {};
+  return {
+    state: audioContext?.state ?? 'off',
+    sampleRate: audioContext?.sampleRate ?? 0,
+    mic: !track ? 'off' : track.muted ? 'muted' : track.readyState, // 'live' or 'ended'
+    echoCancellation: settings.echoCancellation,
+    noiseSuppression: settings.noiseSuppression,
+    autoGainControl: settings.autoGainControl,
+  };
 }
 
 // Open the input you picked. If it's gone (like an unplugged interface), open the default input.

@@ -576,6 +576,18 @@ body {
   display: none;
 }
 
+/* ?debug only: the mic's numbers, small and grey, one line each. */
+.debug-info {
+  margin: 0;
+  font-family: var(--tab-font);
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--muted);
+  text-align: center;
+  white-space: pre-line;
+}
+
 .muted {
   color: var(--muted);
   margin: 0;

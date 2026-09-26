@@ -36,6 +36,8 @@ The server is needed because browsers block the mic and JavaScript modules on a 
 
 No guitar around? A piano or keyboard app playing single notes should work too.
 
+If it can't hear your guitar, add `?debug` to the address (like https://riffboi.com/?debug). The Recording and Tuner screens then show what the mic is picking up: how loud and how clear the sound is, its pitch, and whether the browser's sound is running.
+
 ## How it works
 
 The browser's Web Audio API listens to the mic 60 times a second, and [Pitchy](https://github.com/ianprime0509/pitchy) works out the pitch of each slice of sound and how clear it is. `js/notes.js` turns those pitches into notes. It decides when a new note starts (a pick, a pitch change, a hammer-on) and ignores harmonics and background noise. It also follows the pitch closely to hear bends: a bend glides smoothly through the pitches in between, while a hammer-on or slide jumps from fret to fret. `js/tab.js` picks a string and fret for each note. The sound can't tell you which string you played, so it goes with the spot that needs the least hand movement. `js/rhythm.js` turns when each note started into note values (quarter, eighth and so on) using your tempo, and `js/tabsvg.js` draws the tab picture. `js/confidence.js` scores how clear, in tune, quiet and steady the notes were, and `js/storage.js` saves riffs in the browser's localStorage, so there's no server and no accounts.
@@ -55,7 +57,7 @@ node tools/check.mjs
 node tools/score.mjs
 ```
 
-`check.mjs` runs 91 checks on the note, bend, rhythm, tab, confidence and input picker logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
+`check.mjs` runs 99 checks on the note, bend, rhythm, tab, confidence and input picker logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
 
 ## What it can't do yet
 

@@ -2,7 +2,8 @@
 // Usage: node tools/check.mjs
 // Uses made-up readings (no guitar needed). Run it after changing notes.js or tab.js.
 
-import { readNote, createNoteTracker, cleanUpRiff, tuningOf } from '../js/notes.js';
+import { readFileSync } from 'node:fs';
+import { readNote, createNoteTracker, cleanUpRiff, tuningOf, stillRinging, RINGING_READINGS } from '../js/notes.js';
 import { placeNotes, positionsFor, drawTab, tabToken } from '../js/tab.js';
 import { riffConfidence } from '../js/confidence.js';
 import { rhythmOf } from '../js/rhythm.js';
@@ -153,6 +154,8 @@ const bendCases = [
   ['a slow bend (0.4 s)', [...pick(62), ...glide(62, 64, 24), ...hold(64, 20)], 'B3b5'],
   ['a bend that ends a little flat (20 cents) still counts', [...pick(62), ...glide(62, 63.8, 10), ...hold(63.8, 20)], 'B3b5'],
   ['a pre-bend: picked already bent, then released', [...pick(64), ...glide(64, 62, 10), ...hold(62, 15)], 'B3pb5r3'],
+  // With distortion, Pitchy often hears the octave above for a moment and the note gets fixed.
+  ['a bend on a note whose octave was fixed first', [[hz(74), 0.95, 0.02], [hz(74), 0.97, 0.12], ...ring(74, 3), ...ring(62, 17), ...glide(62, 64, 10), ...hold(64, 20)], 'B3b5'],
   ['vibrato is not a bend', [...pick(62), ...Array.from({ length: 60 }, (_, i) => [hz(62 + 0.4 * Math.sin(i / 2)), 0.97, 0.2])], 'B3'],
 ];
 for (const [label, readings, expected] of bendCases) {
@@ -267,6 +270,58 @@ check('rhythm: two notes very close together never land on the same spot',
   check('tab picture: with rhythm off there are no bars, tempo or stems, just the notes',
     !plain.includes('♩') && !plain.includes('t-time') && !plain.includes('t-stem') && (plain.match(/class="t-bar"/g) || []).length === 2);
   check('tab picture: an empty riff is still a clean empty staff', !tabSvg([]).includes('NaN') && tabSvg([]).includes('t-line'));
+}
+
+// --- Where the last note ends (that sets its note value) ---
+// Like app.js: the last note lasts while its own pitch is still heard, RINGING_READINGS in a row.
+// Readings are [frequency, clarity, volume] at 60 a second, or [..., time] from a real recording.
+function riffEnd(readings) {
+  const track = createNoteTracker();
+  const notes = [];
+  let ringing = 0;
+  let end = 0;
+  readings.forEach(([f, c, v, time = null], i) => {
+    const t = time ?? i / 60;
+    const result = track(f, c, v, t);
+    if (result?.fix) Object.assign(notes[notes.length - 1], result.fix);
+    else if (result?.bend) Object.assign(notes[notes.length - 1], result.bend);
+    else if (result) notes.push(result);
+    ringing = stillRinging(notes[notes.length - 1], f, c, v) ? ringing + 1 : 0;
+    if (ringing >= RINGING_READINGS) end = t;
+  });
+  return end;
+}
+check('last note: still heard when it gets less clear as it dies away, an octave up, or at its bent pitch',
+  stillRinging({ midi: 45 }, hz(45), 0.6, 0.05) && stillRinging({ midi: 45 }, hz(57), 0.9, 0.05) && stillRinging({ midi: 62, bend: 2 }, hz(64), 0.9, 0.1));
+check('last note: amp hiss (no clear pitch), a different note, too quiet, or no note at all don\'t count',
+  [[{ midi: 45 }, hz(45), 0.3, 0.05], [{ midi: 45 }, hz(47), 0.95, 0.05], [{ midi: 45 }, hz(45), 0.95, 0.001], [undefined, hz(45), 0.95, 0.1]]
+    .every((args) => !stillRinging(...args)));
+{
+  // Hiss: louder than the volume limit, but no clear pitch (made-up, but the same every time).
+  const hiss = (n) => Array.from({ length: n }, (_, i) => [80 + ((i * 37) % 700), 0.2 + ((i * 13) % 25) / 100, 0.03]);
+  const rang = [...pick(45), ...ring(45, 60, 0.2)]; // the note rings until reading 81 (1.35 s)
+  const end = riffEnd([...rang, ...hiss(180)]);
+  check('last note: ends when the note stops, not when you tap Stop 3 s later over amp hiss', Math.abs(end - 81 / 60) < 0.02, `${end.toFixed(2)} s`);
+  const held = [...pick(45), ...hold(45, 120)];
+  check('last note: a note still ringing when you tap Stop lasts until Stop', riffEnd(held) === (held.length - 1) / 60, riffEnd(held).toFixed(2));
+  const bent = [...pick(62), ...glide(62, 64, 10), ...hold(64, 60)];
+  check('last note: a bend held until Stop lasts until Stop', riffEnd(bent) === (bent.length - 1) / 60, riffEnd(bent).toFixed(2));
+}
+// Real playing, then 3 s of that same room and amp (the quiet start of the recording, before
+// the first note), like waiting a moment before tapping Stop. The run on the A string has a
+// few louder bumps in its room noise, so one stray reading must not count.
+for (const [name, label] of [['crazy-train', 'Crazy Train'], ['run-2-A', 'the run on the A string']]) {
+  const { readings } = JSON.parse(readFileSync(new URL(`./recordings/${name}.json`, import.meta.url), 'utf8'));
+  const room = readings.filter((r) => r[3] < readings[0][3] + 0.6);
+  let t = readings[readings.length - 1][3];
+  const waited = [...readings, ...Array.from({ length: 180 }, (_, i) => {
+    t += 1 / 60;
+    return [...room[i % room.length].slice(0, 3), t];
+  })];
+  const plain = riffEnd(readings);
+  const withRoom = riffEnd(waited);
+  check(`last note: waiting 3 s over real room noise before Stop doesn't make it longer (${label})`,
+    Math.abs(withRoom - plain) < 0.05, `${plain.toFixed(2)} s without the wait, ${withRoom.toFixed(2)} s with it`);
 }
 
 let playable = true;

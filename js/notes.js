@@ -296,6 +296,9 @@ export function createNoteTracker() {
         current.name = note.name;
         current.fixed = true; // Riff Boi wasn't sure about this one
         lowerCount = 0;
+        // The bend tracking measured the note's pitch in the wrong octave: start it over.
+        base = null;
+        baseReadings = [];
         return { fix: { midi: note.midi, name: note.name } };
       }
       // Picked again, as loud as the note's attack? Wait until the pitch holds (it might be
@@ -339,6 +342,18 @@ export function createNoteTracker() {
     if (current && !picked && !candidateBreak && isLikelyHarmonic(candidateLow, current.midi)) return null;
     return start(candidateLow, t, volume);
   };
+}
+
+// Is this reading still the note that's ringing (in any octave, or at its bent pitch)?
+// Tells when a riff's last note ended: amp hiss and room noise can be as loud as a note
+// that's dying away, but they don't have its pitch.
+export const RINGING_CLARITY = 0.5; // a dying note gets less clear, so this is lower than CLARITY_MIN
+export const RINGING_READINGS = 2;  // ...heard this many readings in a row (one stray reading of hiss doesn't count)
+
+export function stillRinging(note, freq, clarity, volume) {
+  if (!note || !(freq > 0) || clarity < RINGING_CLARITY || volume < VOLUME_MIN) return false;
+  const name = frequencyToMidi(freq) % 12;
+  return name === note.midi % 12 || Boolean(note.bend) && name === (note.midi + note.bend) % 12;
 }
 
 // Clean-up rules that need to see the whole riff so far (the tab redraws with them live).

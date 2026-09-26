@@ -65,7 +65,7 @@ PRD ref: `prd.md > The Core Journey`.
   ```
   Then open **http://localhost:8000** in Chrome. Browsers allow the mic on `localhost` without https.
 - **Why not just double-click `index.html`?** JavaScript modules and the microphone don't work from a `file://` address, so the app needs a tiny local server.
-- **On your phone:** use the GitHub Pages link (https). Phones only allow the mic on secure sites.
+- **On your phone:** use https://riffboi.com *(on Vercel; the plan was GitHub Pages)*. Phones only allow the mic on secure (https) sites.
 - **For the demo recording:** screen-record Chrome on the Mac (for example with QuickTime) while playing through the audio interface with a clean tone, plus a short clip of it on the phone if the Pages link is up.
 - **Submission needs:** a public GitHub repo + README with these run steps + a 3–5 min demo video. The GitHub Pages link is a recommended extra.
 
@@ -103,6 +103,8 @@ Learner decision (added during spec, a change from the PRD's no-setup idea): see
 
 ### Audio Listener (`audio.js`)
 Opens the chosen input with `getUserMedia`, connects it to a Web Audio `AnalyserNode`, and about 60 times a second hands a slice of sound to Pitchy. It also measures volume (how loud the slice is) to help spot new notes. It stops everything cleanly when you tap Stop.
+*(Fixed after the code review)* iPhones often start the sound system (the `AudioContext`) paused, even inside a tap, and pause it again for a call or Siri. While it's paused, Pitchy only gets silence, so no notes show up (the learner's iPhone test). So the listener asks it to start inside the tap, again once the mic is open, and every time it gets paused.
+*(Added after the code review)* With `?debug` in the address, the Recording and Tuner screens show the mic's numbers: whether the sound system is running, its sample rate, whether the mic is live, the phone's voice clean-up settings as the phone really applied them, and the latest volume, clarity and pitch.
 PRD ref: `prd.md > Starting a Riff`, `prd.md > Live Note-to-Tab`.
 
 ### Note Detector (`notes.js`)
@@ -157,14 +159,14 @@ Bending pushes the string sideways, so the ringing note's pitch **glides** smoot
 - It glided (at least 3 readings in between two notes) and settled within 0.25 of 1, 2 or 3 semitones up: a **bend**, written `7b9` (fret 7 bent up to sound like fret 9). Gliding back down to the note: a **release**, `7b9r7`.
 - It glided *down* 1 to 3 semitones from the picked pitch: the string was bent before the pick and then released, a **pre-bend**, `7pb9r7`. The note becomes the fretted (lower) note. A pre-bend that's never released sounds exactly like a normal note, so it can't be heard.
 - It jumped, settled between two notes, or didn't settle within 40 readings: not a bend, so the normal new-note rules handle it (on the learner's Crazy Train recording, a smeared note change settled 0.7 semitones below the note and must not count).
-While a bend glides or is held, its pitches can't start new notes, and the note's quality for the confidence bar stops being measured (a bent note is out of tune on purpose). A new pick always starts a new note.
+While a bend glides or is held, its pitches can't start new notes, and the note's quality for the confidence bar stops being measured (a bent note is out of tune on purpose). A new pick always starts a new note. If the note's octave gets fixed right after it starts (distortion often makes Pitchy hear the octave above for a moment), the bend tracking starts over from the fixed pitch *(fixed after the code review: before, a bend on that note came out as 3 separate notes)*.
 Checked on the learner's 8 recordings (which have no bends): the same 110/115 notes and 0 false bends. Settling stricter (so bends slower than about 0.4 s for a whole step aren't split) lost 6 to 7 real notes on those recordings, so it wasn't used. Real bend recordings are needed to tune it further.
 PRD ref: `prd.md > What We're Building` (bends).
 
 ### Tab Picture and Rhythm (`tabsvg.js` + `rhythm.js`) *(added during the build, learner request)*
 The tab is drawn as a picture (SVG) like a Songsterr tab, the learner's pick from 3 rendered options: six string lines with the fret numbers on them, "TAB" and 4/4 at the start, bar lines every 4 beats with measure numbers, the tempo (♩ = 120), bends as curved arrows labelled ½, full or 1½, and the rhythm underneath: no stem for a whole note, a short stem for a half note, a full stem for shorter notes, beams joining eighths and sixteenths in the same beat (flags for a lone one) and a dot for dotted notes.
 - **Tempo:** the learner sets the BPM on the home screen (− / + or typing, 40 to 240, default 120). Each riff saves the BPM it was played at.
-- **Note values:** each note's start is snapped to the nearest sixteenth note at that tempo, and it lasts until the next note starts. The last note lasts until the guitar went quiet (or Stop). The longest value that fits is used; leftover time is just space.
+- **Note values:** each note's start is snapped to the nearest sixteenth note at that tempo, and it lasts until the next note starts. The last note lasts while its own pitch can still be heard (in any octave, or at its bent pitch, with clarity 0.5 or more, 2 readings in a row), or until Stop. The longest value that fits is used; leftover time is just space. *(Changed after the code review: it used to last until the volume dropped below the volume limit, but amp hiss can be louder than that, and then the last note lasted until Stop.)*
 - **Rhythm switch:** with rhythm off, the tab is just the notes, evenly spaced, with no bars, tempo or stems.
 - The newest note is red while recording. The old text tab (`drawTab`) stays for the checks and a future "copy as text".
 PRD ref: `prd.md > What We're Building` (note values).
@@ -232,11 +234,12 @@ beginners-paradise/          # the project folder = the GitHub repo
   - `PitchDetector.forFloat32Array(bufferSize)` creates the detector once.
   - `detector.findPitch(samples, sampleRate)` returns `[frequencyHz, clarity]`, called for each slice.
   - No key and no cost. It needs internet the first time the page loads.
-- **GitHub + GitHub Pages:** a free account. Turn on Pages in the repo settings, deploying from the main branch, and the site goes live at `https://<username>.github.io/<repo>/`. No keys.
+- **GitHub + Vercel** *(changed during the build, from GitHub Pages)*: the repo is public at https://github.com/riff-boi/riff-boi, and Vercel's free plan puts it live at https://riffboi.com every time `main` changes on GitHub. No keys.
 - **No API keys or secrets anywhere** in this project.
 
 ## Important Failure Modes
 - **Mic permission denied / input won't open** → the "Can't hear your guitar" message on the Recording screen.
+- **The phone starts or pauses the sound system** (iPhones) → Riff Boi asks it to start again; `?debug` shows its state and the mic's numbers on screen, to find out why a phone can't hear.
 - **Noisy or distorted signal gives wrong or extra notes** → only high-clarity readings count. The clarity and volume limits are easy-to-change numbers, and a clean tone through the interface is recommended for the demo.
 - **Saved input unplugged** → fall back to the default input.
 - **Pitchy fails to load from the CDN** → the app shows an error message; the fix is copying the library into `js/vendor/`.
@@ -248,7 +251,7 @@ beginners-paradise/          # the project folder = the GitHub repo
 - **Pitchy** instead of writing pitch detection from scratch: the math is a project on its own. We still write the note-start logic, which is the Riff Boi-specific part.
 - **Simple position rule** instead of editing positions or using a camera (learner decisions in `prd.md > Product Decisions` and `scope.md > Explicitly Cut`).
 - **Standard tuning only**: drop tunings would need a tuning setting (later).
-- **No rhythm in the tab**: note order only. Note times are saved so rhythm could be added later.
+- ~~No rhythm in the tab~~ *(rhythm was added during the build)*: note values come from a tempo you set. Riff Boi doesn't work out the tempo by itself, and the time signature is always 4/4.
 
 ## Decisions and Open Issues
 
