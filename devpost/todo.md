@@ -8,15 +8,12 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 
 ## Next up
 
-Where we left off (Sep 26, 2026, late evening):
-- On GitHub and riffboi.com: only up to the Rhythm switch fix. Everything else is on my Mac, on the `ideas` branch, not pushed. When I've tested it, Claude fast-forwards `main` and pushes.
-- Built on the branch: the time signature, Auto detect tempo (blank tempo box), Count-in, New Tab (type a fret and press Enter), Rename and Delete, Play and Practice, Upload a recording, Copy, Share, the key and scale line, editing a saved riff's tab (drag to another string, change the fret, mark hammer-ons, pull-offs and slides, delete), faded unsure notes, easier-to-read reds, a how-to-start line, Space to record, and in `?debug`, saving the raw sound as a WAV.
+Where we left off (Sep 26, 2026, night):
+- Everything is on GitHub and live at https://riffboi.com (pushed Sep 26): the time signature, Auto detect tempo, Count-in, New Tab, Rename and Delete, Play and Practice, Upload a recording, Copy, Share, the key and scale line, editing a saved riff's tab (drag, change the fret, hammer-ons, pull-offs and slides, delete), faded unsure notes, the note name shown right away, easier-to-read reds, a how-to-start line, Space to record, and saving the raw sound in `?debug`.
 - Accuracy: 113 of 115 notes, 84/84 strings, 0 wrong. 195 checks pass.
-- My part now: 1. test it all at http://localhost:8000 (Cmd+Shift+R first), 2. record the test takes in `devpost/test-recordings.md` (which string, and hammer-ons, pull-offs and slides), 3. tell Claude to push.
-- Next with Claude: detecting hammer-ons, pull-offs and slides, and trying string detection, with my recordings. Then more ease of use.
-- Still mine: test on my iPhone and with my guitar, the Devpost description and AI part (my words), screenshots, the demo video and submitting.
-
-- The lag (my answer: yes): the Recording screen now shows the note name as soon as it's heard, in gray until the tab is sure of it, then red.
+- Testing on my Mac: use Chrome at http://localhost:8000 and press Cmd+Shift+R after changes (the local server lets Chrome keep old copies of files, and a mix of old and new stops the page from working). The Claude app's browser pane blocks the mic, so record in Chrome.
+- My part next (the deadline is Wednesday Sep 30, 5pm EDT): test on my iPhone at riffboi.com and with my guitar, the precision test, screenshots, the Devpost description and AI part (my words), the README "AI use" part, a practice run, the demo video, then submit Wednesday morning. The list is below.
+- If there's time: the test takes in `devpost/test-recordings.md` (for detecting hammer-ons, pull-offs, slides and strings later).
 
 ### My answers to Claude's questions (Sep 26)
 1. Dragging keeps the same note and tapping changes the fret: that's right.
