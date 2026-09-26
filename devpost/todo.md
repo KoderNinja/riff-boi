@@ -37,8 +37,8 @@ In order of priority. "Me" is stuff only I can do, "Claude" is building with Cla
 - [ ] Me: put the live link in Devpost's "Try it out" field (Claude is getting the GitHub About box ready)
 - [ ] Me: fill in Devpost's "Built with" tags (like javascript, html, css, web audio api, pitchy)
 - [ ] Me: record a few string bends with `?debug`, so Claude can tune the bends feature
-- [ ] Claude: a code tour, a plain-words walk through each file, so I can explain my own code in the video
-- [ ] Me + Claude: precision test (slice 7). I play a known riff slow, fast and distorted, and we count the right, missed and extra notes. Real numbers for the demo
+- [x] Claude: a code tour, a plain-words walk through each file, so I can explain my own code in the video (`devpost/code-tour.md`)
+- [ ] Me + Claude: precision test (slice 7). I play a known riff slow, fast and distorted, and we count the right, missed and extra notes. Real numbers for the demo. The steps and the table to fill in are in `devpost/precision-test.md`
 - [ ] Claude: update all the GitHub descriptions (the About box: description, riffboi.com and topics) and the README (my request, after the to-do list)
 - [ ] Claude: a quick codebase check, last (my request)
 
