@@ -8,15 +8,24 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 
 ## Next up
 
-Where we left off (Sep 26, 2026, early afternoon):
-- On GitHub and riffboi.com: the cloud session's work, my bar line fix and the Rhythm switch fix.
-- Only on my Mac, on the `ideas` branch (I asked Claude not to push until I'm back): the time signature, Auto detect tempo, New Tab, Rename and Delete, Play, Upload a recording, moving a note to another string, Copy, the key and scale finder, Share, Practice (speed, loop, click), and clearer switch labels. 163 checks pass and the scoreboard is unchanged (110/115, 83/83).
-- My part first: test those at http://localhost:8000 (Cmd+Shift+R first). When they work, Claude fast-forwards `main` to `ideas` and pushes, and riffboi.com updates.
-- Claude built ideas 4, 5, 6, 10 and 14 while I was away, using its recommended choices. They're listed in `checklist.md` so I can change any of them.
-- Skipped for now, to do with me: ideas 7 to 9 (Drop D, dimming unsure notes, hammer-ons/pull-offs/slides) change how notes are heard, so they need my decisions and my guitar. 11 to 13 and 16 need decisions too.
-- Ideas list: on hold for now (it's ranked at the bottom of this list).
-- Next with Claude, in this order (my request): 1. editing a saved riff's tab (drag a note to another string, tap a note to change its fret or delete it), 2. real-time accuracy and features, including ways to tell which string I played, 3. ease of use.
-- Still mine: test on my iPhone and with my guitar, the Devpost description and AI part (my words), screenshots, the demo video, and submitting.
+Where we left off (Sep 26, 2026, evening):
+- On GitHub and riffboi.com: only up to the Rhythm switch fix. Everything below is on my Mac, on the `ideas` branch, not pushed (I asked Claude to wait). When I've tested it, Claude fast-forwards `main` and pushes.
+- Built since then: the time signature, Auto detect tempo (the tempo box goes blank while it's on), New Tab (type a fret and press Enter), Rename and Delete, Play and Practice, Upload a recording, Copy, Share, the key and scale line, editing a saved riff's tab (drag a note to another string, tap to change its fret or delete it), faded notes Riff Boi wasn't sure about, and in `?debug`, saving the raw sound as a WAV.
+- Real-time accuracy: 110 → 113 of 115 notes on the scoreboard (84/84 strings, 0 wrong), from two rules for fast, distorted notes. The speed was measured (about 64 ms from a note's pitch to the screen) and left alone. Which string: see `devpost/string-detection.md`.
+- 183 checks pass. Test on the Mac at http://localhost:8000 (Cmd+Shift+R first). Claude tests on its own server at http://localhost:8001, which never touches my riffs.
+- Next with Claude: my answers to the questions below, then ease of use.
+- My part: test on my iPhone and with my guitar, then the Devpost description and AI part (my words), screenshots, the demo video and submitting.
+
+### Questions for me (Claude saved these while I was away)
+1. Dragging a note to another string keeps it the same note (the fret changes to match), and tapping lets me change the fret. Is that what I meant by "you can fully change the note too"?
+2. In run-3-D, there's a clear second D4 (fret 12, with a little vibrato) after the run ends, at 8.6 s. Did I play fret 12 twice? If so, the answer key should have 13 notes, and the scoreboard's 1 extra note goes away.
+3. The scoreboard is now 113/115 and 84/84 strings. OK to change the target in `CLAUDE.md` (it still says 110/115 and 83/83)?
+4. When I play, does the live tab feel laggy? (A note shows up about 64 ms after its pitch starts.)
+5. For telling strings apart by their sound: can I record a test with `?debug` and save the sound (WAV)? The same 5 or 6 notes on 3 different strings, with the strings written down.
+6. Text on the red buttons is 4.43:1 against the readability guideline's 4.5:1. A red that's a hair darker (#d5141f instead of #d7141f, no visible change) fixes it. And the small red "newest note" number is 3.5:1; a lighter red just for small red text would fix that. OK to change either?
+7. Real-time features that need my decisions: a count-in (clicks before recording starts, so the first note lands on a beat), stopping by itself after some silence, and hammer-ons, pull-offs and slides in the tab (I'd need to record some, with the tab written down).
+8. Ease of use ideas: a short "how to start" line on the empty home screen (like "Tap New Riff, allow the mic, and play single notes"), Space to start and stop recording on a computer, and screen-reader names for each note in a saved riff's tab.
+9. Ready to push everything once I've tested it?
 
 ## Before the deadline
 
