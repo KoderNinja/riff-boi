@@ -578,6 +578,25 @@ body {
   text-anchor: middle;
 }
 
+/* Hammer-ons and pull-offs (an arc with h or p), and slides (a slanted line). */
+.t-slur {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.2;
+}
+
+.t-link {
+  fill: var(--muted);
+  font-family: var(--label-font);
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+.t-slide {
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+
 .t-stem {
   stroke: var(--muted);
   stroke-width: 1.5;

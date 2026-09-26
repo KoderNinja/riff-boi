@@ -235,3 +235,7 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - Testing it showed something hidden: Riff Boi writes down a note's time when it's SURE of it, 60 to 100 ms after I played it. That never mattered before, because the rhythm counted from my first note and every note was late by the same amount. With a count-in, the downbeat is fixed, so the delay pushed notes a sixteenth late.
 - I tried stamping each note when it was first heard instead. The timing got less even, because that first reading isn't always the real start. So the times stay as they were, and only the count-in takes a fixed 60 ms off. Measuring before and after is how I knew which idea was better.
 - The lag: the only part the app controls is waiting for 3 clear readings (33 ms), and cutting it to 2 let fake notes in (2 wrong, 3 extra). The rest is the attack of the note and the mic.
+
+## Sep 26, 2026: Hammer-ons, pull-offs and slides in the tab
+- The tab can show them now, like real tab: an arc with h or p, or a slanted line for a slide, and Copy writes `5h7` or `7/9`. For now I mark them by hand on a saved riff.
+- Riff Boi already knows when a note started without a pick, so I measured whether that could mark them: it would have marked 5 of 114 notes on recordings where I (I think) picked everything, so about 1 mark in 23 would be wrong, and it can't tell a hammer-on from a slide. Detecting them for real needs recordings where I write down what I played (`devpost/test-recordings.md`).

@@ -37,6 +37,17 @@ export function otherSpots(note, maxFret = MAX_FRET) {
   return positionsFor(note.midi, maxFret).filter((spot) => spot.string !== note.string);
 }
 
+// How a note was played from the note before it, as a tab mark: a hammer-on 'h' or pull-off 'p'
+// (note.link = 'legato'), or a slide '/' up or '\' down (note.link = 'slide'). Only between two
+// notes on the same string at different frets; otherwise null.
+export function linkMark(prev, note) {
+  if (!note.link || !prev || prev.string !== note.string || prev.fret === note.fret) return null;
+  const up = note.fret > prev.fret;
+  if (note.link === 'legato') return up ? 'h' : 'p';
+  if (note.link === 'slide') return up ? '/' : '\\';
+  return null;
+}
+
 // The note on its string at another fret, so it becomes a different note (a bend stays a bend).
 export function withFret(note, fret) {
   const midi = TUNING[note.string - 1] + fret;
@@ -152,6 +163,9 @@ export function tabText(notes, newBar = []) {
   const lines = STRING_LABELS.map((label) => label + '|-');
   notes.forEach((note, i) => {
     if (i > 0 && newBar.includes(i)) for (let s = 0; s < 6; s++) lines[s] += '|-';
+    // A hammer-on, pull-off or slide goes right before the note, like 5h7 or 7/9.
+    const mark = linkMark(notes[i - 1], note);
+    if (mark) lines[note.string - 1] = lines[note.string - 1].slice(0, -1) + mark;
     const token = tabToken(note);
     for (let s = 1; s <= 6; s++) {
       lines[s - 1] += (s === note.string ? token : '-'.repeat(token.length)) + '-';

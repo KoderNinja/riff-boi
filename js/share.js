@@ -7,6 +7,7 @@ import { TUNING } from './tab.js';
 
 const PREFIX = '#riff=';
 const MOST_NOTES = 2000; // a riff this long is already a whole song
+const LINKS = [null, 'legato', 'slide']; // how a note was played from the one before (0 = picked)
 
 // The link for a riff: this page, with the riff packed into the "#riff=..." part.
 export function riffToLink(riff, pageUrl) {
@@ -18,7 +19,7 @@ export function riffToLink(riff, pageUrl) {
     r: riff.rhythm === false ? 0 : 1,
     m: riff.meter,
     w: riff.written ? 1 : 0,
-    s: riff.notes.map((note) => [note.midi, note.string, note.fret, Math.round(note.t * 100) / 100, note.bend || 0, note.release ? 1 : 0, note.prebend ? 1 : 0]),
+    s: riff.notes.map((note) => [note.midi, note.string, note.fret, Math.round(note.t * 100) / 100, note.bend || 0, note.release ? 1 : 0, note.prebend ? 1 : 0, LINKS.indexOf(note.link ?? null)]),
   };
   return pageUrl.split('#')[0] + PREFIX + toBase64Url(JSON.stringify(data));
 }
@@ -39,11 +40,12 @@ export function riffFromLink(hash) {
   const notes = [];
   for (const item of data.s) {
     if (!Array.isArray(item)) return null;
-    const [midi, string, fret, t, bend, release, prebend] = item;
-    if (!whole(string, 1, 6) || !whole(fret, 0, 24) || !number(t, 0, 3600) || !whole(bend, 0, 3)) return null;
+    const [midi, string, fret, t, bend, release, prebend, link = 0] = item; // (links made before marks were added have no 8th number)
+    if (!whole(string, 1, 6) || !whole(fret, 0, 24) || !number(t, 0, 3600) || !whole(bend, 0, 3) || !whole(link, 0, LINKS.length - 1)) return null;
     if (midi !== TUNING[string - 1] + fret) return null; // the string and fret must give that note
     const note = { midi, name: midiToName(midi), string, fret, t };
     if (bend) Object.assign(note, { bend }, release === 1 && { release: true }, prebend === 1 && { prebend: true });
+    if (link) note.link = LINKS[link];
     notes.push(note);
   }
   const name = typeof data.n === 'string' && data.n.trim() ? data.n.trim().slice(0, 40) : 'Shared riff';

@@ -4,7 +4,7 @@
 
 import { readFileSync, readdirSync } from 'node:fs';
 import { readNote, createNoteTracker, cleanUpRiff, tuningOf, stillRinging, RINGING_READINGS, notesFromReadings } from '../js/notes.js';
-import { placeNotes, positionsFor, drawTab, tabToken, otherSpots, tabText, fretOn, withFret } from '../js/tab.js';
+import { placeNotes, positionsFor, drawTab, tabToken, otherSpots, tabText, fretOn, withFret, linkMark } from '../js/tab.js';
 import { riffConfidence, isUnsure } from '../js/confidence.js';
 import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS, barStarts, countInClicks, countInOrigin, HEARD_LATE } from '../js/rhythm.js';
 import { tabSvg } from '../js/tabsvg.js';
@@ -818,6 +818,27 @@ check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().m
   const saved = (extra) => riffTiming({ notes: late, bpm: 120, endTime: 2.5, meter: '4/4', ...extra }, 120).origin;
   check('count-in: a saved riff counts from its downbeat only if it had a count-in (and rhythm on)',
     near(saved({ countIn: true }), HEARD_LATE) && saved({}) === null && saved({ countIn: true, rhythm: false }) === null);
+}
+
+// --- Hammer-ons, pull-offs and slides in the tab ---
+{
+  const G = (fret, link) => ({ string: 3, fret, link });
+  check('marks: h up and p down for a hammer-on or pull-off, / and \\ for slides, and nothing across strings or on the same fret',
+    [linkMark(G(5), G(7, 'legato')), linkMark(G(7), G(5, 'legato')), linkMark(G(5), G(9, 'slide')), linkMark(G(9), G(7, 'slide')),
+      linkMark({ string: 4, fret: 5 }, G(7, 'legato')), linkMark(G(7), G(7, 'legato')), linkMark(undefined, G(7, 'legato')), linkMark(G(5), G(7))].join(' ') === 'h p / \\    ');
+  const notes = [G(5), G(7, 'legato'), G(5, 'legato'), G(9, 'slide'), G(7, 'slide'), { string: 4, fret: 7, link: 'legato' }];
+  const text = tabText(notes, [3]).split('\n');
+  check('marks: text tab writes them between the notes (5h7p5, and |/9\\7 after a bar line)', text[2] === 'G|-5h7p5-|/9\\7---|' && text[3] === 'D|-------|-----7-|', text.join(' / '));
+  const svg = tabSvg(notes.map((n, i) => ({ ...n, t: i * 0.5 })), { bpm: 120, endTime: 3 });
+  const letters = [...svg.matchAll(/class="t-link"[^>]*>([^<]+)</g)].map((m) => m[1]).join(' ');
+  check('marks: the tab picture draws h and p over an arc, and slides as slanted lines', letters === 'h p' && (svg.match(/class="t-slide"/g) || []).length === 2 && (svg.match(/class="t-slur"/g) || []).length === 2, letters);
+  shelf.set('riffboi.riffs', '[]');
+  saveRiff([{ midi: 60, string: 3, fret: 5, t: 0 }, { midi: 62, string: 3, fret: 7, t: 0.5, link: 'legato' }], null, { bpm: 120 });
+  check('marks: saved with the riff', loadRiffs()[0].notes[1].link === 'legato' && !('link' in loadRiffs()[0].notes[0]));
+  const shared = riffFromLink(new URL(riffToLink({ name: 'x', bpm: 120, endTime: 1, notes: [{ midi: 60, string: 3, fret: 5, t: 0 }, { midi: 64, string: 3, fret: 9, t: 0.5, link: 'slide' }] }, 'https://riffboi.com/')).hash);
+  const pack = (s) => '#riff=' + Buffer.from(JSON.stringify({ v: 1, n: 'x', b: 120, e: 1, r: 1, m: '4/4', s })).toString('base64url');
+  check('marks: share links carry them, older links without them still open, and a made-up mark is turned down',
+    shared?.notes[1].link === 'slide' && !('link' in shared.notes[0]) && riffFromLink(pack([[60, 3, 5, 0, 0, 0, 0]])) !== null && riffFromLink(pack([[60, 3, 5, 0, 0, 0, 0, 7]])) === null);
 }
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');

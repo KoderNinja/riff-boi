@@ -3,7 +3,7 @@
 import { startListening, stopListening, listInputs, onInputsChange, soundInfo, recordedSound } from './audio.js';
 import { wavFile } from './wav.js';
 import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS } from './notes.js';
-import { placeNotes, otherSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken } from './tab.js';
+import { placeNotes, otherSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken, linkMark } from './tab.js';
 import { tabSvg } from './tabsvg.js';
 import { METERS, detectTempo, barStarts, meterOf, countInClicks, countInOrigin } from './rhythm.js';
 import { loadRiffs, saveRiff, updateRiff, deleteRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
@@ -730,7 +730,27 @@ function openEdit(i) {
   });
   actions.push(done);
 
-  $('move-row').replaceChildren(title, fretRow, ...actions, sameLabel, ...same);
+  // How it was played from the note before (same string, another fret): picked, a hammer-on or
+  // pull-off, or a slide. The tab shows h, p, / or \ between the two notes.
+  const prev = shownRiff.notes[i - 1];
+  const linkRow = [];
+  if (prev && prev.string === note.string && prev.fret !== note.fret) {
+    const up = note.fret > prev.fret;
+    const label = document.createElement('span');
+    label.className = 'move-title';
+    label.textContent = `From the ${prev.name} before it:`;
+    const choices = [[undefined, 'Picked'], ['legato', up ? 'Hammer-on (h)' : 'Pull-off (p)'], ['slide', up ? 'Slide up (/)' : 'Slide down (\\)']];
+    linkRow.push(label, ...choices.map(([link, text]) => {
+      const button = document.createElement('button');
+      button.className = 'choice-btn';
+      button.textContent = text;
+      button.setAttribute('aria-pressed', String((note.link ?? undefined) === link));
+      button.addEventListener('click', () => changeNote(i, { link }));
+      return button;
+    }));
+  }
+
+  $('move-row').replaceChildren(title, fretRow, ...actions, ...linkRow, sameLabel, ...same);
   $('move-row').hidden = false;
   $('move-hint').hidden = true;
   $('riff-tab').querySelectorAll('.t-fret').forEach((fret, j) => fret.classList.toggle('t-now', j === i));

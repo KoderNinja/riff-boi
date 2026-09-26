@@ -73,6 +73,7 @@ The sound says which note, not which string. The same note can be played in up t
 - `tabToken` writes a note as tab text: `7`, `7b9`, `7b9r7` or `7pb9r7`.
 - For editing a saved riff: `fretOn` says which fret plays a note on a given string (for dragging), `otherSpots` lists the other strings a note can be played on, and `withFret` changes a note's fret, which makes it a new note.
 - `tabText` writes the tab as six lines of text with bar lines, for Copy (`barStarts` in `rhythm.js` says where the bars start).
+- `linkMark` says which mark goes between two notes on the same string: h or p for a hammer-on or pull-off, / or \ for a slide.
 
 ## `js/rhythm.js` and `js/tabsvg.js`: the page of tab
 
@@ -122,7 +123,7 @@ Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs`
 
 ## `tools/`: the tests
 
-- `check.mjs`: 190 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
+- `check.mjs`: 195 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
 - `score.mjs`: the scoreboard. It replays my 8 real recordings and compares them to what I really played (the `.txt` answer files): 110 of 115 notes, and 83 of 83 on the right string.
 - `replay.mjs`: replays one `?debug` recording through the current code, to compare before and after a change.
 

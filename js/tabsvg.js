@@ -4,7 +4,7 @@
 // The picture is SVG (shapes described as text), so it stays sharp at any size.
 
 import { rhythmOf, meterOf, barOf, groupOf } from './rhythm.js';
-import { tabToken } from './tab.js';
+import { tabToken, linkMark } from './tab.js';
 
 const LEFT = 6;               // where the staff starts
 const TOP = 54;               // room above the tab for the tempo, measure numbers and bends
@@ -94,6 +94,22 @@ export function tabSvg(notes, { bpm = 120, endTime = null, meter = '4/4', origin
     parts.push(`<rect class="t-gap" x="${xs[i] - widths[i] / 2}" y="${y - 8}" width="${widths[i]}" height="16"/>`);
     parts.push(`<text class="t-fret${now}${unsure}" x="${xs[i]}" y="${y}">${labels[i]}</text>`);
     if (note.bend && bendArrows) parts.push(bendArrow(note, xs[i], widths[i], y));
+  });
+
+  // Hammer-ons and pull-offs: an arc over the two notes with h or p on top. Slides: a slanted
+  // line between them, going up for a slide up.
+  notes.forEach((note, i) => {
+    const mark = linkMark(notes[i - 1], note);
+    if (!mark) return;
+    const y = stringY(note.string);
+    if (mark === 'h' || mark === 'p') {
+      const mid = (xs[i - 1] + xs[i]) / 2;
+      parts.push(`<path class="t-slur" d="M ${xs[i - 1]} ${y - 11} Q ${mid} ${y - 21} ${xs[i]} ${y - 11}"/>`);
+      parts.push(`<text class="t-link" x="${mid}" y="${y - 19}">${mark}</text>`);
+    } else {
+      const rise = mark === '/' ? 4 : -4;
+      parts.push(`<line class="t-slide" x1="${xs[i - 1] + widths[i - 1] / 2 + 2}" y1="${y + rise}" x2="${xs[i] - widths[i] / 2 - 2}" y2="${y - rise}"/>`);
+    }
   });
 
   if (rhythm) parts.push(rhythmMarks(beats, xs, time));
