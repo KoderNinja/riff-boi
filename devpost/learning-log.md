@@ -178,3 +178,7 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - To be sure an upload gives the same notes as playing live, the steps from readings to notes are now in one shared function, and a check runs every recording through both ways. They match, down to the strings.
 - The proof: my pentatonic mp3 in the browser gave exactly the tab the saved readings of the same recording give (11 of 12 notes, 85% confidence). Judges without a guitar can tap Try a sample and see it work.
 - Mutation testing showed two lines that can't change anything, because the note tracker already fixes the note itself. Code that looks important but does nothing is worth knowing about. I kept them so it matches the live code.
+
+## Sep 26, 2026: Moving a note to another string
+- The sound says which note, not which string, so Riff Boi guesses the string. Now I can tap a note on a saved riff and pick another string for it, and the riff saves my choice.
+- The tab is one picture for screen readers, so the notes inside it aren't real buttons. The strings to pick from are real buttons under the tab, and a note can also be reached with Tab and Enter. After moving, the keyboard focus goes back to the note so you don't lose your place.

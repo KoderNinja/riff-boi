@@ -4,6 +4,7 @@
 // the same order as the lines on a tab (high e on top).
 export const TUNING = [64, 59, 55, 50, 45, 40];
 const STRING_LABELS = ['e', 'B', 'G', 'D', 'A', 'E'];
+export const STRING_NAMES = ['high e', 'B', 'G', 'D', 'A', 'low E']; // string 1 to 6, for buttons
 export const MAX_FRET = 22;
 
 // Tunable numbers for the position rule.
@@ -34,6 +35,11 @@ export function positionsFor(midi) {
 // cost effort. The cheapest spot wins; on a tie, the thicker string.
 // One exception: if you just moved one fret along a string, taking one more step the
 // same way on that string is cheap — you're probably walking up (or down) that string.
+// Where else this note can be played: every other string with a fret that gives the same pitch.
+export function otherSpots(note) {
+  return positionsFor(note.midi).filter((spot) => spot.string !== note.string);
+}
+
 export function createPositionPicker(first = null, finger = 0) {
   let boxLow = null;        // lowest fret of the hand's box (null = no note yet)
   let total = 0;            // effort of every move so far

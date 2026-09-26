@@ -4,7 +4,7 @@
 
 import { readFileSync, readdirSync } from 'node:fs';
 import { readNote, createNoteTracker, cleanUpRiff, tuningOf, stillRinging, RINGING_READINGS, notesFromReadings } from '../js/notes.js';
-import { placeNotes, positionsFor, drawTab, tabToken } from '../js/tab.js';
+import { placeNotes, positionsFor, drawTab, tabToken, otherSpots } from '../js/tab.js';
 import { riffConfidence } from '../js/confidence.js';
 import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS } from '../js/rhythm.js';
 import { tabSvg } from '../js/tabsvg.js';
@@ -611,6 +611,14 @@ check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().m
   check('upload: 60 readings a second of 2048 samples each, timed where each slice ends',
     readings.length === 58 && slices.every((n) => n === 2048) && readings[0][3] === 2048 / 48000 && readings[1][3] === (2048 + 800) / 48000 && readings[0][2] === 0.5 && readings[0][0] === 110,
     `${readings.length} readings, first at ${readings[0]?.[3]}`);
+}
+
+// --- Move a note to another string ---
+{
+  const spots = (note) => otherSpots(note).map((spot) => `${spot.string}/${spot.fret}`).join(' ');
+  check('move a note: C3 on the A string can also go on the low E (fret 8)', spots({ midi: 48, string: 5, fret: 3 }) === '6/8', spots({ midi: 48, string: 5, fret: 3 }));
+  check('move a note: G3 on the G string can go on the D, A or low E', spots({ midi: 55, string: 3, fret: 0 }) === '4/5 5/10 6/15', spots({ midi: 55, string: 3, fret: 0 }));
+  check('move a note: the open low E can only be played there', spots({ midi: 40, string: 6, fret: 0 }) === '');
 }
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');

@@ -17,6 +17,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 - Shows how sure it is about the tab, with a hint when something's off, like background noise or an out-of-tune guitar.
 - Lets you write a tab by hand too (New Tab): pick a string, a fret and a note value for each note.
 - Plays a riff back with a plucked-string sound, so you can hear what the tab says.
+- Lets you move a note to another string by tapping it, since the string is a best guess.
 - Gets the tab of a recording too: upload an mp3, wav or m4a, or tap Try a sample (my pentatonic scale) if there's no guitar around.
 - Has a tuner built in.
 - Lets you pick your mic or audio interface, remembers it, and tells you when it can't hear your guitar.
@@ -60,11 +61,11 @@ node tools/check.mjs
 node tools/score.mjs
 ```
 
-`check.mjs` runs 150 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, input picker, saving, tab editor, playback and upload logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
+`check.mjs` runs 153 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, input picker, saving, tab editor, playback and upload logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
 
 ## What it can't do yet
 
-It only hears single notes, so no chords or power chords yet. It assumes standard tuning. The string and fret are a best guess, because the sound doesn't say which string you played. A really soft first note can get missed. A pre-bend only shows up once you release it, since until then it sounds just like a normal note, and a very slow bend (slower than about 0.4 seconds for a whole step) can come out as separate notes. Auto tempo needs a steady beat and at least 4 notes, and it can come out at double or half speed (you can type the right tempo on the saved riff). On an iPhone, the silent switch can mute playback. Uploaded recordings can be up to 5 minutes long.
+It only hears single notes, so no chords or power chords yet. It assumes standard tuning. The string and fret are a best guess, because the sound doesn't say which string you played (tap a note on a saved riff to move it). A really soft first note can get missed. A pre-bend only shows up once you release it, since until then it sounds just like a normal note, and a very slow bend (slower than about 0.4 seconds for a whole step) can come out as separate notes. Auto tempo needs a steady beat and at least 4 notes, and it can come out at double or half speed (you can type the right tempo on the saved riff). On an iPhone, the silent switch can mute playback. Uploaded recordings can be up to 5 minutes long.
 
 ## How I made it
 

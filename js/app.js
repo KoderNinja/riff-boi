@@ -2,7 +2,7 @@
 
 import { startListening, stopListening, listInputs, onInputsChange, soundInfo } from './audio.js';
 import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS } from './notes.js';
-import { placeNotes } from './tab.js';
+import { placeNotes, otherSpots, STRING_NAMES } from './tab.js';
 import { tabSvg } from './tabsvg.js';
 import { METERS, detectTempo } from './rhythm.js';
 import { loadRiffs, saveRiff, updateRiff, deleteRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
@@ -299,8 +299,14 @@ function showRiff(riff) {
 // and "auto" shows if Riff Boi worked it out.
 function drawRiff(riff) {
   stopPlayback();
+  closeMove();
   const timing = riffTiming(riff, settings.bpm);
   $('riff-tab').innerHTML = tabSvg(riff.notes, timing);
+  // Each note can be tapped (or reached with Tab and Enter) to move it to another string.
+  $('riff-tab').querySelectorAll('.t-fret').forEach((fret, i) => {
+    fret.setAttribute('tabindex', '0');
+    fret.dataset.index = i;
+  });
   $('riff-tempo').hidden = !timing.timing;
   $('riff-bpm-input').value = timing.bpm;
   $('riff-auto-tag').hidden = !riff.autoTempo;
@@ -472,6 +478,76 @@ stopBtn.addEventListener('click', async () => {
   if (detected !== null) setBpm(bpm); // the next riff's live tab starts at this tempo
   await wait(auto ? 2500 : 1500); // a little longer, to read the tempo
   showHome();
+});
+
+// --- Move a note to another string ---
+
+// Riff Boi can't hear which string you played, so it guesses. Tapping a note shows the other
+// strings it can be played on; picking one moves it there and saves the riff.
+function openMove(i) {
+  stopPlayback(); // both use the red highlight
+  const note = shownRiff.notes[i];
+  const row = $('move-row');
+  const spots = otherSpots(note);
+  const title = document.createElement('span');
+  title.className = 'move-title';
+  title.textContent = spots.length
+    ? `Move ${note.name} to:`
+    : `${note.name} can only be played on the ${STRING_NAMES[note.string - 1]} string`;
+  const buttons = spots.map((spot) => {
+    const button = document.createElement('button');
+    button.className = 'choice-btn';
+    button.textContent = `${STRING_NAMES[spot.string - 1]} string, fret ${spot.fret}`;
+    button.addEventListener('click', () => moveNote(i, spot));
+    return button;
+  });
+  const cancel = document.createElement('button');
+  cancel.className = 'riff-action';
+  cancel.textContent = spots.length ? 'Cancel' : 'OK';
+  cancel.addEventListener('click', () => {
+    closeMove();
+    focusNote(i); // back where you were, for keyboards
+  });
+  row.replaceChildren(title, ...buttons, cancel);
+  row.hidden = false;
+  $('move-hint').hidden = true;
+  $('riff-tab').querySelectorAll('.t-fret').forEach((fret, j) => fret.classList.toggle('t-now', j === i));
+  (buttons[0] ?? cancel).focus();
+}
+
+function closeMove() {
+  $('move-row').hidden = true;
+  $('move-row').replaceChildren();
+  $('move-hint').hidden = false;
+  $('riff-tab').querySelectorAll('.t-now').forEach((fret) => fret.classList.remove('t-now'));
+}
+
+function moveNote(i, spot) {
+  const notes = shownRiff.notes.map((note, j) => (j === i ? { ...note, string: spot.string, fret: spot.fret } : note));
+  try {
+    shownRiff = updateRiff(shownRiff.id, { notes }) ?? { ...shownRiff, notes };
+  } catch (err) {
+    console.error(err); // the browser blocked saving: the tab still changes, but won't be remembered
+    shownRiff = { ...shownRiff, notes };
+  }
+  drawRiff(shownRiff);
+  focusNote(i);
+}
+
+function focusNote(i) {
+  $('riff-tab').querySelectorAll('.t-fret')[i]?.focus();
+}
+
+$('riff-tab').addEventListener('click', (event) => {
+  const fret = event.target.closest('.t-fret');
+  if (fret) openMove(Number(fret.dataset.index));
+});
+$('riff-tab').addEventListener('keydown', (event) => {
+  const fret = event.target.closest('.t-fret');
+  if (fret && (event.key === 'Enter' || event.key === ' ')) {
+    event.preventDefault(); // Space would scroll the page
+    openMove(Number(fret.dataset.index));
+  }
 });
 
 // --- Upload a recording, or try the sample ---

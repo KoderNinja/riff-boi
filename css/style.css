@@ -844,3 +844,42 @@ body {
   opacity: 0.4;
   cursor: default;
 }
+
+/* Moving a note to another string, on a saved riff. */
+#riff-tab .t-fret {
+  cursor: pointer;
+}
+
+#riff-tab .t-fret:focus {
+  outline: none;
+}
+
+#riff-tab .t-fret:focus-visible {
+  fill: var(--red);
+  text-decoration: underline;
+}
+
+.move-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.move-row[hidden],
+.move-hint[hidden] {
+  display: none;
+}
+
+.move-title {
+  width: 100%;
+  text-align: center;
+  color: var(--muted);
+}
+
+.move-hint {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+}
