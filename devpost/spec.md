@@ -167,7 +167,7 @@ PRD ref: `prd.md > What We're Building` (bends).
 The tab is drawn as a picture (SVG) like a Songsterr tab, the learner's pick from 3 rendered options: six string lines with the fret numbers on them, "TAB" and 4/4 at the start, bar lines every 4 beats with measure numbers, the tempo (♩ = 120), bends as curved arrows labelled ½, full or 1½, and the rhythm underneath: no stem for a whole note, a short stem for a half note, a full stem for shorter notes, beams joining eighths and sixteenths in the same beat (flags for a lone one) and a dot for dotted notes.
 - **Tempo:** the learner sets the BPM on the home screen (− / + or typing, 40 to 240, default 120). Each riff saves the BPM it was played at.
 - **Note values:** each note's start is snapped to the nearest sixteenth note at that tempo, and it lasts until the next note starts. The last note lasts while its own pitch can still be heard (in any octave, or at its bent pitch, with clarity 0.5 or more, 2 readings in a row), or until Stop. The longest value that fits is used; leftover time is just space. *(Changed after the code review: it used to last until the volume dropped below the volume limit, but amp hiss can be louder than that, and then the last note lasted until Stop.)*
-- **Rhythm switch:** with rhythm off, the tab is just the notes, evenly spaced, with no bars, tempo or stems.
+- **Rhythm switch:** with rhythm off, the tab is just the notes, evenly spaced, with no bars, tempo or stems. It only changes the riff being recorded: each riff saves whether rhythm was on and is always drawn that way. *(Changed after the build, learner request: it used to redraw every saved riff too.)*
 - The newest note is red while recording. The old text tab (`drawTab`) stays for the checks and a future "copy as text".
 PRD ref: `prd.md > What We're Building` (note values).
 
@@ -194,6 +194,7 @@ Everything lives in the browser's localStorage, as text in JSON format (a simple
 - `t` is seconds since you tapped New Riff. It's saved now and kept for later (e.g. rhythm).
 - Bent notes also have `bend` (semitones, 1 to 3), and `release: true` and/or `prebend: true` when those happened. `fret` is always the fretted note, so `{ "fret": 7, "bend": 2, "release": true }` is drawn as `7b9r7`.
 - `bpm` is the tempo the riff was played at, and `endTime` is when the last note ended (seconds since New Riff), so the note values can be drawn again. Riffs from before this don't have them: they use today's tempo, and the last note counts as a quarter note.
+- `rhythm` is whether the Rhythm switch was on when the riff was recorded. Riffs from before this don't have it and are drawn with rhythm on.
 - `confidence` is how sure Riff Boi was about the riff (the score and each part from 0 to 1, rounded to 2 decimals) plus the hint, or `null` if there was nothing to judge. Riffs saved before the confidence bar don't have it.
 
 **`riffboi.settings`**: `{ "bpm": 120, "rhythm": true }`, the tempo and the rhythm switch.

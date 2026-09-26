@@ -86,7 +86,7 @@ They're mixed 35% tone, 25% steadiness, 20% tuning, 20% noise. If Riff Boi had t
 
 ## `js/storage.js`: the notebook
 
-Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs` (the riffs), `riffboi.settings` (tempo and rhythm) and `riffboi.inputDeviceId` (your input). A riff keeps only what's needed to draw it again: each note's pitch, string, fret, time and bend, plus the confidence, the tempo and when the last note ended. Every save is wrapped in `try`, because some private windows block storage.
+Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs` (the riffs), `riffboi.settings` (tempo and rhythm) and `riffboi.inputDeviceId` (your input). A riff keeps only what's needed to draw it again: each note's pitch, string, fret, time and bend, plus the confidence, the tempo, when the last note ended and whether rhythm was on. `riffTiming` reads those back, so a saved riff is always drawn the way it was recorded. Every save is wrapped in `try`, because some private windows block storage.
 
 ## `tools/`: the tests
 

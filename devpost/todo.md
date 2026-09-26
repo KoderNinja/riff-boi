@@ -40,7 +40,7 @@ In order of priority. "Me" is stuff only I can do, "Claude" is building with Cla
 - [ ] Me: record a few string bends with `?debug`, so Claude can tune the bends feature
 - [x] Claude: a code tour, a plain-words walk through each file, so I can explain my own code in the video (`devpost/code-tour.md`)
 - [ ] Me + Claude: precision test (slice 7). I play a known riff slow, fast and distorted, and we count the right, missed and extra notes. Real numbers for the demo. The steps and the table to fill in are in `devpost/precision-test.md`
-- [ ] Claude: fix the Rhythm switch (my request). Right now, turning rhythm on or off also changes how every saved riff is drawn. It should only change the riff I'm recording, and each saved riff should stay the way it was saved
+- [x] Claude: fix the Rhythm switch (my request). Turning rhythm on or off used to change how every saved riff is drawn. Now it only changes the riff I'm recording: each riff saves whether rhythm was on, and riffs from before that show with rhythm on
 - [ ] Claude: update all the GitHub descriptions (the About box: description, riffboi.com and topics) and the README (my request, after the to-do list)
 - [ ] Claude: a quick codebase check, last (my request)
 

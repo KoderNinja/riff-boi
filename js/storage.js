@@ -55,8 +55,8 @@ export function saveInputId(deviceId) {
 
 // Save a new riff at the top of the list and return it.
 // `confidence` is how sure Riff Boi was about it (see confidence.js), or null.
-// `timing` is { bpm, endTime }: the tempo it was played at, and when you tapped Stop
-// (seconds), so its note values can be drawn again later.
+// `timing` is { bpm, endTime, rhythm }: the tempo it was played at, when you tapped Stop
+// (seconds), and whether rhythm was on, so its tab can be drawn the same way later.
 // Throws if the browser won't let us save (the app shows a message).
 export function saveRiff(notes, confidence = null, timing = {}) {
   const now = new Date();
@@ -70,9 +70,17 @@ export function saveRiff(notes, confidence = null, timing = {}) {
     confidence: confidence && roundNumbers(confidence),
     bpm: timing.bpm,
     endTime: timing.endTime === undefined ? undefined : Math.round(timing.endTime * 100) / 100,
+    rhythm: timing.rhythm,
   };
   localStorage.setItem(RIFFS_KEY, JSON.stringify([riff, ...loadRiffs()]));
   return riff;
+}
+
+// How to draw a saved riff's tab: at the tempo it was played (riffs from before tempo
+// existed use `bpm`, today's tempo), and with rhythm on or off the way it was recorded,
+// so the Rhythm switch only changes new riffs. Riffs from before that was saved had rhythm on.
+export function riffTiming(riff, bpm) {
+  return { bpm: riff.bpm ?? bpm, endTime: riff.endTime ?? null, timing: riff.rhythm ?? true };
 }
 
 // 0.873456 → 0.87, so saved riffs stay small. Text (like the hint) stays as it is.

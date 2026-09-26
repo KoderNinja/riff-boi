@@ -4,7 +4,7 @@ import { startListening, stopListening, listInputs, onInputsChange, soundInfo } 
 import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS } from './notes.js';
 import { placeNotes } from './tab.js';
 import { tabSvg } from './tabsvg.js';
-import { loadRiffs, saveRiff, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
+import { loadRiffs, saveRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
 import { riffConfidence } from './confidence.js';
 
 const screens = {
@@ -102,8 +102,7 @@ $('bpm-up').addEventListener('click', () => setBpm(settings.bpm + 1));
 $('bpm-input').addEventListener('change', (event) => setBpm(Number(event.target.value)));
 $('rhythm-input').addEventListener('change', (event) => {
   settings.rhythm = event.target.checked;
-  saveSettings(settings);
-  showHome(); // redraw the riff cards with or without rhythm
+  saveSettings(settings); // only for new riffs: saved riffs keep the rhythm they were recorded with
 });
 
 // --- Input picker: the mic or your audio interface, remembered between visits ---
@@ -127,12 +126,6 @@ async function showInputs() {
 
 inputSelect.addEventListener('change', () => saveInputId(inputSelect.value));
 onInputsChange(showInputs); // an input was plugged in or unplugged
-
-// How to draw a saved riff's tab: at the tempo it was played (riffs from before tempo
-// existed use today's setting), and with rhythm on or off.
-function riffTiming(riff) {
-  return { bpm: riff.bpm ?? settings.bpm, endTime: riff.endTime ?? null, timing: settings.rhythm };
-}
 
 // The live tab, redrawn when a note is added or changes. The newest note is red.
 function drawLiveTab(notes) {
@@ -172,7 +165,7 @@ function showHome() {
     preview.className = 'mini-tab';
     preview.setAttribute('aria-hidden', 'true'); // screen readers read the label, not the picture
     const shown = riff.notes.slice(0, MINI_TAB_NOTES);
-    const timing = riffTiming(riff);
+    const timing = riffTiming(riff, settings.bpm);
     if (shown.length < riff.notes.length) timing.endTime = null; // the riff goes on past the preview
     preview.innerHTML = tabSvg(shown, { ...timing, rhythm: false });
     card.append(top, preview);
@@ -190,7 +183,7 @@ function showHome() {
 
 function showRiff(riff) {
   $('riff-title').textContent = riff.label;
-  $('riff-tab').innerHTML = tabSvg(riff.notes, riffTiming(riff));
+  $('riff-tab').innerHTML = tabSvg(riff.notes, riffTiming(riff, settings.bpm));
   $('riff-tab').scrollLeft = 0; // start at the beginning of the riff
   $('riff-count').textContent = noteCount(riff.notes.length);
   // Riffs saved before the confidence bar existed don't have a score: hide the bar for those.
@@ -324,7 +317,7 @@ stopBtn.addEventListener('click', async () => {
   showScreen('saving');
   let riff;
   try {
-    riff = saveRiff(notes, riffConfidence(notes, volumes), { bpm: settings.bpm, endTime });
+    riff = saveRiff(notes, riffConfidence(notes, volumes), { bpm: settings.bpm, endTime, rhythm: settings.rhythm });
   } catch (err) {
     console.error(err);
     $('saving-title').textContent = "Couldn't save";
