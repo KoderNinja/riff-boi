@@ -64,3 +64,11 @@ What I learned and the problems I solved along the way. I'll use this for my dem
 - **What the data showed:** one small mistake snowballs — a stray note or one wrong octave pulled whole runs onto the wrong string. Fixing the first mistake fixed the whole run.
 - **Background noise:** quiet sounds before I start playing showed up as notes. Riff Boi now drops notes much quieter (under 35%) than my typical note. I picked 35% by measuring: noise was 14–22%, my real notes were 56% or louder.
 - **Overfitting:** if you tune on the same recordings you test on, the score can look better than it really is. The fair test is a new riff that wasn't used for tuning.
+
+## Sep 25, 2026 — Code review and a fair test
+- **Independent review:** separate AI reviewers tried to break Riff Boi's logic, and other reviewers double-checked every problem they reported. 9 real problems were confirmed (e.g. picking the same note twice was often lost, and on a 120 Hz screen the app would have taken readings twice as fast and broken).
+- **Write the test first:** for each problem we wrote a check, watched it FAIL, then fixed the code and watched it pass. That proves the check really tests the problem.
+- **A bug in my own earlier fix:** a pedal riff (open low E, a high note, back to E) was being "corrected" into the wrong octave. No test covered it until we thought about how metal riffs actually work.
+- **Fair test:** my pentatonic at the 6th fret (never used for tuning) scored 10/12 notes, 6/10 strings before the fixes and 11/12, 11/11 after.
+- **Same notes, different places:** the sound can't tell the 6th-fret box from the 1st-position box. Riff Boi now tries every place you could have started and picks the one that needs the least hand movement.
+- **Scoreboard now:** 110/115 notes (96%), 0 wrong notes, 83/83 strings.

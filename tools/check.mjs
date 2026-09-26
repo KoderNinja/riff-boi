@@ -48,6 +48,14 @@ const cases = [
   ['a fifth-above harmonic heard an octave low is ignored', [...pick(41), ...ring(48, 2, 0.2), ...ring(60, 5, 0.2), ...ring(41, 10, 0.2)], 'F2'],
   ['a PICKED octave + fifth jump still counts', [...pick(40), ...ring(40, 5, 0.05), ...pick(59)], 'E2 B3'],
   ['heard an octave too high at first, then fixed', [...pick(62).slice(0, 6), ...ring(50, 10, 0.2)], 'D3'],
+  ['a picked octave riff keeps its octaves (A2 A3 A2)', [...pick(45), ...ring(45, 5, 0.05), ...pick(57), ...ring(57, 5, 0.05), ...pick(45)], 'A2 A3 A2'],
+  ['a picked jump DOWN an octave soon after a note is not "fixed" away', [...pick(52).slice(0, 18), ...pick(40)], 'E3 E2'],
+  ['fast repeated picking of one note keeps every note (8 picks, last one rings out)',
+    [...Array.from({ length: 8 }, () => [[hz(40), 0.97, 0.05], [hz(40), 0.97, 0.15], [hz(40), 0.97, 0.3], ...ring(40, 4, 0.24)]).flat(), ...ring(40, 20, 0.2)],
+    'E2 E2 E2 E2 E2 E2 E2 E2'],
+  ['a new note a fifth up after a pitch break still counts', [...pick(45), ...ring(45, 20, 0.1), ...Array.from({ length: 4 }, () => [hz(45), 0.3, 0.1]), ...ring(52, 30, 0.12)], 'A2 E3'],
+  ['a re-pick without a big volume jump (the pitch breaks) still counts', [...pick(45), ...Array.from({ length: 3 }, () => [hz(45), 0.3, 0.2]), ...ring(45, 20, 0.28)], 'A2 A2'],
+  ['a pitch break right after a note starts is not a re-pick (slide)', [...pick(45).slice(0, 5), ...Array.from({ length: 3 }, () => [hz(45), 0.3, 0.2]), ...ring(45, 20, 0.25)], 'A2'],
   ['volume pulsing (amp/room) is not a new pick',
     [...pick(49), ...Array.from({ length: 60 }, (_, i) => [hz(49), 0.95, 0.02 + 0.015 * Math.sin((i / 10) * 2 * Math.PI)])], 'C#3'],
 ];
@@ -66,6 +74,8 @@ const cleanCases = [
   ['octave glitch in a walk is fixed (F#3 G4 G#3)', riffOf([['F#3', 54, 0.1], ['G4', 67, 0.1], ['G#3', 56, 0.1]]), 'F#3 G3 G#3'],
   ['a real octave riff is left alone (A2 A3 A2)', riffOf([['A2', 45, 0.1], ['A3', 57, 0.1], ['A2', 45, 0.1]]), 'A2 A3 A2'],
   ['a real jump up to a high note is left alone', riffOf([['E2', 40, 0.1], ['E4', 64, 0.1], ['D4', 62, 0.1]]), 'E2 E4 D4'],
+  ['a pedal riff on the open low E is left alone (E2 F#3 E2 G3 E2)', riffOf([['E2', 40, 0.1], ['F#3', 54, 0.1], ['E2', 40, 0.1], ['G3', 55, 0.1], ['E2', 40, 0.1]]), 'E2 F#3 E2 G3 E2'],
+  ['a note heard a third too low in a scale is fixed (F4 C#3 A#4 → G#4)', riffOf([['D#4', 63, 0.1], ['F4', 65, 0.1], ['C#3', 49, 0.1], ['A#4', 70, 0.1], ['C#5', 73, 0.1]]), 'D#4 F4 G#4 A#4 C#5'],
 ];
 for (const [label, notes, expected] of cleanCases) {
   const got = names(cleanUpRiff(notes));
@@ -82,15 +92,37 @@ const LABEL = 'EADGBe';
 const patterns = [
   ['walking up the low E string fret by fret (learner recording)', [41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52], 'E1 E2 E3 E4 E5 E6 E7 E8 E9 E10 E11 E12'],
   ['walking up the low E string, then back down it', [41, 42, 43, 44, 45, 46, 47, 48, 47, 46, 45, 44], 'E1 E2 E3 E4 E5 E6 E7 E8 E7 E6 E5 E4'],
+  ['walking up a string with a repeated note stays on that string', [41, 42, 43, 44, 44, 45, 46, 47, 48], 'E1 E2 E3 E4 E4 E5 E6 E7 E8'],
   ['1-2-3-4 finger exercise across strings', [41, 42, 43, 44, 46, 47, 48, 49], 'E1 E2 E3 E4 A1 A2 A3 A4'],
   ['A minor pentatonic box at the 5th fret', [45, 48, 50, 52, 55, 57, 60, 62, 64, 67, 69, 72], 'E5 E8 A5 A7 D5 D7 G5 G7 B5 B8 e5 e8'],
   ['open-position riff', [40, 40, 43, 40, 45, 47], 'E0 E0 E3 E0 A0 A2'],
+  ['A minor pentatonic box, coming DOWN (starts under the pinky)', [72, 69, 67, 64, 62, 60, 57, 55, 52, 50, 48, 45], 'e8 e5 B8 B5 G7 G5 D7 D5 A7 A5 E8 E5'],
 ];
 for (const [label, midis, expected] of patterns) {
   const notes = midis.map((midi) => ({ midi }));
   placeNotes(notes);
   const got = notes.map((n) => LABEL[6 - n.string] + n.fret).join(' ');
   check(label, got === expected, got);
+}
+
+// G major from G2 can be played in open position or 2nd position (same notes, both standard);
+// either is fine, but it must not drift up the neck.
+{
+  const scale = [43, 45, 47, 48, 50, 52, 54, 55, 57, 59, 60, 62, 64, 66, 67].map((midi) => ({ midi }));
+  placeNotes(scale);
+  const highest = Math.max(...scale.map((n) => n.fret));
+  check('G major scale from G2 stays near the nut (no drifting up the neck)', highest <= 5,
+    scale.map((n) => LABEL[6 - n.string] + n.fret).join(' '));
+}
+// Learner's pentatonic box at the 6th fret (tools/recordings/pentatonic-6th), with and without its first note.
+{
+  const place = (midis) => { const n = midis.map((midi) => ({ midi })); placeNotes(n); return n.map((x) => LABEL[6 - x.string] + x.fret).join(' '); };
+  const all = place([46, 49, 51, 53, 56, 58, 61, 63, 65, 68, 70, 73]);
+  check('pentatonic box at the 6th fret stays in 6th position', all === 'E6 E9 A6 A8 D6 D8 G6 G8 B6 B9 e6 e9', all);
+  const noFirst = place([49, 51, 53, 56, 58, 61, 63, 65, 68, 70, 73]);
+  check('...even if its first note was missed', noFirst === 'E9 A6 A8 D6 D8 G6 G8 B6 B9 e6 e9', noFirst);
+  const desc = place([72, 69, 67, 64, 62, 60, 57, 57]);
+  check('a short pentatonic run coming down stays in the box', desc === 'e8 e5 B8 B5 G7 G5 D7 D7', desc);
 }
 
 let playable = true;

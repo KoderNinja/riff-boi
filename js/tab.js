@@ -25,14 +25,18 @@ export function positionsFor(midi) {
 
 // Makes a position picker for one riff. It remembers where your hand is,
 // so call it once per riff and then pick(midi) for every note in order.
+// `first` is where the first note goes ({ string, fret }), and `finger` says which finger
+// plays it (0 = index ... 3 = pinky), which sets where the hand's box starts.
+// pick.totalCost() adds up the effort of the whole riff.
 //
 // The rule: imagine your hand covers a box of 4 frets. Each possible spot for a note
 // gets a "cost": moving your hand outside the box, and jumping across strings, both
 // cost effort. The cheapest spot wins; on a tie, the thicker string.
 // One exception: if you just moved one fret along a string, taking one more step the
 // same way on that string is cheap — you're probably walking up (or down) that string.
-export function createPositionPicker() {
+export function createPositionPicker(first = null, finger = 0) {
   let boxLow = null;        // lowest fret of the hand's box (null = no note yet)
+  let total = 0;            // effort of every move so far
   let lastString = null;
   let lastFret = null;
   let lastStep = 0;         // fret change of the last move, if it stayed on the same string
@@ -64,33 +68,61 @@ export function createPositionPicker() {
     else if (fret > boxLow + BOX_SIZE - 1) boxLow = fret - (BOX_SIZE - 1);
   }
 
-  return function pick(midi) {
+  function pick(midi) {
     const spots = positionsFor(midi);
     if (spots.length === 0) return null;
 
     let spot;
     if (boxLow === null) {
-      spot = firstSpot(spots);
-      boxLow = Math.max(spot.fret, 1);
+      spot = first ?? firstSpot(spots);
+      boxLow = Math.max(spot.fret - finger, 1);
     } else {
       spot = spots.reduce((best, s) => {
         const diff = cost(s) - cost(best);
         return diff < 0 || (diff === 0 && s.string > best.string) ? s : best;
       });
+      total += cost(spot);
       moveBox(spot.fret);
     }
-    lastStep = spot.string === lastString ? spot.fret - lastFret : 0;
+    // Remember the direction of a walk along a string. Repeating the same fret keeps it.
+    if (spot.string !== lastString) lastStep = 0;
+    else if (spot.fret !== lastFret) lastStep = spot.fret - lastFret;
     lastString = spot.string;
     lastFret = spot.fret;
     return spot;
-  };
+  }
+  pick.totalCost = () => total;
+  return pick;
 }
 
 // Give every note in a riff its string and fret, in order. Running the whole riff
 // again each time means a corrected note also moves the notes after it.
+// We don't know where the first note was played, or with which finger, so we try every
+// place and every finger, and keep the version of the whole riff that needs the least
+// hand movement (e.g. a pentatonic box at the 6th fret instead of 1st position, or a
+// scale coming DOWN that starts under the pinky). On a tie, the usual first-note choice
+// (lowest fret, not open) wins, then the version played lower on the neck.
 export function placeNotes(notes) {
-  const pick = createPositionPicker();
-  for (const note of notes) Object.assign(note, pick(note.midi));
+  if (notes.length === 0) return;
+  const firstSpots = positionsFor(notes[0].midi).sort(firstNoteOrder);
+  let best = null;
+  firstSpots.forEach((first, rank) => {
+    for (let finger = 0; finger < BOX_SIZE; finger++) {
+      const pick = createPositionPicker(first, finger);
+      const spots = notes.map((note) => pick(note.midi));
+      const total = pick.totalCost();
+      const height = spots.reduce((sum, s) => sum + s.fret, 0); // how far up the neck overall
+      const better = !best || total < best.total ||
+        (total === best.total && (rank < best.rank || (rank === best.rank && height < best.height)));
+      if (better) best = { spots, total, rank, height };
+    }
+  });
+  notes.forEach((note, i) => Object.assign(note, best.spots[i]));
+}
+
+// Usual preference for a first note: fretted before open, then the lowest fret.
+function firstNoteOrder(a, b) {
+  return (a.fret === 0) - (b.fret === 0) || a.fret - b.fret;
 }
 
 // Draw notes as six lines of tab text inside the given element, e.g.

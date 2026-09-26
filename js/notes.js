@@ -42,9 +42,10 @@ export const GLITCH_READINGS = 2;   // up to this many junk readings don't inter
 export const PICK_JUMP = 1.8;       // volume this many times louder than just before = you picked
 export const PICK_GAP = 6;          // ignore extra jumps for this many readings after a pick
 export const PICK_WINDOW = 10;      // a pick only counts if its note shows up this soon after it
-export const FIX_WINDOW = 20;       // how long after a note appears Riff Boi may fix its octave
+export const FIX_WINDOW = 10;       // how long after a note appears Riff Boi may fix its octave
 export const REPICK_LEVEL = 0.75;  // picking the same note again must be this loud compared to the note's loudest
 export const REPICK_HOLD = 7;      // ...and then hold its pitch this many readings
+export const BREAK_RING = 8;       // a pitch break only counts as a re-pick after the note rang this long
 
 // Is this pitch probably a harmonic of the ringing note, not a new note?
 // Distortion and strong picking make a note's overtones loud. The ones with a DIFFERENT
@@ -73,6 +74,9 @@ export function createNoteTracker() {
   let candidateCount = 0;   // how many times we've heard it
   let candidateLow = null;  // the lowest MIDI number heard for it
   let repickCount = 0;      // readings of the same note since a re-pick (0 = no re-pick)
+  let repickLow = null;     // the lowest MIDI number heard during the re-pick
+  let lowerCount = 0;       // readings in a row of the ringing note's lower octave
+  let candidateBreak = false; // did the candidate come right after a break in the pitch?
   let junk = 0;             // junk readings in a row (unclear, out of range)
   let quiet = 0;            // quiet readings in a row
   let volumes = [0, 0, 0];  // the last few volumes, to spot a pick
@@ -112,6 +116,7 @@ export function createNoteTracker() {
 
     const note = readNote(freq, clarity, volume);
     if (!note) {
+      lowerCount = 0;
       // A few junk readings don't interrupt anything; more than that resets the candidate.
       if (++junk > GLITCH_READINGS) {
         candidate = null;
@@ -119,6 +124,7 @@ export function createNoteTracker() {
       }
       return null;
     }
+    const pitchBreak = junk >= 2; // the pitch just broke up for a moment, like a new attack does
     junk = 0;
     const name = note.midi % 12;
 
@@ -127,22 +133,39 @@ export function createNoteTracker() {
       candidate = null;
       candidateCount = 0;
       current.peak = Math.max(current.peak, volume); // the loudest this note has been
-      // Heard a lower octave soon after the note started? The first guess was a harmonic: fix it.
-      if (note.midi < current.midi && sinceStart <= FIX_WINDOW) {
+      // Heard the lower octave twice in a row soon after the note started, without a new pick?
+      // Then the first guess was a harmonic: fix it. (A picked lower note is a real new note.)
+      lowerCount = note.midi < current.midi ? lowerCount + 1 : 0;
+      if (lowerCount >= 2 && !picked && repickCount === 0 && sinceStart <= FIX_WINDOW) {
         current.midi = note.midi;
         current.name = note.name;
+        lowerCount = 0;
         return { fix: { midi: note.midi, name: note.name } };
       }
       // Picked again, as loud as the note's attack? Wait until the pitch holds (it might be
       // the pick of the NEXT note, heard a moment before the new fret is pressed down).
-      if (repickCount === 0 && picked && volume >= current.peak * REPICK_LEVEL) repickCount = 1;
-      else if (repickCount > 0) repickCount++;
-      if (repickCount >= REPICK_HOLD) return start(Math.min(note.midi, current.midi), t, volume);
+      // (A short break in the pitch also counts as a pick, since quiet picks don't always make the
+      // volume jump. But not right after the note started: that's usually a slide or fret change.)
+      const breakPick = pitchBreak && sinceStart > BREAK_RING;
+      if (repickCount === 0 && (picked || breakPick) && volume >= current.peak * REPICK_LEVEL) {
+        repickCount = 1;
+        repickLow = note.midi;
+      } else if (repickCount > 0) {
+        repickCount++;
+        repickLow = Math.min(repickLow, note.midi); // could be an octave jump: A2 → A3
+      }
+      if (repickCount >= REPICK_HOLD) {
+        const newerPick = sincePick < repickCount - 1; // you already picked again during the wait
+        const started = start(repickLow, t, volume);
+        if (newerPick) pickUsed = false; // ...so keep that pick for the next note
+        return started;
+      }
       return null;
     }
 
     // A different note name: count how often we hear it before believing it.
     repickCount = 0;
+    lowerCount = 0;
     if (name === candidate) {
       candidateCount++;
       candidateLow = Math.min(candidateLow, note.midi);
@@ -150,11 +173,13 @@ export function createNoteTracker() {
       candidate = name;
       candidateCount = 1;
       candidateLow = note.midi;
+      candidateBreak = pitchBreak;
     }
     const needed = !current || picked ? STABLE_READINGS : LEGATO_READINGS;
     if (candidateCount < needed) return null;
-    // Unpicked and exactly a harmonic of the ringing note? Probably not a new note.
-    if (current && !picked && isLikelyHarmonic(candidateLow, current.midi)) return null;
+    // Unpicked, no break in the pitch, and exactly a harmonic of the ringing note?
+    // Probably not a new note. (A pitch break means a new attack, even if the pick was missed.)
+    if (current && !picked && !candidateBreak && isLikelyHarmonic(candidateLow, current.midi)) return null;
     return start(candidateLow, t, volume);
   };
 }
@@ -162,13 +187,17 @@ export function createNoteTracker() {
 // Clean-up rules that need to see the whole riff so far (the tab redraws with them live).
 export const GHOST_LEVEL = 0.35;   // a note this much quieter than the riff's typical note is noise
 
+// Pitchy's typical mistakes, as the fix in semitones: it heard the octave above (-12),
+// the octave below (+12), or a third of the real pitch (+19), or three times it (-19).
+const GLITCH_FIXES = [-12, 12, 19, -19];
+
 // Returns the riff's notes with two kinds of mistakes cleaned up:
 // 1. Ghost notes: much quieter than your other notes (background noise, a finger touching
 //    a string before you start). Needs at least 3 notes to know what "typical" is.
-// 2. Octave glitches: a note that jumps an octave away from both neighbours, when an
-//    octave lower it would sit right between them (F#3 G4 G#3 → F#3 G3 G#3).
-//    Real octave riffs like A2 A3 A2 are left alone: there the lower octave EQUALS a
-//    neighbour instead of sitting between them.
+// 2. Pitch glitches: a note that leaps far away (10+ semitones) from both neighbours, when
+//    one of Pitchy's typical mistakes would put it strictly BETWEEN two different
+//    neighbours, like a scale or walk: F#3 G4 G#3 → F#3 G3 G#3. Riffs that jump away and
+//    come back (A2 A3 A2, or a pedal riff E2 F#3 E2) are left alone.
 export function cleanUpRiff(notes) {
   let kept = notes;
   if (notes.length >= 3) {
@@ -178,10 +207,15 @@ export function cleanUpRiff(notes) {
   return kept.map((note, i) => {
     const prev = kept[i - 1];
     const next = kept[i + 1];
-    const down = note.midi - 12;
-    const between = (other) => other.midi !== down && Math.abs(other.midi - down) <= 2;
-    if (prev && next && down >= LOWEST_MIDI && between(prev) && between(next)) {
-      return { ...note, midi: down, name: midiToName(down) };
+    if (!prev || !next) return note;
+    if (Math.abs(note.midi - prev.midi) < 10 || Math.abs(note.midi - next.midi) < 10) return note;
+    const low = Math.min(prev.midi, next.midi);
+    const high = Math.max(prev.midi, next.midi);
+    for (const fix of GLITCH_FIXES) {
+      const midi = note.midi + fix;
+      if (midi > low && midi < high && midi >= LOWEST_MIDI && midi <= HIGHEST_MIDI) {
+        return { ...note, midi, name: midiToName(midi) };
+      }
     }
     return note;
   });
