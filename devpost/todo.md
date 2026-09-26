@@ -8,27 +8,28 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 
 ## Next up
 
-Where we left off (Sep 26, 2026):
-- Riff Boi moved from a cloud session to my Mac. If `git status` says my branch is ahead of `origin/main`, push those commits to GitHub first.
-- Next to build: change the time signature. Then the input picker and the "Can't hear your guitar" message. Then a quick code review to check for bugs.
-- Built and waiting for my guitar test: the confidence bar, string bends and note values.
+Where we left off (Sep 25, 2026, late):
+- My `beginners-paradise` folder has everything from the cloud session and is linked to GitHub. Riff Boi is live at https://riffboi.com, and Vercel updates it whenever I push to GitHub.
+- My newest commits aren't on GitHub yet. The first `git push` from my Mac asks for my GitHub username and a token (a password made just for pushing).
+- Built and waiting for my guitar test: the input picker and "Can't hear your guitar" message (slice 4), the confidence bar, string bends and note values.
+- Next: a quick code review to check for bugs, then the time signature if there's time.
 
 ## Before the deadline
 
 ### Stuff only I can do
 - [x] Make a free GitHub org (`riff-boi`) and move the repo there: https://github.com/riff-boi/riff-boi
-- [ ] Invite Matt to the org, if I haven't yet
-- [ ] Push my newest commits to GitHub from my Mac (GitHub Desktop's "Push origin" button, or Claude can walk me through it)
+- [x] Give Matt access (Matt is a collaborator on GitHub)
+- [ ] Push my newest commits to GitHub from my Mac (`git push` in Terminal, with my username and a token the first time)
 - [ ] Only if I want cloud sessions on Riff Boi again: give the Claude GitHub App access to the org (https://github.com/apps/claude/installations/select_target, then the `riff-boi` org, then the `riff-boi` repo)
-- [ ] Get a live link. Either turn on GitHub Pages (github.com/riff-boi/riff-boi/settings/pages, "Deploy from a branch", `main`, `/ (root)`), which gives https://riff-boi.github.io/riff-boi/, or Matt deploys it on Vercel (free plan, Framework Preset "Other", keep the repo public)
-- [ ] Put the live link in the README, in the repo's About box on GitHub and in Devpost's "Try it out" field
-- [ ] Buy riffboi.com and point it at the live link (on Vercel: Settings, then Domains; for GitHub Pages, ask Claude for the DNS steps)
+- [x] Get a live link: https://riffboi.com, on Vercel. It updates whenever I push to GitHub
+- [ ] Put the live link in the repo's About box on GitHub and in Devpost's "Try it out" field (the README has it now)
+- [x] Buy riffboi.com and point it at the live link
 - [ ] Test Riff Boi on my iPhone with the live link (Safari asks for the mic)
-- [x] Get the newest copy onto my Mac (the `riff-boi.zip` download from the cloud session). My old `beginners-paradise` folder is only a backup now
+- [x] Get the newest copy onto my Mac (the `riff-boi.zip` download from the cloud session). Git brought it into my `beginners-paradise` folder, so that folder is the up-to-date one
 - [ ] Test each new feature with my guitar
 - [ ] Record a few string bends with `?debug` for the bends feature
-- [ ] Join the hackathon on Devpost
-- [ ] If Matt is on my team, check he's eligible (13 to 21, a student) and add him on Devpost. If he's only helping with hosting, he doesn't go on the submission
+- [x] Join the hackathon on Devpost
+- [x] Matt isn't on my Devpost team (Matt is a collaborator on GitHub), so Matt doesn't go on the submission
 - [ ] Write my Devpost description: what it is, the problem, who it's for and how it works (my words)
 - [ ] Say how I used AI (Claude Code) in that description (my words)
 - [ ] Write the "AI use" part of the README (my words)
@@ -41,13 +42,13 @@ Where we left off (Sep 26, 2026):
 ### Building with Claude, in this order
 - [x] Put the project on GitHub
 - [ ] Confidence bar (slice 6): built, waiting for my guitar test
-- [x] README (the AI part is still mine to write; add the live link and a screenshot later)
+- [x] README (the AI part is still mine to write; the live link is in; add a screenshot later)
 - [x] New layout and the Metal look (I picked it from 2 options)
 - [ ] String bends: hear them and write them in the tab, like `7b9`, `7b9r7` and `7pb9r7` (built, waiting for my bend recordings and guitar test)
 - [ ] Note values, drawn like a Songsterr tab: string lines with the fret numbers on them, bar lines, the tempo, rhythm stems under the tab. I set the BPM (built, waiting for my guitar test)
 - [x] A switch to turn rhythm off and just get the notes (evenly spaced, no bars, stems or tempo)
 - [ ] Change the time signature (like 3/4, 6/8 or 7/8), not just 4/4
-- [ ] Input picker and a "Can't hear your guitar" message (slice 4)
+- [ ] Input picker and a "Can't hear your guitar" message (slice 4): built, waiting for my guitar test
 - [ ] Quick code review to check for bugs (my request, after the next few tasks)
 - [x] App icon so it can go on my phone's home screen (the blackletter R; I picked it from 2 options)
 - [ ] If there's time: precision test (slice 7), final review and code tour

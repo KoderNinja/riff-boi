@@ -6,6 +6,8 @@ I've played guitar for six years, mostly technical metal and instrumental stuff.
 
 I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devpost.com/) hackathon (2026).
 
+**Try it:** https://riffboi.com (allow the mic when your browser asks)
+
 ## What it does
 
 - Writes tab live while you play single notes.
@@ -18,7 +20,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 
 ## Run it
 
-You'll need Chrome (other modern browsers should work too), Python 3 for a small local server (Macs usually have it already), a mic or an audio interface, and internet the first time the page loads, because it downloads the pitch detection library.
+The quickest way is the live version at https://riffboi.com. To run it on your own computer instead, you'll need Chrome (other modern browsers should work too), Python 3 for a small local server (Macs usually have it already), a mic or an audio interface, and internet the first time the page loads, because it downloads the pitch detection library.
 
 ```
 git clone https://github.com/riff-boi/riff-boi.git
