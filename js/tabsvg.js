@@ -47,10 +47,18 @@ export function tabSvg(notes, { bpm = 120, endTime = null, timing = true, rhythm
     const prev = xs[i - 1];
     const room = (widths[i - 1] + widths[i]) / 2 + 10 + (notes[i - 1].bend && bendArrows ? BEND_ROOM : 0);
     let gap = Math.max(MIN_GAP, room, (beats[i].beat - beats[i - 1].beat) * BEAT_WIDTH);
-    const newBars = Math.floor(beats[i].beat / BEATS_PER_BAR) - Math.floor(beats[i - 1].beat / BEATS_PER_BAR);
-    if (newBars > 0) {
+    const barBefore = Math.floor(beats[i - 1].beat / BEATS_PER_BAR); // 0 = measure 1
+    const barNow = Math.floor(beats[i].beat / BEATS_PER_BAR);
+    if (barNow > barBefore) {
       gap += 2 * BAR_PAD;
-      bars.push({ x: prev + gap - BAR_PAD - widths[i] / 2 - 6, measure: Math.floor(beats[i].beat / BEATS_PER_BAR) + 1 });
+      // A bar line just before this note. If a long rest skipped whole bars, their lines
+      // go in between, spaced by beats, so no measure goes missing.
+      const lastX = prev + gap - BAR_PAD - widths[i] / 2 - 6;
+      const fromX = prev + widths[i - 1] / 2 + BAR_PAD;
+      for (let bar = barBefore + 1; bar <= barNow; bar++) {
+        const share = (bar * BEATS_PER_BAR - beats[i - 1].beat) / (barNow * BEATS_PER_BAR - beats[i - 1].beat);
+        bars.push({ x: fromX + (lastX - fromX) * share, measure: bar + 1 });
+      }
     }
     xs.push(prev + gap);
   });

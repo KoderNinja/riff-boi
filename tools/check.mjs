@@ -270,6 +270,11 @@ check('rhythm: two notes very close together never land on the same spot',
   check('tab picture: with rhythm off there are no bars, tempo or stems, just the notes',
     !plain.includes('♩') && !plain.includes('t-time') && !plain.includes('t-stem') && (plain.match(/class="t-bar"/g) || []).length === 2);
   check('tab picture: an empty riff is still a clean empty staff', !tabSvg([]).includes('NaN') && tabSvg([]).includes('t-line'));
+  // A long rest: 5 seconds at 120 BPM is 10 beats, so the second note is in measure 3.
+  const rest = tabSvg([{ string: 6, fret: 0, t: 0 }, { string: 6, fret: 3, t: 5 }], { bpm: 120, endTime: 6 });
+  const measures = [...rest.matchAll(/class="t-measure"[^>]*>(\d+)</g)].map((m) => m[1]).join(' ');
+  check('tab picture: a long rest still draws every bar line and measure number (1 2 3)',
+    measures === '1 2 3' && (rest.match(/class="t-bar"/g) || []).length === 4 && !rest.includes('NaN'), measures);
 }
 
 // --- Where the last note ends (that sets its note value) ---
