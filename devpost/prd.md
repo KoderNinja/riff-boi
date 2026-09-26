@@ -88,6 +88,9 @@ Success is the moment in `scope.md > What "Working" Looks Like`: **"I play a rif
 ## Possible Later Enhancements
 - Renaming, deleting or exporting riffs.
 - **Tuning setting** *(learner idea during the build)*: choose your tuning (e.g. Drop D) and the tabs use it.
+- **Apple Watch version** *(learner idea during the build)*: a super-light version for the watch.
+- **iOS app** *(learner idea during the build)*: the same app as a real iPhone app (e.g. wrapped with Capacitor).
+- **Camera attachment** *(learner idea during the build)*: a camera for better string/fret accuracy (cut from the POC; see Non-Goals).
 - Releasing it to other guitarists (`scope.md > Later`).
 - "A few other features" the learner mentioned, which aren't defined yet.
 

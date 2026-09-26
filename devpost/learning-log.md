@@ -73,6 +73,12 @@ What I learned and the problems I solved along the way. I'll use this for my dem
 - **Same notes, different places:** the sound can't tell the 6th-fret box from the 1st-position box. Riff Boi now tries every place you could have started and picks the one that needs the least hand movement.
 - **Scoreboard now:** 110/115 notes (96%), 0 wrong notes, 83/83 strings.
 
+## Sep 25, 2026 — Putting Riff Boi on GitHub
+- **My first public repo:** https://github.com/KoderNinja/riff-boi (the hackathon requires a public GitHub repo).
+- **History kept:** my 8 commits went up exactly as they were, with their original dates, which shows the work happened during the hackathon.
+- **What stayed private:** my learner profile, `.claude/` and `.DS_Store` never left my Mac, thanks to `.gitignore`.
+- **Remote and push:** a *remote* is the copy of my repo on GitHub; *pushing* sends my new commits there. Claude now builds in a cloud session and pushes each checked step, and I test it with my guitar on the live link.
+
 ## Sep 25, 2026 — Build slice 6: confidence bar
 - **A confidence score:** Riff Boi now shows how sure it is about a riff, from 0 to 100%, live while I play and saved with each riff. It combines four measurements of the sound (tone clarity, tuning, background noise and steadiness), weighted by how much each one matters.
 - **Honest limits:** it only judges the *sound*. It can't know whether a string guess is right, so a high score means "the notes are probably right", not "the tab matches where I played".
