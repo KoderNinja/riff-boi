@@ -16,13 +16,14 @@ Deadline: **Wednesday, Sep 30, 2026 at 5:00pm EDT** (Beginner's Paradise – Fir
 - [ ] Join the hackathon on Devpost
 - [ ] Write my Devpost description: what it is, the problem it solves, who it's for, how it works (my own words)
 - [ ] Write my AI-use disclosure (Claude Code) in that description (my own words)
+- [ ] Write the "AI use" part of the README (my own words)
 - [ ] Record the 3–5 minute demo video: live demo, how it works, tech used, challenges, what I learned
 - [ ] Submit on Devpost (aim for Wednesday morning, not 4:59)
 
 ### Building with Claude (in this order)
 - [x] Put the project on GitHub: https://github.com/KoderNinja/riff-boi
 - [ ] Confidence bar (slice 6): built, waiting for my guitar test
-- [ ] **README** (required): what Riff Boi is, how to run it, tech used, a spot for my AI disclosure
+- [x] **README** (required): what Riff Boi is, how to run it, tech used, a spot for my AI disclosure (update it after the design pass and bends, and add the live link + a screenshot)
 - [ ] Design and layout pass (I pick the look)
 - [ ] String bends: detect them and write them in the tab (like `7b9`)
 - [ ] Input picker + "Can't hear your guitar" message (slice 4)

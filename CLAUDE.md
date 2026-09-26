@@ -34,7 +34,7 @@ The planning and building skills in `~/.claude/skills` (`/1-start` → `/2-scope
 Required:
 - [ ] A working project made during the hackathon
 - [x] A **public GitHub repository** with the source code: https://github.com/KoderNinja/riff-boi
-- [ ] A **README** with clear setup and run instructions for judges
+- [x] A **README** with clear setup and run instructions for judges (`README.md`; the "AI use" part is still mine to write)
 - [ ] A Devpost project description: what I built, the problem it solves, who it's for, and how it works
 - [ ] A **demo video (3–5 min)**: live demo, how it works, the tech used, challenges I overcame, what I learned
 - [ ] Disclosure of significant AI help (Claude Code) in the project description
