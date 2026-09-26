@@ -97,7 +97,8 @@ PRD ref: `prd.md > Latest Riffs List`, `prd.md > States and Boundaries`.
 ### Input Picker (`audio.js` + home screen)
 A dropdown listing audio inputs, e.g. "MacBook Microphone" or "Scarlett 2i2." The chosen input is saved in localStorage and reused for every new riff.
 - **Catch:** browsers hide input *names* until mic permission has been granted once. Before that, the picker shows just "Default input." After the first recording, it fills in the real names.
-- If the saved input is gone (e.g. the interface is unplugged), fall back to the default input.
+- If the saved input is gone (e.g. the interface is unplugged), fall back to the default input. The choice stays saved, so plugging the interface back in picks it again. The dropdown refreshes when an input is plugged in or unplugged.
+- The tuner listens to the same input *(added during the build)*.
 Learner decision (added during spec, a change from the PRD's no-setup idea): see **Decisions and Open Issues**.
 
 ### Audio Listener (`audio.js`)
@@ -138,6 +139,8 @@ Shown on the Recording screen when:
 - no clear note is detected within about 5 seconds of starting.
 
 It disappears as soon as a note is caught.
+
+*(Added during the build)* A short grey hint under the message says what to try: allow the mic, check the input is plugged in and not used by another app, or play louder and check the input on the home screen. If Pitchy can't be downloaded, the message is "Couldn't load the pitch detector" instead, because the fix is different (check the internet). The tuner shows the same messages.
 PRD ref: `prd.md > States and Boundaries`.
 
 ### Tuner *(added during the build)*

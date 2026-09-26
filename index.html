@@ -36,6 +36,11 @@
       </div>
       <label class="rhythm-switch"><input id="rhythm-input" type="checkbox" checked> <span class="setting-label">Rhythm</span></label>
     </div>
+    <!-- Which input Riff Boi listens to: the mic or your audio interface (remembered between visits) -->
+    <label class="input-picker">
+      <span class="setting-label">Input</span>
+      <select id="input-select" class="input-select"><option value="">Default input</option></select>
+    </label>
     <!-- Only shown when the address ends in ?debug (for tuning note detection) -->
     <button id="save-readings-btn" class="small-btn" hidden>Save last recording's readings</button>
     <h2 class="screen-title">Latest Riffs</h2>
@@ -57,7 +62,11 @@
       <div class="confidence-bar" role="meter" aria-label="Confidence" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="confidence-fill"></div></div>
       <p class="confidence-hint"></p>
     </div>
-    <p id="status-msg" class="status-msg"></p>
+    <!-- Messages like "Can't hear your guitar", with a hint about what to try -->
+    <div class="status">
+      <p id="status-msg" class="status-msg"></p>
+      <p id="status-hint" class="status-hint"></p>
+    </div>
     <button id="stop-btn" class="big-btn bottom-btn">Stop</button>
   </section>
 
@@ -74,7 +83,10 @@
       <div id="tuner-status" class="tuner-status">Play one string</div>
       <div id="tuner-freq" class="muted"></div>
     </div>
-    <p id="tuner-msg" class="status-msg"></p>
+    <div class="status">
+      <p id="tuner-msg" class="status-msg"></p>
+      <p id="tuner-hint" class="status-hint"></p>
+    </div>
     <button id="tuner-done-btn" class="big-btn bottom-btn">Done</button>
   </section>
 

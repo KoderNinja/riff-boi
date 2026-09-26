@@ -14,6 +14,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 - Saves each riff to a Latest Riffs list that's still there next time you open it.
 - Shows how sure it is about the tab, with a hint when something's off, like background noise or an out-of-tune guitar.
 - Has a tuner built in.
+- Lets you pick your mic or audio interface, remembers it, and tells you when it can't hear your guitar.
 
 ## Run it
 
@@ -52,7 +53,7 @@ node tools/check.mjs
 node tools/score.mjs
 ```
 
-`check.mjs` runs 86 checks on the note, bend, rhythm, tab and confidence logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
+`check.mjs` runs 91 checks on the note, bend, rhythm, tab, confidence and input picker logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
 
 ## What it can't do yet
 

@@ -1,10 +1,10 @@
 // app.js — starts Riff Boi, switches screens and wires up the buttons.
 
-import { startListening, stopListening } from './audio.js';
+import { startListening, stopListening, listInputs, onInputsChange } from './audio.js';
 import { createNoteTracker, cleanUpRiff, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN } from './notes.js';
 import { placeNotes } from './tab.js';
 import { tabSvg } from './tabsvg.js';
-import { loadRiffs, saveRiff, loadSettings, saveSettings, DEFAULT_SETTINGS } from './storage.js';
+import { loadRiffs, saveRiff, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
 import { riffConfidence } from './confidence.js';
 
 const screens = {
@@ -19,6 +19,7 @@ const liveTab = $('live-tab');
 const noteName = $('note-name');
 const noteFreq = $('note-freq');
 const statusMsg = $('status-msg');
+const statusHint = $('status-hint');
 const stopBtn = $('stop-btn');
 const liveConfidence = $('live-confidence');
 const recTime = $('rec-time');
@@ -29,6 +30,7 @@ let startTime = 0;
 let trackNote = null;
 let volumes = []; // every reading's volume, to measure background noise for the confidence bar
 let lastSound = 0; // when the guitar was last loud enough to hear (seconds): where the last note ends
+let heardNote = false; // has a note shown up in the tab yet? (until then, "Can't hear your guitar" can show)
 
 // The confidence bar moves slowly, so it's updated 4 times a second (every 15 readings).
 const CONFIDENCE_EVERY = 15;
@@ -88,6 +90,28 @@ $('rhythm-input').addEventListener('change', (event) => {
   showHome(); // redraw the riff cards with or without rhythm
 });
 
+// --- Input picker: the mic or your audio interface, remembered between visits ---
+
+const inputSelect = $('input-select');
+
+// Fill the dropdown with the inputs the browser can see. It only shares their names once
+// you've allowed the mic, so before your first riff there's just "Default input".
+async function showInputs() {
+  let inputs = [];
+  try {
+    inputs = await listInputs();
+  } catch (err) {
+    console.error(err);
+  }
+  inputSelect.replaceChildren(new Option('Default input', ''), ...inputs.map((input) => new Option(input.name, input.id)));
+  // Show your pick if it's plugged in. If it isn't, Riff Boi uses the default input for now.
+  const saved = loadInputId();
+  inputSelect.value = inputs.some((input) => input.id === saved) ? saved : '';
+}
+
+inputSelect.addEventListener('change', () => saveInputId(inputSelect.value));
+onInputsChange(showInputs); // an input was plugged in or unplugged
+
 // How to draw a saved riff's tab: at the tempo it was played (riffs from before tempo
 // existed use today's setting), and with rhythm on or off.
 function riffTiming(riff) {
@@ -142,6 +166,7 @@ function showHome() {
     return item;
   }));
   $('no-riffs-msg').hidden = riffs.length > 0;
+  showInputs(); // after your first riff, the inputs' real names show up
   showScreen('home');
 }
 
@@ -160,6 +185,30 @@ function showRiff(riff) {
 
 $('back-btn').addEventListener('click', showHome);
 
+// --- Messages: "Can't hear your guitar" and friends ---
+
+// A message in red with a grey hint under it. With no message, both are cleared.
+function showMessage(messageEl, hintEl, [message, hint] = ['', '']) {
+  messageEl.textContent = message;
+  hintEl.textContent = hint;
+}
+
+// What to say when listening can't start. The error's name comes from the browser
+// (NotAllowedError means the mic is blocked) or from audio.js (PitchyLoadError).
+function problemFor(err) {
+  if (err.name === 'PitchyLoadError') {
+    return ["Couldn't load the pitch detector", 'Check your internet connection, then reload the page.'];
+  }
+  if (err.name === 'NotAllowedError') {
+    return ["Can't hear your guitar", 'The mic is blocked. Allow it for this site in your browser, then try again.'];
+  }
+  return ["Can't hear your guitar", "Your mic or interface didn't open. Check it's plugged in and not being used by another app."];
+}
+
+// No note after 5 seconds of listening (60 readings a second) means something's off.
+const CANT_HEAR_READINGS = 5 * 60;
+const CANT_HEAR = ["Can't hear your guitar", 'Play a little louder, or check your input on the home screen.'];
+
 // --- Recording ---
 
 // Called for every reading from the mic (~60 times a second).
@@ -169,6 +218,8 @@ function handleReading(freq, clarity, volume) {
   if (DEBUG) readings.push([round(freq, 2), round(clarity, 3), round(volume, 4), round(t, 3)]);
   volumes.push(volume);
   if (volume >= VOLUME_MIN) lastSound = t;
+  // volumes has one entry per reading, so this is 5 seconds after listening started.
+  if (!heardNote && volumes.length === CANT_HEAR_READINGS) showMessage(statusMsg, statusHint, CANT_HEAR);
   const time = formatTime(t);
   if (recTime.textContent !== time) recTime.textContent = time;
   const peakBefore = riffNotes[riffNotes.length - 1]?.peak;
@@ -194,6 +245,10 @@ function handleReading(freq, clarity, volume) {
   drawLiveTab(shown);
   noteName.textContent = shown.length ? shown[shown.length - 1].name : '–';
   noteFreq.textContent = noteCount(shown.length);
+  if (shown.length && !heardNote) {
+    heardNote = true;
+    showMessage(statusMsg, statusHint); // it can hear you: hide "Can't hear your guitar"
+  }
 }
 
 function round(x, digits) {
@@ -205,6 +260,7 @@ $('new-riff-btn').addEventListener('click', async () => {
   readings = [];
   volumes = [];
   lastSound = 0;
+  heardNote = false;
   startTime = performance.now();
   trackNote = createNoteTracker();
   drawLiveTab([]); // an empty staff, ready for notes
@@ -212,14 +268,14 @@ $('new-riff-btn').addEventListener('click', async () => {
   recTime.textContent = '0:00';
   noteName.textContent = '–';
   noteFreq.textContent = 'Play a riff';
-  statusMsg.textContent = '';
+  showMessage(statusMsg, statusHint);
   stopBtn.disabled = false;
   showScreen('recording');
   try {
-    await startListening(handleReading);
+    await startListening(handleReading, loadInputId());
   } catch (err) {
     console.error(err);
-    statusMsg.textContent = "Can't hear your guitar";
+    showMessage(statusMsg, statusHint, problemFor(err));
   }
 });
 
@@ -234,7 +290,7 @@ stopBtn.addEventListener('click', async () => {
   const notes = currentRiff();
 
   if (notes.length === 0) {
-    statusMsg.textContent = 'No notes caught. Nothing saved';
+    showMessage(statusMsg, statusHint, ['No notes caught. Nothing saved', '']);
     await wait(2000);
     showHome();
     return;
@@ -305,13 +361,13 @@ $('tuner-btn').addEventListener('click', async () => {
   tunerFreqs = [];
   unclear = 0;
   showTuning(null);
-  $('tuner-msg').textContent = '';
+  showMessage($('tuner-msg'), $('tuner-hint'));
   showScreen('tuner');
   try {
-    await startListening(handleTunerReading);
+    await startListening(handleTunerReading, loadInputId());
   } catch (err) {
     console.error(err);
-    $('tuner-msg').textContent = "Can't hear your guitar";
+    showMessage($('tuner-msg'), $('tuner-hint'), problemFor(err));
   }
 });
 

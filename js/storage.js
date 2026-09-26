@@ -33,6 +33,26 @@ export function saveSettings(settings) {
   }
 }
 
+// The audio input you picked (its device id), or '' for the default input.
+const INPUT_KEY = 'riffboi.inputDeviceId';
+
+export function loadInputId() {
+  try {
+    return localStorage.getItem(INPUT_KEY) || '';
+  } catch {
+    return '';
+  }
+}
+
+export function saveInputId(deviceId) {
+  try {
+    if (deviceId) localStorage.setItem(INPUT_KEY, deviceId);
+    else localStorage.removeItem(INPUT_KEY);
+  } catch {
+    // Not vital either: the picker just won't be remembered.
+  }
+}
+
 // Save a new riff at the top of the list and return it.
 // `confidence` is how sure Riff Boi was about it (see confidence.js), or null.
 // `timing` is { bpm, endTime }: the tempo it was played at, and when you tapped Stop

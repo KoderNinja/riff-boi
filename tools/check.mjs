@@ -7,6 +7,7 @@ import { placeNotes, positionsFor, drawTab, tabToken } from '../js/tab.js';
 import { riffConfidence } from '../js/confidence.js';
 import { rhythmOf } from '../js/rhythm.js';
 import { tabSvg } from '../js/tabsvg.js';
+import { openInput, listInputs } from '../js/audio.js';
 
 let allOk = true;
 function check(label, ok, detail = '') {
@@ -279,6 +280,55 @@ const el = { textContent: '', scrollLeft: 0, scrollWidth: 0 };
 drawTab(el, riff);
 const lines = el.textContent.split('\n');
 check('tab is six lines of equal length', lines.length === 6 && new Set(lines.map((l) => l.length)).size === 1);
+
+// --- Input picker (audio.js), with a pretend mic, so no real audio is needed ---
+{
+  const tries = []; // what audio.js asked the browser for, each time
+  let fail = null;  // (what it asked for) => an error to throw, or nothing
+  Object.defineProperty(navigator, 'mediaDevices', {
+    configurable: true,
+    value: {
+      async getUserMedia({ audio }) {
+        tries.push(audio);
+        const error = fail?.(audio);
+        if (error) throw error;
+        return audio.deviceId ? 'picked input' : 'default input';
+      },
+      async enumerateDevices() {
+        return [
+          { kind: 'audioinput', deviceId: 'default', label: 'Default - MacBook Air Microphone' },
+          { kind: 'audioinput', deviceId: 'mic', label: 'MacBook Air Microphone' },
+          { kind: 'audioinput', deviceId: 'scarlett', label: 'Scarlett 2i2 USB' },
+          { kind: 'audioinput', deviceId: '', label: '' },
+          { kind: 'videoinput', deviceId: 'cam', label: 'FaceTime HD Camera' },
+        ];
+      },
+    },
+  });
+  const named = (name) => Object.assign(new Error(name), { name });
+  const guitarSound = (audio) => audio.echoCancellation === false && audio.noiseSuppression === false && audio.autoGainControl === false;
+
+  check('input picker: opens the input you picked, with the voice clean-up turned off',
+    await openInput('scarlett') === 'picked input' && tries[0].deviceId.exact === 'scarlett' && guitarSound(tries[0]), JSON.stringify(tries));
+
+  tries.length = 0;
+  check('input picker: with nothing picked, it opens the default input',
+    await openInput('') === 'default input' && tries.length === 1 && !tries[0].deviceId && guitarSound(tries[0]), JSON.stringify(tries));
+
+  tries.length = 0;
+  fail = (audio) => audio.deviceId && named('OverconstrainedError');
+  check('input picker: an unplugged input falls back to the default input',
+    await openInput('scarlett') === 'default input' && tries.length === 2 && !tries[1].deviceId && guitarSound(tries[1]), JSON.stringify(tries));
+
+  tries.length = 0;
+  fail = () => named('NotAllowedError');
+  const blocked = await openInput('scarlett').then(() => 'opened', (err) => err.name);
+  check('input picker: a blocked mic is reported, not hidden by the fallback', blocked === 'NotAllowedError' && tries.length === 1, `${blocked} after ${tries.length} tries`);
+
+  const inputs = await listInputs();
+  check('input picker: lists real inputs only (no "Default" copies, cameras or nameless inputs)',
+    inputs.map((input) => input.name).join(' | ') === 'MacBook Air Microphone | Scarlett 2i2 USB', JSON.stringify(inputs));
+}
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');
 process.exit(allOk ? 0 : 1);
