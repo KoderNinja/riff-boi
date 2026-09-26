@@ -159,6 +159,9 @@ Under the tab on the Recording screen (live, updated 4 times a second) and in th
 It combines four things Riff Boi can measure about the *sound*, each from 0 (bad) to 1 (good): **tone** (Pitchy's clarity), **tuning** (cents off, like the tuner), **background noise** (the quiet moments vs the notes) and **steadiness** (how often a note's first readings were really that note). Notes Riff Boi had to correct count against it. It can't know whether a string guess is right.
 PRD ref: `prd.md > What We're Building` (confidence bar).
 
+### Faded Notes (`confidence.js` + `tabsvg.js`) *(added after the build, learner idea)*
+Notes Riff Boi wasn't sure about are drawn faded (45% opacity), live and on saved riffs, so you know which to double-check. `noteSureness` scores one note from its first readings the same way the confidence bar scores a riff (clear, steady, in tune; background noise is left out, since that's the whole riff's), and `isUnsure` fades notes under 0.4. On the learner's recordings that's about 1 note in 11, all in the hardest spots (fast, distorted notes and a soft first note), and none on the clean fret runs. An octave fix alone doesn't fade a note: it's routine on clean notes and usually gets it right (tried first; it faded a clean G3). The note still ringing isn't judged until it has 8 readings, so it doesn't flicker. Saved notes keep an `unsure` flag; editing a note (drag, fret, same note) clears it, since you've checked it. A saved riff with faded notes says so in the line under its tab. Claude's choices while the learner was away: the 0.4 line, the 45% fade, and that editing clears it.
+
 ### Bends (`notes.js` + `tab.js`) *(added during the build, learner request)*
 Bending pushes the string sideways, so the ringing note's pitch **glides** smoothly through the in-between pitches with no new pick. Hammer-ons, pull-offs and slides **jump** from fret to fret instead. The note tracker follows the ringing note's pitch in semitones with decimals, measured from the note's own pitch (the middle of its first 3 clear readings). When the pitch moves 0.3 semitones or more, it waits for the pitch to settle (3 readings within 0.15), then decides:
 - It glided (at least 3 readings in between two notes) and settled within 0.25 of 1, 2 or 3 semitones up: a **bend**, written `7b9` (fret 7 bent up to sound like fret 9). Gliding back down to the note: a **release**, `7b9r7`.
@@ -221,6 +224,7 @@ Everything lives in the browser's localStorage, as text in JSON format (a simple
 - `midi` is the note number: every note has one, e.g. low E = 40.
 - `string` counts 1–6 from high e to low E, the same as the lines on the tab.
 - `t` is seconds since you tapped New Riff. It's saved now and kept for later (e.g. rhythm).
+- `unsure: true` marks a note Riff Boi wasn't sure about (drawn faded; only saved when true).
 - Bent notes also have `bend` (semitones, 1 to 3), and `release: true` and/or `prebend: true` when those happened. `fret` is always the fretted note, so `{ "fret": 7, "bend": 2, "release": true }` is drawn as `7b9r7`.
 - `bpm` is the tempo the riff was played at, and `endTime` is when the last note ended (seconds since New Riff), so the note values can be drawn again. Riffs from before this don't have them: they use today's tempo, and the last note counts as a quarter note.
 - `rhythm` is whether the Rhythm switch was on when the riff was recorded. Riffs from before this don't have it and are drawn with rhythm on.

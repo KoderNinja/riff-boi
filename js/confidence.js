@@ -57,3 +57,28 @@ export function riffConfidence(notes, volumes) {
   const hint = value < 0.7 ? HINTS[weakest] : 'Sounds clean';
   return { score, ...parts, hint };
 }
+
+// How sure Riff Boi is about ONE note, 0 to 1, from its first readings: how clear, steady and in
+// tune it was (like the riff's score, but without background noise, which is the whole riff's).
+export function noteSureness(note) {
+  const q = note.quality;
+  if (!q || q.matched === 0) return 0;
+  const tone = scale(q.claritySum / q.matched, CLARITY_RANGE);
+  const tuning = scale(q.centsSum / q.matched, CENTS_RANGE);
+  const steadiness = scale(q.matched / q.heard, STEADY_RANGE);
+  const { tone: wTone, steadiness: wSteady, tuning: wTuning } = WEIGHTS;
+  return (wTone * tone + wSteady * steadiness + wTuning * tuning) / (wTone + wSteady + wTuning);
+}
+
+// Notes the tab fades, so you know which ones to double-check: a low score. (On the learner's
+// recordings that's about 1 note in 11, all in the hardest spots: fast, distorted notes and a
+// very soft first note; none on the clean fret runs.) An octave fix alone doesn't count: it's
+// routine on clean notes, and it usually gets the note right. A saved note has no readings left,
+// so it just says whether it was unsure.
+export const UNSURE_BELOW = 0.4;
+
+export function isUnsure(note) {
+  if (!note.quality) return Boolean(note.unsure);
+  return noteSureness(note) < UNSURE_BELOW;
+}
+

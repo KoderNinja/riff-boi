@@ -5,7 +5,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { readNote, createNoteTracker, cleanUpRiff, tuningOf, stillRinging, RINGING_READINGS, notesFromReadings } from '../js/notes.js';
 import { placeNotes, positionsFor, drawTab, tabToken, otherSpots, tabText, fretOn, withFret } from '../js/tab.js';
-import { riffConfidence } from '../js/confidence.js';
+import { riffConfidence, isUnsure } from '../js/confidence.js';
 import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS, barStarts } from '../js/rhythm.js';
 import { tabSvg } from '../js/tabsvg.js';
 import { openInput, listInputs } from '../js/audio.js';
@@ -766,6 +766,29 @@ check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().m
   check('wav: the header says 16-bit, one channel, 48 kHz, 6 samples', header === 'RIFF 48 WAVE fmt  16 1 1 48000 96000 2 16 data 12' && view.byteLength === 56, header);
   const samples = Array.from({ length: 6 }, (_, i) => view.getInt16(44 + i * 2, true)).join(' ');
   check('wav: sound from -1 to 1 becomes whole numbers, and louder than that is clipped', samples === '0 32767 -32768 16384 32767 -32768', samples);
+}
+
+// --- Fading the notes Riff Boi isn't sure about ---
+{
+  const clear = { heard: 20, matched: 18, claritySum: 18 * 0.97, centsSum: 18 * 5 };
+  const blurry = { heard: 16, matched: 2, claritySum: 2 * 0.82, centsSum: 2 * 15 };
+  check('unsure notes: a clear, steady note isn\'t faded (even if its octave was fixed); a blurry one is',
+    !isUnsure({ quality: clear }) && !isUnsure({ quality: clear, fixed: true }) && isUnsure({ quality: blurry }));
+  check('unsure notes: a saved note just says whether it was unsure', isUnsure({ unsure: true }) && !isUnsure({}));
+  const svg = tabSvg([{ string: 5, fret: 3, t: 0, unsure: true }, { string: 5, fret: 5, t: 0.5 }], { bpm: 120, endTime: 1 });
+  check('unsure notes: drawn faded in the tab', (svg.match(/class="t-fret t-unsure"/g) || []).length === 1);
+  shelf.set('riffboi.riffs', '[]');
+  saveRiff([{ midi: 48, string: 5, fret: 3, t: 0, unsure: true }, { midi: 50, string: 5, fret: 5, t: 0.5, unsure: false }], null, { bpm: 120, endTime: 1 });
+  const savedNotes = loadRiffs()[0].notes;
+  check('unsure notes: saved with the riff (only when true)', savedNotes[0].unsure === true && !('unsure' in savedNotes[1]));
+  // On real recordings: none on the clean fret runs; on Crazy Train, the notes that were hardest to hear.
+  const dir = new URL('./recordings/', import.meta.url);
+  const unsureIn = (file) => notesFromReadings(JSON.parse(readFileSync(new URL(file, dir), 'utf8')).readings).notes.filter(isUnsure);
+  const clean = readdirSync(dir).filter((name) => name.startsWith('run-') && name.endsWith('.json')).flatMap(unsureIn);
+  const crazy = unsureIn('crazy-train.json').map((n) => `${n.name}@${n.t}`);
+  check('unsure notes: none on the clean fret runs', clean.length === 0, clean.map((n) => n.name).join(' '));
+  check('unsure notes: on Crazy Train, the hardest notes (like the B2 and D3 found only by the distortion rules)',
+    crazy.includes('B2@5.83') && crazy.includes('D3@8.33') && crazy.length <= 10, crazy.join(' '));
 }
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');

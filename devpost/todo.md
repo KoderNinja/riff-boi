@@ -85,7 +85,7 @@ Ranked by how much each one helps Riff Boi before the deadline, for how much wor
 5. [x] Copy a riff as text tab, part of the export idea. Size: small. Done: a Copy button on saved riffs, with bar lines (built while I was away, so check it).
 6. [x] A key and scale finder that shows what key or scale a riff is in, like E minor pentatonic. Size: small to medium. Done: "Sounds like ..." under a saved riff (built while I was away, so check it).
 7. A tuning setting like Drop D (my idea). Size: medium. Drop D is very common in metal.
-8. Mark the notes Riff Boi isn't sure about (dim them in the tab), so I know which ones to double-check. Size: medium. It goes with the accuracy work.
+8. [x] Mark the notes Riff Boi isn't sure about (dim them in the tab), so I know which ones to double-check. Size: medium. Done: faded, live and on saved riffs; editing a note un-fades it (built while I was away, so check it).
 9. Techniques in the tab: hammer-ons (`5h7`), pull-offs (`7p5`), slides (`5/7` up, `7\5` down), vibrato (`~`), palm mutes (P.M.), tremolo picking, pinch harmonics, tapping (`t`), sweep picking, and natural and artificial harmonics. Riff Boi already knows if a note was picked, so hammer-ons, pull-offs and slides are the easiest start. Size: medium to big. Hearing them right is the hard part.
 10. [x] Share a riff with a link that opens its tab in a friend's browser. Size: medium. Done: Share on saved riffs, and Save to my riffs when you open one (built while I was away, so check it).
 11. A metronome: play a click while I record. Size: small to medium. Showing a riff's tempo is done (that's Auto). The click could leak into the mic, so it needs care.

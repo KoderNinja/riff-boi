@@ -111,13 +111,17 @@ Play plays a tab back. `playbackPlan` works out when each note starts and how lo
 
 Share packs the riff into the link itself: `riffToLink` turns it into short JSON, then into base64 (letters and digits that are safe in a link), after `#riff=`. Browsers never send the part after `#` to the website, so the riff isn't stored anywhere. `riffFromLink` unpacks it and checks every value first, because anyone can type a link: a string and fret must really give the note it says, for example.
 
+## Faded notes (`confidence.js`)
+
+`noteSureness` scores one note from its first readings (how clear, steady and in tune it was), and `isUnsure` fades notes under 0.4 in the tab, so you know which ones to check. On my recordings that's about 1 note in 11, all in the hardest spots, and none on the clean fret runs. Editing a note un-fades it.
+
 ## `js/storage.js`: the notebook
 
 Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs` (the riffs), `riffboi.settings` (tempo and rhythm) and `riffboi.inputDeviceId` (your input). A riff keeps only what's needed to draw it again: each note's pitch, string, fret, time and bend, plus the confidence, the tempo, when the last note ended, whether rhythm was on, the time signature and whether the tempo was worked out. `riffTiming` reads those back, so a saved riff is always drawn the way it was recorded, `updateRiff` saves a change, like a tempo you typed or a new name, and `deleteRiff` removes a riff. Every save is wrapped in `try`, because some private windows block storage.
 
 ## `tools/`: the tests
 
-- `check.mjs`: 177 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
+- `check.mjs`: 183 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
 - `score.mjs`: the scoreboard. It replays my 8 real recordings and compares them to what I really played (the `.txt` answer files): 110 of 115 notes, and 83 of 83 on the right string.
 - `replay.mjs`: replays one `?debug` recording through the current code, to compare before and after a change.
 

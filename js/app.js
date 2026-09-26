@@ -7,7 +7,7 @@ import { placeNotes, otherSpots, STRING_NAMES, tabText, fretOn, withFret, tabTok
 import { tabSvg } from './tabsvg.js';
 import { METERS, detectTempo, barStarts } from './rhythm.js';
 import { loadRiffs, saveRiff, updateRiff, deleteRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
-import { riffConfidence } from './confidence.js';
+import { riffConfidence, isUnsure } from './confidence.js';
 import { writtenRiff, retime, EDITOR_MAX_FRET, typedFret } from './editor.js';
 import { playNotes } from './playback.js';
 import { riffFromRecording } from './upload.js';
@@ -168,8 +168,18 @@ inputSelect.addEventListener('change', () => saveInputId(inputSelect.value));
 onInputsChange(showInputs); // an input was plugged in or unplugged
 
 // The live tab, redrawn when a note is added or changes. The newest note is red.
+// Notes Riff Boi wasn't sure about are drawn faded. The note still ringing isn't judged until it
+// has been heard for a moment (8 readings), so it doesn't flicker.
+const JUDGE_AFTER = 8;
+function markUnsure(notes, live = false) {
+  return notes.map((note, i) => {
+    const ringing = live && i === notes.length - 1 && (note.quality?.heard ?? 0) < JUDGE_AFTER;
+    return { ...note, unsure: !ringing && isUnsure(note) };
+  });
+}
+
 function drawLiveTab(notes) {
-  liveTab.innerHTML = tabSvg(notes, { bpm: settings.bpm, timing: settings.rhythm, meter: settings.meter, highlightLast: true });
+  liveTab.innerHTML = tabSvg(markUnsure(notes, true), { bpm: settings.bpm, timing: settings.rhythm, meter: settings.meter, highlightLast: true });
   liveTab.scrollLeft = liveTab.scrollWidth; // keep the newest notes in view
 }
 
@@ -323,6 +333,7 @@ function drawRiff(riff) {
   closeEdit();
   const timing = riffTiming(riff, settings.bpm);
   $('riff-tab').innerHTML = tabSvg(riff.notes, timing);
+  $('move-hint').textContent = editHint();
   // Each note can be tapped (or reached with Tab and Enter) to move it to another string.
   $('riff-tab').querySelectorAll('.t-fret').forEach((fret, i) => {
     fret.setAttribute('tabindex', '0');
@@ -484,7 +495,7 @@ stopBtn.addEventListener('click', async () => {
   const { auto, detected, bpm } = tempoFor(notes);
   let riff;
   try {
-    riff = saveRiff(notes, riffConfidence(notes, volumes), { bpm, endTime, rhythm: settings.rhythm, meter: settings.meter, autoTempo: detected !== null });
+    riff = saveRiff(markUnsure(notes), riffConfidence(notes, volumes), { bpm, endTime, rhythm: settings.rhythm, meter: settings.meter, autoTempo: detected !== null });
   } catch (err) {
     console.error(err);
     $('saving-title').textContent = "Couldn't save";
@@ -703,7 +714,7 @@ function saveNotes(notes) {
 
 // Change note i (like { string, fret }, or a new fret from withFret) and keep editing it.
 function changeNote(i, changes) {
-  saveNotes(shownRiff.notes.map((note, j) => (j === i ? { ...note, ...changes } : note)));
+  saveNotes(shownRiff.notes.map((note, j) => (j === i ? { ...note, ...changes, unsure: undefined } : note))); // you checked it
   openEdit(i);
 }
 
@@ -724,10 +735,13 @@ function flashHint(text) {
   hint.textContent = text;
   hint.hidden = false;
   clearTimeout(hintTimer);
-  hintTimer = setTimeout(() => (hint.textContent = EDIT_HINT), 3000);
+  hintTimer = setTimeout(() => (hint.textContent = editHint()), 3000);
 }
-const EDIT_HINT = 'Tap a note to change it, or drag it to another string';
-$('move-hint').textContent = EDIT_HINT;
+// The hint under a saved riff's tab (it explains faded notes when there are some).
+function editHint() {
+  const faded = shownRiff?.notes.some((note) => note.unsure);
+  return (faded ? 'Faded notes are ones Riff Boi wasn\'t sure about. ' : '') + 'Tap a note to change it, or drag it to another string';
+}
 
 // Dragging: press on a note (or the dark patch behind it), move up or down, let go. While it
 // moves, it shows the fret it would have on that string, or × if it can't go there.
@@ -779,7 +793,7 @@ $('riff-tab').addEventListener('pointerup', () => {
     return flashHint(`${note.name} can't be played on that string`);
   }
   if (target.string === note.string) return drawRiff(shownRiff);
-  saveNotes(shownRiff.notes.map((n, j) => (j === i ? { ...n, ...target } : n)));
+  saveNotes(shownRiff.notes.map((n, j) => (j === i ? { ...n, ...target, unsure: undefined } : n))); // you checked it
   focusNote(i);
 });
 
@@ -835,7 +849,7 @@ async function tabFromRecording(file, name) {
   const { detected, bpm } = tempoFor(result.notes);
   let riff;
   try {
-    riff = saveRiff(result.notes, riffConfidence(result.notes, result.volumes), {
+    riff = saveRiff(markUnsure(result.notes), riffConfidence(result.notes, result.volumes), {
       bpm, endTime: result.endTime, rhythm: settings.rhythm, meter: settings.meter, autoTempo: detected !== null, name,
     });
   } catch (err) {

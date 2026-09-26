@@ -220,3 +220,8 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - I measured the delay: a note shows up about 64 ms after its pitch first appears (90% within 164 ms). The slow ones start with a blurry attack. Faster would mean trusting blurry readings, which is where fake notes come from, so it stays.
 - Knowing the string from the sound is a real research problem: a thicker string is stiffer, so its overtones sit a little sharp (inharmonicity), and that can tell strings apart on a clean sound. To try it, Riff Boi needs the raw sound, not just pitch readings, so `?debug` can now save a WAV file. The plan is in `devpost/string-detection.md`.
 - The raw sound is copied on the browser's audio thread by an AudioWorklet, a small piece of code that gets every 128 samples as they come in.
+
+## Sep 26, 2026: Fading the notes Riff Boi isn't sure about
+- Each note already had a quality score from its first readings (clear, steady, in tune). Notes under 0.4 are now drawn faded, so I know which to check, and dragging or changing one un-fades it.
+- I checked what the scores look like on my recordings before picking the line: 93 of 114 notes score 80 or more, and the 10 under 40 are exactly the hardest ones.
+- The checks on real recordings caught a bad first idea: also fading notes whose octave was fixed made a clean G3 look unsure. An octave fix is routine, so it doesn't count anymore.

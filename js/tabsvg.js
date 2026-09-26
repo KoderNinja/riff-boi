@@ -89,8 +89,9 @@ export function tabSvg(notes, { bpm = 120, endTime = null, meter = '4/4', timing
   notes.forEach((note, i) => {
     const y = stringY(note.string);
     const now = highlightLast && i === notes.length - 1 ? ' t-now' : '';
+    const unsure = note.unsure ? ' t-unsure' : ''; // Riff Boi wasn't sure: drawn faded
     parts.push(`<rect class="t-gap" x="${xs[i] - widths[i] / 2}" y="${y - 8}" width="${widths[i]}" height="16"/>`);
-    parts.push(`<text class="t-fret${now}" x="${xs[i]}" y="${y}">${labels[i]}</text>`);
+    parts.push(`<text class="t-fret${now}${unsure}" x="${xs[i]}" y="${y}">${labels[i]}</text>`);
     if (note.bend && bendArrows) parts.push(bendArrow(note, xs[i], widths[i], y));
   });
 

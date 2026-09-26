@@ -69,7 +69,7 @@ export function saveRiff(notes, confidence = null, details = {}) {
     createdAt: now.toISOString(),
     // Keep just what's needed to draw the tab again later (see spec.md > Data Model).
     // Bend details are only there for bent notes (the rest are left out when saved).
-    notes: notes.map(({ midi, name, string, fret, t, bend, release, prebend }) => ({ midi, name, string, fret, t, bend, release, prebend })),
+    notes: notes.map(({ midi, name, string, fret, t, bend, release, prebend, unsure }) => ({ midi, name, string, fret, t, bend, release, prebend, unsure: unsure || undefined })),
     confidence: confidence && roundNumbers(confidence),
     bpm: details.bpm,
     endTime: details.endTime === undefined ? undefined : Math.round(details.endTime * 100) / 100,

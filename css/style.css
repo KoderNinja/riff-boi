@@ -527,6 +527,10 @@ body {
   fill: var(--red); /* the newest note while recording */
 }
 
+.t-unsure {
+  opacity: 0.45; /* Riff Boi wasn't sure about this note: worth a check */
+}
+
 .t-clef,
 .t-time {
   fill: var(--muted);
@@ -903,6 +907,7 @@ body {
 .move-hint {
   margin: 8px 0 0;
   font-size: 0.85rem;
+  text-align: center;
 }
 
 /* Which key and scale a saved riff sounds like. */
