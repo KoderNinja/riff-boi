@@ -8,52 +8,62 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 
 ## Next up
 
-Where we left off (Sep 26, 2026, just after midnight):
-- Everything is on GitHub and live at https://riffboi.com (pull request #1, merged). Vercel updates the site whenever `main` changes on GitHub.
-- Pushing from my Mac works now: this project's git signs in with GitHub's `gh` tool (in `~/.local/bin`), which I approved in Chrome.
-- Built and waiting for my guitar test: the input picker and "Can't hear your guitar" message (slice 4), the confidence bar, string bends and note values.
-- Next: one guitar session to test all of those (and my iPhone), then a quick code review, then the time signature and tempo detection if there's time.
+Where we left off (Sep 26, 2026, about 1:30am):
+- The code review is done. In the cloud session, Claude fixed my iPhone not hearing notes (the phone started the sound system paused) and 2 bugs the review found. Those commits aren't on GitHub yet, so riffboi.com doesn't have them until I push (the first "must do" below).
+- Claude's part, in priority order: a code tour, getting the precision test ready, the time signature, tempo detection, then updating the GitHub descriptions and README, then a quick codebase check (my requests).
+- My part: push the new commits, then test on my iPhone and with my guitar.
 
 ## Before the deadline
 
-### Stuff only I can do
-- [x] Make a free GitHub org (`riff-boi`) and move the repo there: https://github.com/riff-boi/riff-boi
-- [x] Give Matt access (Matt is a collaborator on GitHub)
-- [x] Push my newest commits to GitHub from my Mac (with GitHub's `gh` tool, approved in Chrome)
-- [ ] Only if I want cloud sessions on Riff Boi again: give the Claude GitHub App access to the org (https://github.com/apps/claude/installations/select_target, then the `riff-boi` org, then the `riff-boi` repo)
-- [x] Get a live link: https://riffboi.com, on Vercel. It updates whenever I push to GitHub
-- [ ] Put the live link in the repo's About box on GitHub and in Devpost's "Try it out" field (the README has it now)
-- [x] Buy riffboi.com and point it at the live link
-- [ ] Test Riff Boi on my iPhone with the live link (Safari asks for the mic)
-- [x] Get the newest copy onto my Mac (the `riff-boi.zip` download from the cloud session). Git brought it into my `beginners-paradise` folder, so that folder is the up-to-date one
-- [ ] Test each new feature with my guitar
-- [ ] Record a few string bends with `?debug` for the bends feature
-- [x] Join the hackathon on Devpost
-- [x] Matt isn't on my Devpost team (Matt is a collaborator on GitHub), so Matt doesn't go on the submission
-- [ ] Write my Devpost description: what it is, the problem, who it's for and how it works (my words)
-- [ ] Say how I used AI (Claude Code) in that description (my words)
-- [ ] Write the "AI use" part of the README (my words)
-- [ ] Take screenshots for the Devpost gallery and thumbnail
-- [ ] Fill in Devpost's "Built with" tags (like javascript, html, css, web audio api, pitchy)
-- [ ] Do a practice run with my audio interface before recording
-- [ ] Record the 3 to 5 minute demo video: live demo, how it works, the tech, the hard parts and what I learned
-- [ ] Submit on Devpost, Wednesday morning if I can, not at 4:59
+In order of priority. "Me" is stuff only I can do, "Claude" is building with Claude.
 
-### Building with Claude, in this order
-- [x] Put the project on GitHub
-- [ ] Confidence bar (slice 6): built, waiting for my guitar test
+### 1. Must do, to submit
+- [ ] Me: get the new commits from the cloud session onto GitHub (bring them to my Mac from the zip and push, like last time), so riffboi.com updates. Or give the Claude GitHub App access to the org, so the cloud session can push by itself: https://github.com/apps/claude/installations/select_target, then the `riff-boi` org, then the `riff-boi` repo
+- [ ] Me: test Riff Boi on my iPhone at https://riffboi.com (reload the page first). If it still can't hear, open https://riffboi.com/?debug and send Claude a screenshot of the numbers on the Recording screen
+- [ ] Me: test each new feature with my guitar:
+  - [ ] Input picker and the "Can't hear your guitar" message (slice 4)
+  - [ ] Confidence bar (slice 6)
+  - [ ] String bends: `7b9`, `7b9r7` and `7pb9r7`
+  - [ ] Note values, drawn like a Songsterr tab, at the BPM I set
+- [ ] Me: write my Devpost description: what it is, the problem, who it's for and how it works (my words)
+- [ ] Me: say how I used AI (Claude Code) in that description (my words)
+- [ ] Me: take screenshots for the Devpost gallery and thumbnail
+- [ ] Me: do a practice run with my audio interface before recording
+- [ ] Me: record the 3 to 5 minute demo video: live demo, how it works, the tech, the hard parts and what I learned
+- [ ] Me: submit on Devpost, Wednesday morning if I can, not at 4:59
+
+### 2. Should do, to make it better
+- [ ] Me: write the "AI use" part of the README (my words)
+- [ ] Me: put the live link in Devpost's "Try it out" field (Claude is getting the GitHub About box ready)
+- [ ] Me: fill in Devpost's "Built with" tags (like javascript, html, css, web audio api, pitchy)
+- [ ] Me: record a few string bends with `?debug`, so Claude can tune the bends feature
+- [ ] Claude: a code tour, a plain-words walk through each file, so I can explain my own code in the video
+- [ ] Me + Claude: precision test (slice 7). I play a known riff slow, fast and distorted, and we count the right, missed and extra notes. Real numbers for the demo
+- [ ] Claude: update all the GitHub descriptions (the About box: description, riffboi.com and topics) and the README (my request, after the to-do list)
+- [ ] Claude: a quick codebase check, last (my request)
+
+### 3. If there's time
+- [ ] Claude: change the time signature (like 3/4, 6/8 or 7/8), not just 4/4
+- [ ] Claude: tempo detection (my idea). A choice to let Riff Boi work out the tempo from how I play, instead of setting the BPM myself
+
+### Later, after the hackathon
+- [ ] A manual tab editor, to write my own tabs from scratch
+- [ ] Upload a tab (a file, or paste it in) and Riff Boi turns it into sheet music (my idea). Tab says the exact string and fret, so the notes are easy. The rhythm only comes along if the tab has it, like a Guitar Pro file
+- [ ] The other way too, upload sheet music and Riff Boi turns it into tab (my idea). It would pick the strings and frets with the same rule it already uses. A music file (like MusicXML) is the easy start; a photo or PDF of printed music needs the computer to read the page first, which is much harder
+- [ ] Only if I want cloud sessions on Riff Boi for good: give the Claude GitHub App access to the org (the link is in the first "must do")
+
+### Done
+- [x] Put the project on GitHub, then make a free GitHub org (`riff-boi`) and move the repo there: https://github.com/riff-boi/riff-boi
+- [x] Give Matt access (Matt is a collaborator on GitHub, not on my Devpost team, so Matt doesn't go on the submission)
+- [x] Get the newest copy onto my Mac from the `riff-boi.zip` download (git brought it into my `beginners-paradise` folder, so that folder is the up-to-date one) and push from my Mac (with GitHub's `gh` tool, approved in Chrome)
+- [x] Get a live link: https://riffboi.com, on Vercel. It updates whenever I push to GitHub
+- [x] Buy riffboi.com and point it at the live link
+- [x] Join the hackathon on Devpost
 - [x] README (the AI part is still mine to write; the live link is in; add a screenshot later)
 - [x] New layout and the Metal look (I picked it from 2 options)
-- [ ] String bends: hear them and write them in the tab, like `7b9`, `7b9r7` and `7pb9r7` (built, waiting for my bend recordings and guitar test)
-- [ ] Note values, drawn like a Songsterr tab: string lines with the fret numbers on them, bar lines, the tempo, rhythm stems under the tab. I set the BPM (built, waiting for my guitar test)
 - [x] A switch to turn rhythm off and just get the notes (evenly spaced, no bars, stems or tempo)
-- [ ] Input picker and a "Can't hear your guitar" message (slice 4): built, waiting for my guitar test
-- [ ] Quick code review to check for bugs (my request)
-- [ ] If there's time: change the time signature (like 3/4, 6/8 or 7/8), not just 4/4
-- [ ] If there's time: tempo detection (my idea). A choice to let Riff Boi work out the tempo from how I play, instead of setting the BPM myself
 - [x] App icon so it can go on my phone's home screen (the blackletter R; I picked it from 2 options)
-- [ ] If there's time: precision test (slice 7), final review and code tour
-- [ ] Later: a manual tab editor, to write my own tabs from scratch
+- [x] Quick code review to check for bugs (my request). It found my iPhone's sound system starting paused, bends on octave-fixed notes, and amp hiss stretching the last note. All 3 fixed in the cloud session
 
 ## Ideas for later
 - A super light Apple Watch version (my idea). It would need a real Apple Watch app written in Swift, since a web app can't use the watch's mic.
