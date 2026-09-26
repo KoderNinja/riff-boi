@@ -123,6 +123,50 @@ body {
   overflow-x: auto;
 }
 
+/* Confidence bar under the tab: 0% (not sure at all) to 100% (very sure), plus a hint. */
+.confidence {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.confidence[hidden] {
+  display: none;
+}
+
+.confidence-label {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.confidence-pct {
+  color: var(--text);
+}
+
+.confidence-bar {
+  height: 8px;
+  background: var(--panel);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  width: 0;
+  height: 100%;
+  background: var(--red);
+  transition: width 200ms ease-out;
+}
+
+.confidence-hint {
+  margin: 0;
+  min-height: 1.3em; /* keeps the layout still when a hint appears */
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 /* The small "last note heard" readout under the tab. */
 .note-display {
   display: flex;

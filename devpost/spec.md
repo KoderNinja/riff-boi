@@ -143,6 +143,11 @@ PRD ref: `prd.md > States and Boundaries`.
 A screen opened from the home screen. It uses the same listener (`audio.js`) and frequency → note math (`notes.js`), and shows the nearest note plus how far off it is in cents (hundredths of a semitone), with an "in tune" state within a few cents.
 PRD ref: `prd.md > Screens and Layout` (Tuner).
 
+### Confidence Bar (`confidence.js`) *(added during the build)*
+Under the tab on the Recording screen (live, updated 4 times a second) and in the Riff View (saved with the riff): a bar from 0 to 100% plus a one-line hint about the weakest part (e.g. "Lots of background noise", "Guitar may be out of tune — try the tuner").
+It combines four things Riff Boi can measure about the *sound*, each from 0 (bad) to 1 (good): **tone** (Pitchy's clarity), **tuning** (cents off, like the tuner), **background noise** (the quiet moments vs the notes) and **steadiness** (how often a note's first readings were really that note). Notes Riff Boi had to correct count against it. It can't know whether a string guess is right.
+PRD ref: `prd.md > What We're Building` (confidence bar).
+
 ## Data Model
 Everything lives in the browser's localStorage, as text in JSON format (a simple way of writing data as text).
 
@@ -156,13 +161,15 @@ Everything lives in the browser's localStorage, as text in JSON format (a simple
     "notes": [
       { "midi": 52, "name": "E3", "string": 5, "fret": 7, "t": 0.00 },
       { "midi": 55, "name": "G3", "string": 5, "fret": 10, "t": 0.41 }
-    ]
+    ],
+    "confidence": { "score": 0.87, "tone": 0.95, "tuning": 0.9, "noise": 0.7, "steadiness": 0.85, "hint": "Sounds clean" }
   }
 ]
 ```
 - `midi` is the note number: every note has one, e.g. low E = 40.
 - `string` counts 1–6 from high e to low E, the same as the lines on the tab.
 - `t` is seconds since you tapped New Riff. It's saved now and kept for later (e.g. rhythm).
+- `confidence` is how sure Riff Boi was about the riff (the score and each part from 0 to 1, rounded to 2 decimals) plus the hint, or `null` if there was nothing to judge. Riffs saved before the confidence bar don't have it.
 
 **`riffboi.inputDeviceId`**: which audio input you picked.
 
@@ -183,6 +190,7 @@ beginners-paradise/          # the project folder = the GitHub repo
 │   ├── audio.js             # mic/interface input, input list, listening loop, Pitchy
 │   ├── notes.js             # frequency → note, "is this a new note?" logic
 │   ├── tab.js               # position rule (string + fret) and drawing the tab
+│   ├── confidence.js        # how sure Riff Boi is about a riff (the confidence bar)
 │   └── storage.js           # save/load riffs and the chosen input (localStorage)
 ├── manifest.webmanifest     # (polish) home-screen app name, colors, icon
 ├── icons/                   # (polish) app icon for "Add to Home Screen"

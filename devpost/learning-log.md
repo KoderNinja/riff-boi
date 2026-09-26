@@ -72,3 +72,10 @@ What I learned and the problems I solved along the way. I'll use this for my dem
 - **Fair test:** my pentatonic at the 6th fret (never used for tuning) scored 10/12 notes, 6/10 strings before the fixes and 11/12, 11/11 after.
 - **Same notes, different places:** the sound can't tell the 6th-fret box from the 1st-position box. Riff Boi now tries every place you could have started and picks the one that needs the least hand movement.
 - **Scoreboard now:** 110/115 notes (96%), 0 wrong notes, 83/83 strings.
+
+## Sep 25, 2026 — Build slice 6: confidence bar
+- **A confidence score:** Riff Boi now shows how sure it is about a riff, from 0 to 100%, live while I play and saved with each riff. It combines four measurements of the sound (tone clarity, tuning, background noise and steadiness), weighted by how much each one matters.
+- **Honest limits:** it only judges the *sound*. It can't know whether a string guess is right, so a high score means "the notes are probably right", not "the tab matches where I played".
+- **The hint:** it names the weakest part, like "Lots of background noise" or "Guitar may be out of tune — try the tuner", so I know what to fix.
+- **Checked against my recordings:** Crazy Train (laptop mic, distortion, my least accurate recording) gets the lowest score, 51%. My fret runs get 84–100%.
+- **Breaking the code on purpose:** to prove the new checks really work, Claude broke the confidence code in 5 different ways in a copy of the project, and a check failed every time. This is called *mutation testing*.

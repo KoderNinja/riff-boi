@@ -4,6 +4,7 @@
 
 import { readNote, createNoteTracker, cleanUpRiff, tuningOf } from '../js/notes.js';
 import { placeNotes, positionsFor, drawTab } from '../js/tab.js';
+import { riffConfidence } from '../js/confidence.js';
 
 let allOk = true;
 function check(label, ok, detail = '') {
@@ -88,6 +89,46 @@ for (const [label, notes, expected] of cleanCases) {
   const got = names(cleanUpRiff(notes));
   check(label, got === expected, got);
 }
+
+// --- Confidence bar ---
+// The same 4-note riff, played clean and then with one thing made worse each time.
+// Each note: picked, rings for half a second, then a short gap before the next one.
+function lick({ cents = 0, clarity = 0.97, gap = 0.001 } = {}) {
+  const f = (midi) => hz(midi) * 2 ** (cents / 1200);
+  return [45, 48, 50, 52].flatMap((midi) => [
+    [f(midi), clarity, 0.02], [f(midi), clarity, 0.12],
+    ...Array.from({ length: 30 }, (_, i) => [f(midi), clarity, 0.3 * 0.97 ** i]),
+    ...Array.from({ length: 10 }, () => [0, 0.1, gap]),
+  ]);
+}
+// Run the readings through the tracker and clean-up like the app does, then score them.
+function riffFrom(readings) {
+  const track = createNoteTracker();
+  const notes = [];
+  readings.forEach(([f, c, v], i) => {
+    const result = track(f, c, v, i / 60);
+    if (result?.fix) Object.assign(notes[notes.length - 1], result.fix);
+    else if (result) notes.push(result);
+  });
+  return cleanUpRiff(notes);
+}
+const confidenceOf = (readings) => riffConfidence(riffFrom(readings), readings.map((r) => r[2]));
+const describe = (c) => `${Math.round(100 * c.score)}% "${c.hint}"`;
+const clean = confidenceOf(lick());
+check('confidence: a clean riff scores high and "Sounds clean"', clean.score > 0.9 && clean.hint === 'Sounds clean', describe(clean));
+const outOfTune = confidenceOf(lick({ cents: 30 }));
+check('confidence: 30 cents out of tune scores lower and suggests the tuner',
+  outOfTune.score < clean.score - 0.1 && outOfTune.hint.includes('try the tuner'), describe(outOfTune));
+const noisy = confidenceOf(lick({ gap: 0.06 }));
+check('confidence: loud background noise between notes scores lower and says so',
+  noisy.score < clean.score - 0.1 && noisy.hint === 'Lots of background noise', describe(noisy));
+const unclear = confidenceOf(lick({ clarity: 0.83 }));
+check('confidence: an unclear tone (clarity just over the limit) scores lower and says so',
+  unclear.score < clean.score - 0.1 && unclear.hint.startsWith('Pitch is unclear'), describe(unclear));
+const allFixed = riffConfidence(riffFrom(lick()).map((n) => ({ ...n, fixed: true })), lick().map((r) => r[2]));
+check('confidence: notes Riff Boi had to correct count against it (every note fixed = 30% less)',
+  Math.abs(allFixed.score - clean.score * 0.7) < 0.001, describe(allFixed));
+check('confidence: no notes = no score (the bar stays empty)', riffConfidence([], []) === null);
 
 // --- String and fret ---
 const riff = [42, 42, 49, 42, 50].map((midi) => ({ midi }));

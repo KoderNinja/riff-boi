@@ -29,6 +29,12 @@
   <section id="screen-recording" class="screen" hidden>
     <h2 class="screen-title">Listening…</h2>
     <pre id="live-tab" class="tab"></pre>
+    <!-- Confidence bar: how sure Riff Boi is about the tab (filled in by app.js) -->
+    <div id="live-confidence" class="confidence">
+      <div class="confidence-label"><span>Confidence</span><span class="confidence-pct">–</span></div>
+      <div class="confidence-bar" role="meter" aria-label="Confidence" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="confidence-fill"></div></div>
+      <p class="confidence-hint"></p>
+    </div>
     <div class="note-display">
       <span id="note-name" class="note-name">–</span>
       <span id="note-freq" class="note-freq">Play a note</span>
@@ -65,6 +71,12 @@
   <section id="screen-riff" class="screen" hidden>
     <h2 id="riff-title" class="screen-title"></h2>
     <pre id="riff-tab" class="tab"></pre>
+    <!-- Same confidence bar, for the saved riff (hidden for riffs saved before it existed) -->
+    <div id="riff-confidence" class="confidence" hidden>
+      <div class="confidence-label"><span>Confidence</span><span class="confidence-pct">–</span></div>
+      <div class="confidence-bar" role="meter" aria-label="Confidence" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="confidence-fill"></div></div>
+      <p class="confidence-hint"></p>
+    </div>
     <p id="riff-count" class="muted"></p>
     <button id="back-btn" class="small-btn">← Latest Riffs</button>
   </section>

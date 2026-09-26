@@ -58,6 +58,7 @@ export const FIX_WINDOW = 10;       // how long after a note appears Riff Boi ma
 export const REPICK_LEVEL = 0.75;  // picking the same note again must be this loud compared to the note's loudest
 export const REPICK_HOLD = 7;      // ...and then hold its pitch this many readings
 export const BREAK_RING = 8;       // a pitch break only counts as a re-pick after the note rang this long
+export const QUALITY_WINDOW = 20;  // judge each note's quality over its first 20 readings (1/3 s)
 
 // Is this pitch probably a harmonic of the ringing note, not a new note?
 // Distortion and strong picking make a note's overtones loud. The ones with a DIFFERENT
@@ -69,8 +70,9 @@ function isLikelyHarmonic(midi, ringingMidi) {
 }
 
 // Makes a note tracker. Feed it every reading. It returns:
-// - a new note { midi, name, t, peak } when one starts (peak = how loud it got while its
-//   pitch was heard; it keeps growing while the note rings: the tracker updates that object),
+// - a new note { midi, name, t, peak, quality } when one starts (peak = how loud it got while
+//   its pitch was heard; quality = how clear, steady and in tune its first readings were;
+//   both keep updating while the note rings, because the tracker updates that same object),
 // - { fix: { midi, name } } when the note it just wrote was in the wrong octave,
 // - or null.
 //
@@ -96,7 +98,7 @@ export function createNoteTracker() {
   let pickUsed = true;      // has the last pick already started a note?
 
   function start(midi, t, volume) {
-    current = { midi, name: midiToName(midi), t, peak: volume };
+    current = { midi, name: midiToName(midi), t, peak: volume, quality: { heard: 0, matched: 0, claritySum: 0, centsSum: 0 } };
     sinceStart = 0;
     pickUsed = true; // one pick = one note
     candidate = null;
@@ -127,6 +129,16 @@ export function createNoteTracker() {
     }
 
     const note = readNote(freq, clarity, volume);
+    // Keep score of the ringing note's first readings: did we hear it clearly and in tune?
+    if (current && current.quality.heard < QUALITY_WINDOW) {
+      const q = current.quality;
+      q.heard++;
+      if (note && note.midi % 12 === current.midi % 12) {
+        q.matched++;
+        q.claritySum += clarity;
+        q.centsSum += Math.abs(tuningOf(freq).cents);
+      }
+    }
     if (!note) {
       lowerCount = 0;
       // A few junk readings don't interrupt anything; more than that resets the candidate.
@@ -151,6 +163,7 @@ export function createNoteTracker() {
       if (lowerCount >= 2 && !picked && repickCount === 0 && sinceStart <= FIX_WINDOW) {
         current.midi = note.midi;
         current.name = note.name;
+        current.fixed = true; // Riff Boi wasn't sure about this one
         lowerCount = 0;
         return { fix: { midi: note.midi, name: note.name } };
       }
@@ -226,7 +239,7 @@ export function cleanUpRiff(notes) {
     for (const fix of GLITCH_FIXES) {
       const midi = note.midi + fix;
       if (midi > low && midi < high && midi >= LOWEST_MIDI && midi <= HIGHEST_MIDI) {
-        return { ...note, midi, name: midiToName(midi) };
+        return { ...note, midi, name: midiToName(midi), fixed: true };
       }
     }
     return note;

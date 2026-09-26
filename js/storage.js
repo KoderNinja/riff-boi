@@ -14,8 +14,9 @@ export function loadRiffs() {
 }
 
 // Save a new riff at the top of the list and return it.
+// `confidence` is how sure Riff Boi was about it (see confidence.js), or null.
 // Throws if the browser won't let us save (the app shows a message).
-export function saveRiff(notes) {
+export function saveRiff(notes, confidence = null) {
   const now = new Date();
   const riff = {
     id: String(now.getTime()),
@@ -23,7 +24,14 @@ export function saveRiff(notes) {
     createdAt: now.toISOString(),
     // Keep just what's needed to draw the tab again later (see spec.md > Data Model).
     notes: notes.map(({ midi, name, string, fret, t }) => ({ midi, name, string, fret, t })),
+    confidence: confidence && roundNumbers(confidence),
   };
   localStorage.setItem(RIFFS_KEY, JSON.stringify([riff, ...loadRiffs()]));
   return riff;
+}
+
+// 0.873456 → 0.87, so saved riffs stay small. Text (like the hint) stays as it is.
+function roundNumbers(object) {
+  return Object.fromEntries(Object.entries(object).map(([key, value]) =>
+    [key, typeof value === 'number' ? Math.round(value * 100) / 100 : value]));
 }

@@ -78,6 +78,7 @@ Success is the moment in `scope.md > What "Working" Looks Like`: **"I play a rif
 - "Can't hear the guitar" message
 - Input picker on the home screen (remembers your choice)
 - A built-in guitar tuner *(added during the build)*
+- A confidence bar showing how sure Riff Boi is about the tab, based on tone clarity, tuning, background noise and steadiness *(added during the build)*
 - Dark black-and-red metal look
 
 ## Deferred From the POC

@@ -29,7 +29,7 @@ Build mode: learn
   Learner check: Play a short single-note riff you know. Do the notes appear in order, live, while you play? Are the fret positions playable, even if they're not exactly where you played them? (This is the early feedback checkpoint: tell me anything about how it feels that should change the rest of the build.)
   Commit: `Turn detected notes into live tab`
 
-- [ ] **3. Stop, save, and find your riff on the home screen**
+- [x] **3. Stop, save, and find your riff on the home screen**
   Becomes usable: The full core journey: home screen with Latest Riffs (newest first) and New Riff → record → Stop → "Saving…" confirmation → back home with the riff on top. Tapping a riff opens its tab. Riffs survive closing and reopening the browser. Empty list says "No riffs yet"; stopping with no notes saves nothing and says so.
   Why now: Once the kernel works, saving is what makes a captured riff safe, which was your reason for the home list. It depends on the note shape from slice 2.
   PRD ref: `prd.md > The Core Journey`, `prd.md > Stopping and Saving`, `prd.md > Latest Riffs List`, `prd.md > States and Boundaries` (first use, persistence)
@@ -49,7 +49,7 @@ Build mode: learn
   Learner check: Plug in your interface, pick it in the dropdown, reload the page and check it's still picked, then record a riff through it. Also try tapping New Riff and not playing anything: does the message show up?
   Commit: `Add input picker and can't-hear message`
 
-- [ ] **5. Tune your guitar with the built-in tuner**
+- [x] **5. Tune your guitar with the built-in tuner**
   Becomes usable: A Tuner button on the home screen opens a tuner screen: play one string and it shows the nearest note and how sharp or flat you are, with a clear "in tune" state. Uses the input you picked.
   Why now: An out-of-tune string sits between two notes, which makes Riff Boi flip between them. Tuning up right before the precision test means the test measures Riff Boi, not the guitar. It reuses the listening code from slices 1 and 4.
   PRD ref: `prd.md > Screens and Layout` (Tuner), `prd.md > What We're Building`
@@ -59,7 +59,17 @@ Build mode: learn
   Learner check: Tune your guitar with it, then check one string against another tuner you trust. Do they agree?
   Commit: `Add a guitar tuner`
 
-- [ ] **6. Find out how precise Riff Boi is, and tune it**
+- [ ] **6. See how confident Riff Boi is about your tab**
+  Becomes usable: A small confidence bar with a percentage under the tab, live while recording and on every saved riff, plus a one-line hint about the weakest part (e.g. "Lots of background noise", "Guitar may be out of tune — try the tuner").
+  Why now: The learner asked for it (after the tuner, before the final look). It reuses the tracker's readings and the tuner math, and it should be honest, so it gets checked against the labeled recordings.
+  PRD ref: `prd.md > Live Note-to-Tab` (added feature: confidence bar)
+  Spec ref: `spec.md > Note Detector (notes.js)`, `spec.md > Saving and Storage (storage.js)`, `spec.md > Look and Feel`
+  Build: Track per-note clarity, steadiness and tuning (cents) in the tracker, measure background noise vs note loudness, combine them in a new `js/confidence.js`, show the bar on the Recording screen and Riff View, and save it with each riff.
+  Verify (mechanical): Checks for clean vs noisy/out-of-tune notes; a Confidence column in the scoreboard that rates the least accurate recording (Crazy Train, laptop mic) lowest; browser test of the live bar, saved bar and hint.
+  Learner check: Record the same riff clean and then with more distortion or background noise. Does the bar drop, and does the hint make sense?
+  Commit: `Add a confidence bar`
+
+- [ ] **7. Find out how precise Riff Boi is, and tune it**
   Becomes usable: Detection limits tuned from real testing on your guitar, with the results written down for your demo. Answers your question "how will the precision of the app be?"
   Why now: Tuning only makes sense once the whole journey and your interface work. The results feed straight into your demo and write-up.
   PRD ref: `prd.md > Live Note-to-Tab` (acceptance criteria)
@@ -69,7 +79,7 @@ Build mode: learn
   Learner check: Play the same riff again after tuning. Did the counts improve? Your numbers go in `devpost/learning-log.md` in your own words.
   Commit: `Tune note detection from precision testing`
 
-- [ ] **7. Make it look finished and runnable by judges**
+- [ ] **8. Make it look finished and runnable by judges**
   Becomes usable: Final metal look pass, "Add to Home Screen" support (manifest + icon), and a README that tells a judge how to run Riff Boi.
   Why now: Polish last, once behavior is settled. The README is required for submission and must describe the finished app.
   PRD ref: `prd.md > Look and Feel`, `prd.md > What We're Building`

@@ -4,6 +4,7 @@ import { startListening, stopListening } from './audio.js';
 import { createNoteTracker, cleanUpRiff, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN } from './notes.js';
 import { placeNotes, drawTab } from './tab.js';
 import { loadRiffs, saveRiff } from './storage.js';
+import { riffConfidence } from './confidence.js';
 
 const screens = {
   home: document.getElementById('screen-home'),
@@ -18,11 +19,16 @@ const noteName = $('note-name');
 const noteFreq = $('note-freq');
 const statusMsg = $('status-msg');
 const stopBtn = $('stop-btn');
+const liveConfidence = $('live-confidence');
 
 // The riff being recorded right now. Lives in memory only until Stop saves it.
 let riffNotes = [];
 let startTime = 0;
 let trackNote = null;
+let volumes = []; // every reading's volume, to measure background noise for the confidence bar
+
+// The confidence bar moves slowly, so it's updated 4 times a second (every 15 readings).
+const CONFIDENCE_EVERY = 15;
 
 // Debug recorder: open Riff Boi as http://localhost:8000/?debug to record every raw
 // reading, then save them as a file. Lets us replay real playing while tuning notes.js.
@@ -48,6 +54,15 @@ function currentRiff() {
   const notes = cleanUpRiff(riffNotes);
   placeNotes(notes);
   return notes;
+}
+
+// Fill in a confidence bar (see confidence.js). With no score yet, it shows an empty bar.
+function showConfidence(element, confidence) {
+  const pct = confidence ? Math.round(confidence.score * 100) : 0;
+  element.querySelector('.confidence-pct').textContent = confidence ? `${pct}%` : '–';
+  element.querySelector('.confidence-fill').style.width = `${pct}%`;
+  element.querySelector('.confidence-bar').setAttribute('aria-valuenow', pct);
+  element.querySelector('.confidence-hint').textContent = confidence ? confidence.hint : '';
 }
 
 // --- Home: Latest Riffs ---
@@ -79,6 +94,9 @@ function showRiff(riff) {
   drawTab($('riff-tab'), riff.notes);
   $('riff-tab').scrollLeft = 0; // start at the beginning of the riff
   $('riff-count').textContent = noteCount(riff.notes.length);
+  // Riffs saved before the confidence bar existed don't have a score: hide the bar for those.
+  $('riff-confidence').hidden = !riff.confidence;
+  if (riff.confidence) showConfidence($('riff-confidence'), riff.confidence);
   showScreen('riff');
 }
 
@@ -91,12 +109,9 @@ $('back-btn').addEventListener('click', showHome);
 function handleReading(freq, clarity, volume) {
   const t = (performance.now() - startTime) / 1000; // seconds since New Riff
   if (DEBUG) readings.push([round(freq, 2), round(clarity, 3), round(volume, 4), round(t, 3)]);
+  volumes.push(volume);
   const peakBefore = riffNotes[riffNotes.length - 1]?.peak;
   const result = trackNote(freq, clarity, volume, t);
-  // Redraw only when something changed: a new note, an octave fix, or the last note
-  // getting louder (that can change whether it counts as a quiet "ghost" note).
-  if (!result && riffNotes[riffNotes.length - 1]?.peak === peakBefore) return;
-
   if (result?.fix) {
     // The last note was really an octave lower: correct it.
     Object.assign(riffNotes[riffNotes.length - 1], result.fix);
@@ -104,6 +119,13 @@ function handleReading(freq, clarity, volume) {
     result.t = round(result.t, 2);
     riffNotes.push(result); // the tracker keeps updating this note's peak loudness
   }
+  if (volumes.length % CONFIDENCE_EVERY === 0) {
+    showConfidence(liveConfidence, riffConfidence(cleanUpRiff(riffNotes), volumes));
+  }
+  // Redraw only when something changed: a new note, an octave fix, or the last note
+  // getting louder (that can change whether it counts as a quiet "ghost" note).
+  if (!result && riffNotes[riffNotes.length - 1]?.peak === peakBefore) return;
+
   const shown = currentRiff();
   drawTab(liveTab, shown);
   noteName.textContent = shown.length ? shown[shown.length - 1].name : '–';
@@ -117,9 +139,11 @@ function round(x, digits) {
 $('new-riff-btn').addEventListener('click', async () => {
   riffNotes = [];
   readings = [];
+  volumes = [];
   startTime = performance.now();
   trackNote = createNoteTracker();
   drawTab(liveTab, riffNotes);
+  showConfidence(liveConfidence, null);
   noteName.textContent = '–';
   noteFreq.textContent = 'Play a riff';
   statusMsg.textContent = '';
@@ -154,7 +178,7 @@ stopBtn.addEventListener('click', async () => {
   showScreen('saving');
   let riff;
   try {
-    riff = saveRiff(notes);
+    riff = saveRiff(notes, riffConfidence(notes, volumes));
   } catch (err) {
     console.error(err);
     $('saving-title').textContent = "Couldn't save";
