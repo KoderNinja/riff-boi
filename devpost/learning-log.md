@@ -109,3 +109,8 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - A bug I noticed with Claude: my last note always came out as a whole note, because it lasted until I tapped Stop. Now it ends when the guitar goes quiet.
 - A test can be wrong too. One check expected a quarter note at 60 BPM, but half a second at 60 BPM really is an eighth note, so we fixed the check, not the code.
 - A Rhythm switch turns it all off, for when I just want the notes.
+
+## Sep 26, 2026: Moving from the cloud to my Mac
+- A cloud session runs on a computer in the cloud. A local session runs on my Mac, with the files in my own folder.
+- GitHub wouldn't let the cloud session push to my new org, because the Claude GitHub App isn't installed there. So my newest commits came to my Mac in a zip, with the whole history inside the hidden `.git` folder, and I push them to GitHub from my Mac with my own login.
+- A new session doesn't remember the old one. Claude Code reads `CLAUDE.md` at the start of every session, so I gave it a "Starting a session" part, and the to-do list has a "Next up" part that says where we left off.

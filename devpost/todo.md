@@ -6,17 +6,25 @@ doc: todo
 
 Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCommit). The hackathon checklist is in `CLAUDE.md`.
 
+## Next up
+
+Where we left off (Sep 26, 2026):
+- Riff Boi moved from a cloud session to my Mac. If `git status` says my branch is ahead of `origin/main`, push those commits to GitHub first.
+- Next to build: change the time signature. Then the input picker and the "Can't hear your guitar" message. Then a quick code review to check for bugs.
+- Built and waiting for my guitar test: the confidence bar, string bends and note values.
+
 ## Before the deadline
 
 ### Stuff only I can do
 - [x] Make a free GitHub org (`riff-boi`) and move the repo there: https://github.com/riff-boi/riff-boi
 - [ ] Invite Matt to the org, if I haven't yet
-- [ ] Give Claude access to the org so it can push again: https://github.com/apps/claude/installations/select_target, then the `riff-boi` org, then the `riff-boi` repo
+- [ ] Push my newest commits to GitHub from my Mac (GitHub Desktop's "Push origin" button, or Claude can walk me through it)
+- [ ] Only if I want cloud sessions on Riff Boi again: give the Claude GitHub App access to the org (https://github.com/apps/claude/installations/select_target, then the `riff-boi` org, then the `riff-boi` repo)
 - [ ] Get a live link. Either turn on GitHub Pages (github.com/riff-boi/riff-boi/settings/pages, "Deploy from a branch", `main`, `/ (root)`), which gives https://riff-boi.github.io/riff-boi/, or Matt deploys it on Vercel (free plan, Framework Preset "Other", keep the repo public)
 - [ ] Put the live link in the README, in the repo's About box on GitHub and in Devpost's "Try it out" field
 - [ ] Buy riffboi.com and point it at the live link (on Vercel: Settings, then Domains; for GitHub Pages, ask Claude for the DNS steps)
 - [ ] Test Riff Boi on my iPhone with the live link (Safari asks for the mic)
-- [ ] Sync my Mac copy with GitHub before I edit anything there (ask Claude for the steps)
+- [x] Get the newest copy onto my Mac (the `riff-boi.zip` download from the cloud session). My old `beginners-paradise` folder is only a backup now
 - [ ] Test each new feature with my guitar
 - [ ] Record a few string bends with `?debug` for the bends feature
 - [ ] Join the hackathon on Devpost
@@ -40,6 +48,7 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 - [x] A switch to turn rhythm off and just get the notes (evenly spaced, no bars, stems or tempo)
 - [ ] Change the time signature (like 3/4, 6/8 or 7/8), not just 4/4
 - [ ] Input picker and a "Can't hear your guitar" message (slice 4)
+- [ ] Quick code review to check for bugs (my request, after the next few tasks)
 - [x] App icon so it can go on my phone's home screen (the blackletter R; I picked it from 2 options)
 - [ ] If there's time: precision test (slice 7), final review and code tour
 - [ ] Later: a manual tab editor, to write my own tabs from scratch
