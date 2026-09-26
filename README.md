@@ -6,19 +6,24 @@ I've played guitar for six years, mostly technical metal and instrumental stuff.
 
 I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devpost.com/) hackathon (2026).
 
+**Try it:** https://riffboi.com (allow the mic when your browser asks)
+
 ## What it does
 
 - Writes tab live while you play single notes.
+- Hears string bends and writes them like real tab: `7b9` for a bend, `7b9r7` for a bend and release, `7pb9r7` for a pre-bend.
+- Draws the tab like a tab site (Songsterr style): string lines with the fret numbers on them, bar lines, and the rhythm underneath, at the tempo you set. You can switch rhythm off to just see the notes.
 - Saves each riff to a Latest Riffs list that's still there next time you open it.
 - Shows how sure it is about the tab, with a hint when something's off, like background noise or an out-of-tune guitar.
 - Has a tuner built in.
+- Lets you pick your mic or audio interface, remembers it, and tells you when it can't hear your guitar.
 
 ## Run it
 
-You'll need Chrome (other modern browsers should work too), Python 3 for a small local server (Macs usually have it already), a mic or an audio interface, and internet the first time the page loads, because it downloads the pitch detection library.
+The quickest way is the live version at https://riffboi.com. To run it on your own computer instead, you'll need Chrome (other modern browsers should work too), Python 3 for a small local server (Macs usually have it already), a mic or an audio interface, and internet the first time the page loads, because it downloads the pitch detection library.
 
 ```
-git clone https://github.com/KoderNinja/riff-boi.git
+git clone https://github.com/riff-boi/riff-boi.git
 cd riff-boi
 python3 -m http.server 8000
 ```
@@ -33,7 +38,7 @@ No guitar around? A piano or keyboard app playing single notes should work too.
 
 ## How it works
 
-The browser's Web Audio API listens to the mic 60 times a second, and [Pitchy](https://github.com/ianprime0509/pitchy) works out the pitch of each slice of sound and how clear it is. `js/notes.js` turns those pitches into notes. It decides when a new note starts (a pick, a pitch change, a hammer-on) and ignores harmonics and background noise. `js/tab.js` picks a string and fret for each note. The sound can't tell you which string you played, so it goes with the spot that needs the least hand movement. `js/confidence.js` scores how clear, in tune, quiet and steady the notes were, and `js/storage.js` saves riffs in the browser's localStorage, so there's no server and no accounts.
+The browser's Web Audio API listens to the mic 60 times a second, and [Pitchy](https://github.com/ianprime0509/pitchy) works out the pitch of each slice of sound and how clear it is. `js/notes.js` turns those pitches into notes. It decides when a new note starts (a pick, a pitch change, a hammer-on) and ignores harmonics and background noise. It also follows the pitch closely to hear bends: a bend glides smoothly through the pitches in between, while a hammer-on or slide jumps from fret to fret. `js/tab.js` picks a string and fret for each note. The sound can't tell you which string you played, so it goes with the spot that needs the least hand movement. `js/rhythm.js` turns when each note started into note values (quarter, eighth and so on) using your tempo, and `js/tabsvg.js` draws the tab picture. `js/confidence.js` scores how clear, in tune, quiet and steady the notes were, and `js/storage.js` saves riffs in the browser's localStorage, so there's no server and no accounts.
 
 The full plan is in [`devpost/spec.md`](devpost/spec.md).
 
@@ -50,11 +55,11 @@ node tools/check.mjs
 node tools/score.mjs
 ```
 
-`check.mjs` runs 59 checks on the note, tab and confidence logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
+`check.mjs` runs 91 checks on the note, bend, rhythm, tab, confidence and input picker logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
 
 ## What it can't do yet
 
-It only hears single notes, so no chords or power chords yet. It assumes standard tuning. The string and fret are a best guess, because the sound doesn't say which string you played. And a really soft first note can get missed.
+It only hears single notes, so no chords or power chords yet. It assumes standard tuning. The string and fret are a best guess, because the sound doesn't say which string you played. A really soft first note can get missed. A pre-bend only shows up once you release it, since until then it sounds just like a normal note, and a very slow bend (slower than about 0.4 seconds for a whole step) can come out as separate notes.
 
 ## How I made it
 

@@ -79,6 +79,8 @@ Success is the moment in `scope.md > What "Working" Looks Like`: **"I play a rif
 - Input picker on the home screen (remembers your choice)
 - A built-in guitar tuner *(added during the build)*
 - A confidence bar showing how sure Riff Boi is about the tab, based on tone clarity, tuning, background noise and steadiness *(added during the build)*
+- Note values in a tab drawn like Songsterr (string lines, bar lines, rhythm stems) at a tempo the learner sets, with a switch to turn rhythm off *(added during the build, learner request)*
+- String bends written like real tab: `7b9` (bend), `7b9r7` (bend and release), `7pb9r7` (pre-bend, once it's released) *(added during the build, learner request)*
 - Dark black-and-red metal look
 
 ## Deferred From the POC

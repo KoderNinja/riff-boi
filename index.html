@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Riff Boi</title>
+  <!-- App icon and "Add to Home Screen": opens full-screen like an app, with the blackletter R icon -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0b0b0b">
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <!-- Fonts from Google Fonts: UnifrakturCook (logo and titles, picked by the learner), Oswald (labels) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,6 +25,22 @@
       <button id="tuner-btn" class="secondary-btn tuner-btn">Tuner</button>
     </header>
     <button id="new-riff-btn" class="record-btn"><span class="record-dot" aria-hidden="true"></span>New Riff</button>
+    <!-- Settings for the tab: the tempo you play at (for note values) and rhythm on/off -->
+    <div class="settings-row">
+      <div class="tempo">
+        <span class="setting-label">Tempo</span>
+        <button id="bpm-down" class="step-btn" aria-label="Slower">−</button>
+        <input id="bpm-input" class="bpm-input" type="number" inputmode="numeric" min="40" max="240" step="1" value="120" aria-label="Tempo in beats per minute">
+        <span class="setting-unit">BPM</span>
+        <button id="bpm-up" class="step-btn" aria-label="Faster">+</button>
+      </div>
+      <label class="rhythm-switch"><input id="rhythm-input" type="checkbox" checked> <span class="setting-label">Rhythm</span></label>
+    </div>
+    <!-- Which input Riff Boi listens to: the mic or your audio interface (remembered between visits) -->
+    <label class="input-picker">
+      <span class="setting-label">Input</span>
+      <select id="input-select" class="input-select"><option value="">Default input</option></select>
+    </label>
     <!-- Only shown when the address ends in ?debug (for tuning note detection) -->
     <button id="save-readings-btn" class="small-btn" hidden>Save last recording's readings</button>
     <h2 class="screen-title">Latest Riffs</h2>
@@ -34,14 +55,18 @@
       <span id="note-name" class="note-name">–</span>
       <span id="note-freq" class="note-freq">Play a note</span>
     </div>
-    <pre id="live-tab" class="tab"></pre>
+    <div id="live-tab" class="tab"></div>
     <!-- Confidence bar: how sure Riff Boi is about the tab (filled in by app.js) -->
     <div id="live-confidence" class="confidence">
       <div class="confidence-label"><span>Confidence</span><span class="confidence-pct">–</span></div>
       <div class="confidence-bar" role="meter" aria-label="Confidence" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="confidence-fill"></div></div>
       <p class="confidence-hint"></p>
     </div>
-    <p id="status-msg" class="status-msg"></p>
+    <!-- Messages like "Can't hear your guitar", with a hint about what to try -->
+    <div class="status">
+      <p id="status-msg" class="status-msg"></p>
+      <p id="status-hint" class="status-hint"></p>
+    </div>
     <button id="stop-btn" class="big-btn bottom-btn">Stop</button>
   </section>
 
@@ -58,7 +83,10 @@
       <div id="tuner-status" class="tuner-status">Play one string</div>
       <div id="tuner-freq" class="muted"></div>
     </div>
-    <p id="tuner-msg" class="status-msg"></p>
+    <div class="status">
+      <p id="tuner-msg" class="status-msg"></p>
+      <p id="tuner-hint" class="status-hint"></p>
+    </div>
     <button id="tuner-done-btn" class="big-btn bottom-btn">Done</button>
   </section>
 
@@ -73,7 +101,7 @@
   <section id="screen-riff" class="screen" hidden>
     <button id="back-btn" class="back-btn">← Latest Riffs</button>
     <h2 id="riff-title" class="screen-title"></h2>
-    <pre id="riff-tab" class="tab"></pre>
+    <div id="riff-tab" class="tab"></div>
     <!-- Same confidence bar, for the saved riff (hidden for riffs saved before it existed) -->
     <div id="riff-confidence" class="confidence" hidden>
       <div class="confidence-label"><span>Confidence</span><span class="confidence-pct">–</span></div>

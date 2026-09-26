@@ -5,24 +5,24 @@ const BUFFER_SIZE = 2048; // how many sound samples Pitchy looks at each time
 // notes.js counts readings ("hold for 7 readings"), so readings must come at a steady rate.
 // A fixed timer does that on any screen (60 Hz, 120 Hz, battery saver...).
 const READINGS_PER_SECOND = 60;
+// Turn off the "phone call" clean-up features when opening the mic:
+// they're made for voices and would mess with a guitar's sound.
+const GUITAR_SOUND = { echoCancellation: false, noiseSuppression: false, autoGainControl: false };
 
 let audioContext = null;
 let stream = null;
 let loopId = null;
 let session = 0; // goes up every time listening stops, so a start that's still loading knows to give up
 
-// Start listening. onReading(freq, clarity, volume) is called 60 times a second.
-export async function startListening(onReading) {
+// Start listening to an input: its id from listInputs(), or '' for the default input.
+// onReading(freq, clarity, volume) is called 60 times a second.
+export async function startListening(onReading, deviceId = '') {
   const mySession = ++session;
   // Create the audio context right away, while we're still inside the button tap
   // (browsers only allow sound to start from something the user did).
   audioContext = new AudioContext();
 
-  // Ask for the mic. Turn off the "phone call" clean-up features:
-  // they're made for voices and would mess with a guitar's sound.
-  const micStream = await navigator.mediaDevices.getUserMedia({
-    audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
-  });
+  const micStream = await openInput(deviceId);
   // Stop was tapped while we waited (e.g. during the permission prompt)? Let the mic go.
   if (mySession !== session) {
     micStream.getTracks().forEach((track) => track.stop());
@@ -30,7 +30,18 @@ export async function startListening(onReading) {
   }
   stream = micStream;
 
-  const { PitchDetector } = await import(PITCHY_URL);
+  let PitchDetector;
+  try {
+    ({ PitchDetector } = await import(PITCHY_URL));
+  } catch (err) {
+    // No internet, or the network blocks the CDN. Let the mic go and tell app.js,
+    // which shows its own message for this.
+    console.error(err);
+    stopListening();
+    const error = new Error("Couldn't load Pitchy");
+    error.name = 'PitchyLoadError';
+    throw error;
+  }
   if (mySession !== session) return; // stopped while Pitchy was loading
   const detector = PitchDetector.forFloat32Array(BUFFER_SIZE);
 
@@ -58,6 +69,37 @@ export function stopListening() {
   loopId = null;
   stream = null;
   audioContext = null;
+}
+
+// Open the input you picked. If it's gone (like an unplugged interface), open the default input.
+export async function openInput(deviceId) {
+  if (deviceId) {
+    try {
+      return await navigator.mediaDevices.getUserMedia({ audio: { ...GUITAR_SOUND, deviceId: { exact: deviceId } } });
+    } catch (err) {
+      // Only "that input isn't there" falls back. Anything else, like a blocked mic,
+      // is a real problem that app.js tells you about.
+      if (err.name !== 'OverconstrainedError' && err.name !== 'NotFoundError') throw err;
+    }
+  }
+  return navigator.mediaDevices.getUserMedia({ audio: GUITAR_SOUND });
+}
+
+// The inputs you can pick from, like "MacBook Air Microphone" or "Scarlett 2i2".
+// Browsers keep the names secret until you've allowed the mic once, so before that
+// this list is empty and the picker only shows "Default input".
+export async function listInputs() {
+  if (!navigator.mediaDevices?.enumerateDevices) return [];
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  return devices
+    // Chrome also lists "Default" and "Communications" copies of real inputs: skip those.
+    .filter((d) => d.kind === 'audioinput' && d.label && !['', 'default', 'communications'].includes(d.deviceId))
+    .map((d) => ({ id: d.deviceId, name: d.label }));
+}
+
+// Call onChange when an input is plugged in or unplugged.
+export function onInputsChange(onChange) {
+  navigator.mediaDevices?.addEventListener('devicechange', onChange);
 }
 
 // Volume of a slice of sound (root mean square): 0 is silence, 1 is as loud as it gets.

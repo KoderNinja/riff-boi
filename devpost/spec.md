@@ -97,7 +97,8 @@ PRD ref: `prd.md > Latest Riffs List`, `prd.md > States and Boundaries`.
 ### Input Picker (`audio.js` + home screen)
 A dropdown listing audio inputs, e.g. "MacBook Microphone" or "Scarlett 2i2." The chosen input is saved in localStorage and reused for every new riff.
 - **Catch:** browsers hide input *names* until mic permission has been granted once. Before that, the picker shows just "Default input." After the first recording, it fills in the real names.
-- If the saved input is gone (e.g. the interface is unplugged), fall back to the default input.
+- If the saved input is gone (e.g. the interface is unplugged), fall back to the default input. The choice stays saved, so plugging the interface back in picks it again. The dropdown refreshes when an input is plugged in or unplugged.
+- The tuner listens to the same input *(added during the build)*.
 Learner decision (added during spec, a change from the PRD's no-setup idea): see **Decisions and Open Issues**.
 
 ### Audio Listener (`audio.js`)
@@ -138,6 +139,8 @@ Shown on the Recording screen when:
 - no clear note is detected within about 5 seconds of starting.
 
 It disappears as soon as a note is caught.
+
+*(Added during the build)* A short grey hint under the message says what to try: allow the mic, check the input is plugged in and not used by another app, or play louder and check the input on the home screen. If Pitchy can't be downloaded, the message is "Couldn't load the pitch detector" instead, because the fix is different (check the internet). The tuner shows the same messages.
 PRD ref: `prd.md > States and Boundaries`.
 
 ### Tuner *(added during the build)*
@@ -148,6 +151,23 @@ PRD ref: `prd.md > Screens and Layout` (Tuner).
 Under the tab on the Recording screen (live, updated 4 times a second) and in the Riff View (saved with the riff): a bar from 0 to 100% plus a one-line hint about the weakest part (e.g. "Lots of background noise", "Guitar may be out of tune. Try the tuner").
 It combines four things Riff Boi can measure about the *sound*, each from 0 (bad) to 1 (good): **tone** (Pitchy's clarity), **tuning** (cents off, like the tuner), **background noise** (the quiet moments vs the notes) and **steadiness** (how often a note's first readings were really that note). Notes Riff Boi had to correct count against it. It can't know whether a string guess is right.
 PRD ref: `prd.md > What We're Building` (confidence bar).
+
+### Bends (`notes.js` + `tab.js`) *(added during the build, learner request)*
+Bending pushes the string sideways, so the ringing note's pitch **glides** smoothly through the in-between pitches with no new pick. Hammer-ons, pull-offs and slides **jump** from fret to fret instead. The note tracker follows the ringing note's pitch in semitones with decimals, measured from the note's own pitch (the middle of its first 3 clear readings). When the pitch moves 0.3 semitones or more, it waits for the pitch to settle (3 readings within 0.15), then decides:
+- It glided (at least 3 readings in between two notes) and settled within 0.25 of 1, 2 or 3 semitones up: a **bend**, written `7b9` (fret 7 bent up to sound like fret 9). Gliding back down to the note: a **release**, `7b9r7`.
+- It glided *down* 1 to 3 semitones from the picked pitch: the string was bent before the pick and then released, a **pre-bend**, `7pb9r7`. The note becomes the fretted (lower) note. A pre-bend that's never released sounds exactly like a normal note, so it can't be heard.
+- It jumped, settled between two notes, or didn't settle within 40 readings: not a bend, so the normal new-note rules handle it (on the learner's Crazy Train recording, a smeared note change settled 0.7 semitones below the note and must not count).
+While a bend glides or is held, its pitches can't start new notes, and the note's quality for the confidence bar stops being measured (a bent note is out of tune on purpose). A new pick always starts a new note.
+Checked on the learner's 8 recordings (which have no bends): the same 110/115 notes and 0 false bends. Settling stricter (so bends slower than about 0.4 s for a whole step aren't split) lost 6 to 7 real notes on those recordings, so it wasn't used. Real bend recordings are needed to tune it further.
+PRD ref: `prd.md > What We're Building` (bends).
+
+### Tab Picture and Rhythm (`tabsvg.js` + `rhythm.js`) *(added during the build, learner request)*
+The tab is drawn as a picture (SVG) like a Songsterr tab, the learner's pick from 3 rendered options: six string lines with the fret numbers on them, "TAB" and 4/4 at the start, bar lines every 4 beats with measure numbers, the tempo (♩ = 120), bends as curved arrows labelled ½, full or 1½, and the rhythm underneath: no stem for a whole note, a short stem for a half note, a full stem for shorter notes, beams joining eighths and sixteenths in the same beat (flags for a lone one) and a dot for dotted notes.
+- **Tempo:** the learner sets the BPM on the home screen (− / + or typing, 40 to 240, default 120). Each riff saves the BPM it was played at.
+- **Note values:** each note's start is snapped to the nearest sixteenth note at that tempo, and it lasts until the next note starts. The last note lasts until the guitar went quiet (or Stop). The longest value that fits is used; leftover time is just space.
+- **Rhythm switch:** with rhythm off, the tab is just the notes, evenly spaced, with no bars, tempo or stems.
+- The newest note is red while recording. The old text tab (`drawTab`) stays for the checks and a future "copy as text".
+PRD ref: `prd.md > What We're Building` (note values).
 
 ## Data Model
 Everything lives in the browser's localStorage, as text in JSON format (a simple way of writing data as text).
@@ -170,7 +190,11 @@ Everything lives in the browser's localStorage, as text in JSON format (a simple
 - `midi` is the note number: every note has one, e.g. low E = 40.
 - `string` counts 1–6 from high e to low E, the same as the lines on the tab.
 - `t` is seconds since you tapped New Riff. It's saved now and kept for later (e.g. rhythm).
+- Bent notes also have `bend` (semitones, 1 to 3), and `release: true` and/or `prebend: true` when those happened. `fret` is always the fretted note, so `{ "fret": 7, "bend": 2, "release": true }` is drawn as `7b9r7`.
+- `bpm` is the tempo the riff was played at, and `endTime` is when the last note ended (seconds since New Riff), so the note values can be drawn again. Riffs from before this don't have them: they use today's tempo, and the last note counts as a quarter note.
 - `confidence` is how sure Riff Boi was about the riff (the score and each part from 0 to 1, rounded to 2 decimals) plus the hint, or `null` if there was nothing to judge. Riffs saved before the confidence bar don't have it.
+
+**`riffboi.settings`**: `{ "bpm": 120, "rhythm": true }`, the tempo and the rhythm switch.
 
 **`riffboi.inputDeviceId`**: which audio input you picked.
 
@@ -192,6 +216,8 @@ beginners-paradise/          # the project folder = the GitHub repo
 │   ├── notes.js             # frequency → note, "is this a new note?" logic
 │   ├── tab.js               # position rule (string + fret) and drawing the tab
 │   ├── confidence.js        # how sure Riff Boi is about a riff (the confidence bar)
+│   ├── rhythm.js            # note starts → beats and note values at your tempo
+│   ├── tabsvg.js            # draws the tab picture (Songsterr style)
 │   └── storage.js           # save/load riffs and the chosen input (localStorage)
 ├── manifest.webmanifest     # (polish) home-screen app name, colors, icon
 ├── icons/                   # (polish) app icon for "Add to Home Screen"

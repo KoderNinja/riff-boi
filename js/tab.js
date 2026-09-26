@@ -125,16 +125,25 @@ function firstNoteOrder(a, b) {
   return (a.fret === 0) - (b.fret === 0) || a.fret - b.fret;
 }
 
+// How one note is written in the tab: "7", or with a bend "7b9" (fret 7 bent up until it
+// sounds like fret 9), "7b9r7" (bent, then released back to 7) or "7pb9r7" (bent before
+// it was picked, then released).
+export function tabToken(note) {
+  const fret = String(note.fret);
+  if (!note.bend) return fret;
+  return `${fret}${note.prebend ? 'pb' : 'b'}${note.fret + note.bend}${note.release ? `r${fret}` : ''}`;
+}
+
 // Draw notes as six lines of tab text inside the given element, e.g.
-//   e|-------
-//   A|-5-7---
+//   e|-------------
+//   A|-5-7-7b9r7---
 // Each note gets its own column, left to right in the order played.
 export function drawTab(element, notes) {
   const lines = STRING_LABELS.map((label) => label + '|-');
   for (const note of notes) {
-    const fret = String(note.fret);
+    const token = tabToken(note);
     for (let s = 1; s <= 6; s++) {
-      lines[s - 1] += (s === note.string ? fret : '-'.repeat(fret.length)) + '-';
+      lines[s - 1] += (s === note.string ? token : '-'.repeat(token.length)) + '-';
     }
   }
   element.textContent = lines.map((line) => line + '--').join('\n');

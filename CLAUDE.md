@@ -17,8 +17,19 @@ I'm a beginner and this hackathon is judged mostly on **what I learn**, so:
 - Keep a running list of what I've learned and the problems we solved in `devpost/learning-log.md`. I'll use it for my demo and write-up.
 - Don't write my Devpost project description or demo script for me. Help me brainstorm, and point out gaps or fix spelling and grammar, but the words should be mine.
 - Never commit secrets (API keys, `.env` files) to git.
+- Ask me questions before you do anything, so we can make sure it's done right.
+- Keep the design and the writing plain and human, not AI-looking, but still professional.
 
 The planning and building skills in `~/.claude/skills` (`/1-start` → `/2-scope` → `/3-prd` → `/4-spec` → `/5-build`) fit this well. They save their progress in `devpost/`. The `/6-ship` skill is written for a different Devpost event, so use the submission checklist below instead.
+
+## Starting a session
+
+A new session doesn't remember the last one, so start here:
+
+1. Read `devpost/todo.md`. "Next up" at the top says where we left off. Also read `devpost/learner-profile.md` if it's there (it's private, so it's only on my Mac).
+2. Run `git status`. If it says my branch is ahead of `origin/main`, those commits aren't on GitHub yet, so help me push them first.
+3. Before calling a step done, run `node tools/check.mjs` (every check must pass) and `node tools/score.mjs` (keep it at 110/115 notes and 83/83 strings, with no false bends listed, unless we decide to change that).
+4. Before the session ends, update "Next up" in the to-do list and add what I learned to `devpost/learning-log.md`.
 
 ## Judging (weights)
 
@@ -33,7 +44,7 @@ The planning and building skills in `~/.claude/skills` (`/1-start` → `/2-scope
 
 Required:
 - [ ] A working project made during the hackathon
-- [x] A **public GitHub repository** with the source code: https://github.com/KoderNinja/riff-boi
+- [x] A **public GitHub repository** with the source code: https://github.com/riff-boi/riff-boi
 - [x] A **README** with clear setup and run instructions for judges (`README.md`; the "AI use" part is still mine to write)
 - [ ] A Devpost project description: what I built, the problem it solves, who it's for, and how it works
 - [ ] A **demo video (3–5 min)**: live demo, how it works, the tech used, challenges I overcame, what I learned

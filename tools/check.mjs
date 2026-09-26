@@ -3,8 +3,11 @@
 // Uses made-up readings (no guitar needed). Run it after changing notes.js or tab.js.
 
 import { readNote, createNoteTracker, cleanUpRiff, tuningOf } from '../js/notes.js';
-import { placeNotes, positionsFor, drawTab } from '../js/tab.js';
+import { placeNotes, positionsFor, drawTab, tabToken } from '../js/tab.js';
 import { riffConfidence } from '../js/confidence.js';
+import { rhythmOf } from '../js/rhythm.js';
+import { tabSvg } from '../js/tabsvg.js';
+import { openInput, listInputs } from '../js/audio.js';
 
 let allOk = true;
 function check(label, ok, detail = '') {
@@ -39,6 +42,7 @@ function notesFrom(readings) {
   readings.forEach(([f, c, v], i) => {
     const result = track(f, c, v, i / 60);
     if (result?.fix) notes[notes.length - 1] = result.fix.name;
+    else if (result?.bend) { if (result.bend.name) notes[notes.length - 1] = result.bend.name; } // a pre-bend moves the note down
     else if (result) notes.push(result.name);
   });
   return notes.join(' ');
@@ -108,6 +112,7 @@ function riffFrom(readings) {
   readings.forEach(([f, c, v], i) => {
     const result = track(f, c, v, i / 60);
     if (result?.fix) Object.assign(notes[notes.length - 1], result.fix);
+    else if (result?.bend) Object.assign(notes[notes.length - 1], result.bend);
     else if (result) notes.push(result);
   });
   return cleanUpRiff(notes);
@@ -129,6 +134,59 @@ const allFixed = riffConfidence(riffFrom(lick()).map((n) => ({ ...n, fixed: true
 check('confidence: notes Riff Boi had to correct count against it (every note fixed = 30% less)',
   Math.abs(allFixed.score - clean.score * 0.7) < 0.001, describe(allFixed));
 check('confidence: no notes = no score (the bar stays empty)', riffConfidence([], []) === null);
+
+// --- Bends ---
+// A bend GLIDES the pitch smoothly with no new pick; hammer-ons and slides JUMP.
+// D4 (MIDI 62) lands on the B string, fret 3, so a whole-step bend is written B3b5.
+const glide = (from, to, n, v = 0.2) => Array.from({ length: n }, (_, i) => [hz(from + ((to - from) * (i + 1)) / n), 0.97, v]);
+const hold = (midi, n, v = 0.18) => Array.from({ length: n }, () => [hz(midi), 0.97, v]);
+function tabOf(readings) {
+  const notes = riffFrom(readings);
+  placeNotes(notes);
+  return notes.map((n) => 'EADGBe'[6 - n.string] + tabToken(n)).join(' ');
+}
+const bendCases = [
+  ['a whole-step bend is one bent note', [...pick(62), ...glide(62, 64, 10), ...hold(64, 20)], 'B3b5'],
+  ['a bend and release', [...pick(62), ...glide(62, 64, 10), ...hold(64, 12), ...glide(64, 62, 10), ...hold(62, 12)], 'B3b5r3'],
+  ['a half-step bend', [...pick(62), ...glide(62, 63, 8), ...hold(63, 20)], 'B3b4'],
+  ['a 1½-step bend', [...pick(62), ...glide(62, 65, 12), ...hold(65, 20)], 'B3b6'],
+  ['a slow bend (0.4 s)', [...pick(62), ...glide(62, 64, 24), ...hold(64, 20)], 'B3b5'],
+  ['a bend that ends a little flat (20 cents) still counts', [...pick(62), ...glide(62, 63.8, 10), ...hold(63.8, 20)], 'B3b5'],
+  ['a pre-bend: picked already bent, then released', [...pick(64), ...glide(64, 62, 10), ...hold(62, 15)], 'B3pb5r3'],
+  ['vibrato is not a bend', [...pick(62), ...Array.from({ length: 60 }, (_, i) => [hz(62 + 0.4 * Math.sin(i / 2)), 0.97, 0.2])], 'B3'],
+];
+for (const [label, readings, expected] of bendCases) {
+  const got = tabOf(readings);
+  check(`bends: ${label} (${expected})`, got === expected, got);
+}
+const notBends = [
+  ['a hammer-on (the pitch jumps) is a new note, not a bend', [...pick(62), ...hold(64, 20)], 'D4 E4'],
+  ['a quick slide through the frets is new notes, not a bend', [...pick(62), ...hold(63, 3), ...hold(64, 20)], 'D4 E4'],
+  // The real readings (semitones below the A2) from Crazy Train at 9.5 s: it slid down and stopped
+  // BETWEEN A2 and G#2, then G#2 came in. A bend or release always ends right on a note.
+  ['a smeared note change that stops between two notes is a new note, not a pre-bend (Crazy Train at 9.5 s)',
+    [...pick(45), ...[-0.303761, -0.447903, -0.711744, -0.609664, -0.759698, -0.696888, -0.660628].map((o) => [hz(45 + o), 0.97, 0.2]), ...hold(44, 20)], 'A2 G#2'],
+  ['a picked note after a bend is a new note', [...pick(62), ...glide(62, 64, 10), ...hold(64, 10), ...pick(67)], 'D4 G4'],
+];
+for (const [label, readings, expected] of notBends) {
+  const got = notesFrom(readings);
+  check(`bends: ${label}`, got === expected, got || '(no notes)');
+}
+check('bends: tab tokens (7, 7b9, 7b9r7, 7pb9r7)',
+  [{ fret: 7 }, { fret: 7, bend: 2 }, { fret: 7, bend: 2, release: true }, { fret: 7, bend: 2, prebend: true, release: true }].map(tabToken).join(' ') === '7 7b9 7b9r7 7pb9r7');
+{
+  const bentTab = { textContent: '', scrollLeft: 0, scrollWidth: 0 };
+  drawTab(bentTab, [{ string: 3, fret: 7, bend: 2, release: true }, { string: 2, fret: 5 }]);
+  const bentLines = bentTab.textContent.split('\n');
+  check('bends: a tab with a bend still has six lines of equal length',
+    bentLines.length === 6 && new Set(bentLines.map((l) => l.length)).size === 1 && bentLines[2].includes('7b9r7'), bentTab.textContent);
+}
+{
+  // Bent right after the pick, so the bend happens while the note's quality is still being judged.
+  const bendRiff = [...silence(20), ...pick(62).slice(0, 8), ...glide(62, 64, 10), ...hold(64, 20)];
+  const c = riffConfidence(riffFrom(bendRiff), bendRiff.map((r) => r[2]));
+  check('bends: a clean bend doesn\'t lower the confidence score (it\'s out of tune on purpose)', c.score > 0.9, describe(c));
+}
 
 // --- String and fret ---
 const riff = [42, 42, 49, 42, 50].map((midi) => ({ midi }));
@@ -173,6 +231,44 @@ for (const [label, midis, expected] of patterns) {
   check('a short pentatonic run coming down stays in the box', desc === 'e8 e5 B8 B5 G7 G5 D7 D7', desc);
 }
 
+// --- Rhythm (note values) and the tab picture ---
+// A riff at 120 BPM (one beat = 0.5 s): eighths, a quarter, an eighth and two sixteenths,
+// a half note (bent and released), a quarter, a dotted quarter and an eighth. 8 beats = 2 bars.
+const timed = [
+  { string: 6, fret: 0, t: 0 }, { string: 6, fret: 0, t: 0.25 }, { string: 5, fret: 2, t: 0.5 },
+  { string: 5, fret: 5, t: 1.0 }, { string: 5, fret: 2, t: 1.25 }, { string: 5, fret: 0, t: 1.375 },
+  { string: 3, fret: 7, bend: 2, release: true, t: 1.5 }, { string: 4, fret: 5, t: 2.5 },
+  { string: 4, fret: 7, t: 3.0 }, { string: 6, fret: 3, t: 3.75 },
+];
+const valueNames = (r) => r.map(({ value }) => (value.dotted ? 'dotted ' : '') + value.name).join(', ');
+const expectedValues = 'eighth, eighth, quarter, eighth, sixteenth, sixteenth, half, quarter, dotted quarter, eighth';
+const rhythm = rhythmOf(timed, 120, 4.0);
+check('rhythm: note values at 120 BPM', valueNames(rhythm) === expectedValues, valueNames(rhythm));
+check('rhythm: where each note starts, in beats', rhythm.map((r) => r.beat).join(' ') === '0 0.5 1 2 2.5 2.75 3 5 6 7.5', rhythm.map((r) => r.beat).join(' '));
+{
+  // Real playing isn't perfectly on time: nudge every note by up to 25 ms either way.
+  const wobbly = timed.map((n, i) => ({ ...n, t: n.t + (i % 2 ? 0.025 : -0.02) * (i ? 1 : 0) }));
+  check('rhythm: slightly early or late notes still snap to the same note values', valueNames(rhythmOf(wobbly, 120, 4.0)) === expectedValues, valueNames(rhythmOf(wobbly, 120, 4.0)));
+}
+check('rhythm: the same timing at half the tempo (60 BPM) gives notes half as long',
+  valueNames(rhythmOf(timed.slice(0, 3), 60, 1.0)) === 'sixteenth, sixteenth, eighth', valueNames(rhythmOf(timed.slice(0, 3), 60, 1.0)));
+check('rhythm: two notes very close together never land on the same spot',
+  rhythmOf([{ t: 0 }, { t: 0.01 }], 120, 1).map((r) => r.beat).join(' ') === '0 0.25');
+{
+  const svg = tabSvg(timed, { bpm: 120, endTime: 4.0 });
+  const count = (cls) => (svg.match(new RegExp(`class="${cls}"`, 'g')) || []).length;
+  check('tab picture: no broken numbers (NaN) in the drawing', !svg.includes('NaN') && !svg.includes('undefined'));
+  check('tab picture: 2 bars = a line at the start, one between the bars and one at the end', count('t-bar') === 3, count('t-bar'));
+  check('tab picture: every fret number is drawn, in order',
+    [...svg.matchAll(/class="t-fret[^"]*"[^>]*>([^<]+)</g)].map((m) => m[1]).join(' ') === '0 0 2 5 2 0 7 5 7 3');
+  check('tab picture: the bend is an arrow labelled "full", with a release', svg.includes('>full<') && count('t-bend') === 2);
+  check('tab picture: the tempo and 4/4 are shown', svg.includes('♩ = 120') && count('t-time') === 2);
+  const plain = tabSvg(timed, { bpm: 120, endTime: 4.0, timing: false });
+  check('tab picture: with rhythm off there are no bars, tempo or stems, just the notes',
+    !plain.includes('♩') && !plain.includes('t-time') && !plain.includes('t-stem') && (plain.match(/class="t-bar"/g) || []).length === 2);
+  check('tab picture: an empty riff is still a clean empty staff', !tabSvg([]).includes('NaN') && tabSvg([]).includes('t-line'));
+}
+
 let playable = true;
 for (let midi = 40; midi <= 86; midi++) {
   const pair = [{ midi: 45 }, { midi }];
@@ -184,6 +280,55 @@ const el = { textContent: '', scrollLeft: 0, scrollWidth: 0 };
 drawTab(el, riff);
 const lines = el.textContent.split('\n');
 check('tab is six lines of equal length', lines.length === 6 && new Set(lines.map((l) => l.length)).size === 1);
+
+// --- Input picker (audio.js), with a pretend mic, so no real audio is needed ---
+{
+  const tries = []; // what audio.js asked the browser for, each time
+  let fail = null;  // (what it asked for) => an error to throw, or nothing
+  Object.defineProperty(navigator, 'mediaDevices', {
+    configurable: true,
+    value: {
+      async getUserMedia({ audio }) {
+        tries.push(audio);
+        const error = fail?.(audio);
+        if (error) throw error;
+        return audio.deviceId ? 'picked input' : 'default input';
+      },
+      async enumerateDevices() {
+        return [
+          { kind: 'audioinput', deviceId: 'default', label: 'Default - MacBook Air Microphone' },
+          { kind: 'audioinput', deviceId: 'mic', label: 'MacBook Air Microphone' },
+          { kind: 'audioinput', deviceId: 'scarlett', label: 'Scarlett 2i2 USB' },
+          { kind: 'audioinput', deviceId: '', label: '' },
+          { kind: 'videoinput', deviceId: 'cam', label: 'FaceTime HD Camera' },
+        ];
+      },
+    },
+  });
+  const named = (name) => Object.assign(new Error(name), { name });
+  const guitarSound = (audio) => audio.echoCancellation === false && audio.noiseSuppression === false && audio.autoGainControl === false;
+
+  check('input picker: opens the input you picked, with the voice clean-up turned off',
+    await openInput('scarlett') === 'picked input' && tries[0].deviceId.exact === 'scarlett' && guitarSound(tries[0]), JSON.stringify(tries));
+
+  tries.length = 0;
+  check('input picker: with nothing picked, it opens the default input',
+    await openInput('') === 'default input' && tries.length === 1 && !tries[0].deviceId && guitarSound(tries[0]), JSON.stringify(tries));
+
+  tries.length = 0;
+  fail = (audio) => audio.deviceId && named('OverconstrainedError');
+  check('input picker: an unplugged input falls back to the default input',
+    await openInput('scarlett') === 'default input' && tries.length === 2 && !tries[1].deviceId && guitarSound(tries[1]), JSON.stringify(tries));
+
+  tries.length = 0;
+  fail = () => named('NotAllowedError');
+  const blocked = await openInput('scarlett').then(() => 'opened', (err) => err.name);
+  check('input picker: a blocked mic is reported, not hidden by the fallback', blocked === 'NotAllowedError' && tries.length === 1, `${blocked} after ${tries.length} tries`);
+
+  const inputs = await listInputs();
+  check('input picker: lists real inputs only (no "Default" copies, cameras or nameless inputs)',
+    inputs.map((input) => input.name).join(' | ') === 'MacBook Air Microphone | Scarlett 2i2 USB', JSON.stringify(inputs));
+}
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');
 process.exit(allOk ? 0 : 1);

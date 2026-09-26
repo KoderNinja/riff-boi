@@ -74,7 +74,8 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - Scoreboard now: 110/115 notes (96%), 0 wrong notes, 83/83 strings.
 
 ## Sep 25, 2026: Putting Riff Boi on GitHub
-- I made my first public repo, since the hackathon needs one: https://github.com/KoderNinja/riff-boi
+- I made my first public repo, since the hackathon needs one. It's now at https://github.com/riff-boi/riff-boi
+- Then I made a free GitHub organization called `riff-boi` and moved the repo into it, so Matt can deploy it on Vercel. Vercel's free plan only deploys repos you own, or public repos in an org you belong to. GitHub forwards the old address to the new one.
 - My 8 commits went up exactly as they were, with their original dates, which shows the work happened during the hackathon.
 - My learner profile, `.claude/` and `.DS_Store` never left my Mac, because of `.gitignore`.
 - A remote is the copy of my repo on GitHub, and pushing sends my new commits there. Claude now builds in a cloud session and pushes each checked step, and I test it with my guitar on the live link.
@@ -92,3 +93,24 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - Then I asked for it to look less AI-made but still professional, so the glowing gradients came out. It's flat red now, with sharp corners and a fine grain.
 - The angled corners are CSS `clip-path`, which cuts the corners off a box. The grain is a tiny SVG noise pattern repeated behind everything.
 - Animations turn off for people who set their device to reduce motion, and keyboard users still get a visible outline inside the angled buttons.
+- I picked the app icon too: the blackletter R from my logo. A small file called a web app manifest tells my phone the app's name, colors and icon, so "Add to Home Screen" opens Riff Boi full-screen like a real app.
+
+## Sep 25, 2026: String bends (my request)
+- A bend and a hammer-on can end on the same note, so how do you tell them apart by sound? A bend glides smoothly through the pitches in between, and a hammer-on or slide jumps straight from fret to fret. Riff Boi now follows the pitch with decimals (like the tuner) and waits for it to settle before deciding.
+- It writes bends the way tab sites do: `7b9` (bend), `7b9r7` (bend and release) and `7pb9r7` (pre-bend). A pre-bend only shows up once I release it, because before that it sounds exactly like a normal higher note.
+- The first version broke one note in my Crazy Train recording. A sloppy note change from A2 to G#2 slid down and stopped 0.7 semitones below A2, and Riff Boi called it a pre-bend. Real bends stop right on a note, so now anything that stops between two notes goes back to the normal note rules.
+- I tried making it stricter so very slow bends don't get split up. Side by side on my recordings, that lost 6 or 7 real notes, because real notes drift in pitch as they ring. So I kept the version that loses nothing: 110/115 notes and 0 false bends. The catch is that bends slower than about 0.4 seconds for a whole step can come out as separate notes.
+- Claude broke the bend code on purpose in 6 ways, and at first two of the breaks got past the checks. Fixing those checks meant copying the exact numbers from my real recording (to 6 decimal places), because the same numbers rounded to 2 decimals took a different path through the code.
+
+## Sep 25, 2026: Note values, drawn like Songsterr (my request)
+- To know whether a note is a quarter or an eighth, Riff Boi needs the tempo. I set it myself (BPM) on the home screen, because guessing a tempo can come out double or half speed.
+- Each note's start gets snapped to the nearest sixteenth note at that tempo, so notes that are a little early or late still come out right. A note lasts until the next one starts.
+- The tab is now a picture (SVG, shapes written as code) like Songsterr: string lines, bar lines, the tempo, bends as arrows, and stems and beams under the tab for the rhythm. I picked this look from 3 real options.
+- A bug I noticed with Claude: my last note always came out as a whole note, because it lasted until I tapped Stop. Now it ends when the guitar goes quiet.
+- A test can be wrong too. One check expected a quarter note at 60 BPM, but half a second at 60 BPM really is an eighth note, so we fixed the check, not the code.
+- A Rhythm switch turns it all off, for when I just want the notes.
+
+## Sep 26, 2026: Moving from the cloud to my Mac
+- A cloud session runs on a computer in the cloud. A local session runs on my Mac, with the files in my own folder.
+- GitHub wouldn't let the cloud session push to my new org, because the Claude GitHub App isn't installed there. So my newest commits came to my Mac in a zip, with the whole history inside the hidden `.git` folder, and I push them to GitHub from my Mac with my own login.
+- A new session doesn't remember the old one. Claude Code reads `CLAUDE.md` at the start of every session, so I gave it a "Starting a session" part, and the to-do list has a "Next up" part that says where we left off.
