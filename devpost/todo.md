@@ -8,13 +8,16 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 
 ## Next up
 
-Where we left off (Sep 26, 2026, evening):
-- On GitHub and riffboi.com: only up to the Rhythm switch fix. Everything below is on my Mac, on the `ideas` branch, not pushed (I asked Claude to wait). When I've tested it, Claude fast-forwards `main` and pushes.
-- Built since then: the time signature, Auto detect tempo (the tempo box goes blank while it's on), New Tab (type a fret and press Enter), Rename and Delete, Play and Practice, Upload a recording, Copy, Share, the key and scale line, editing a saved riff's tab (drag a note to another string, tap to change its fret or delete it), faded notes Riff Boi wasn't sure about, and in `?debug`, saving the raw sound as a WAV.
-- Real-time accuracy: 110 → 113 of 115 notes on the scoreboard (84/84 strings, 0 wrong), from two rules for fast, distorted notes. The speed was measured (about 64 ms from a note's pitch to the screen) and left alone. Which string: see `devpost/string-detection.md`.
-- 183 checks pass. Test on the Mac at http://localhost:8000 (Cmd+Shift+R first). Claude tests on its own server at http://localhost:8001, which never touches my riffs.
-- Next with Claude: my answers to the questions below, then ease of use.
-- My part: test on my iPhone and with my guitar, then the Devpost description and AI part (my words), screenshots, the demo video and submitting.
+Where we left off (Sep 26, 2026, late evening):
+- On GitHub and riffboi.com: only up to the Rhythm switch fix. Everything else is on my Mac, on the `ideas` branch, not pushed. When I've tested it, Claude fast-forwards `main` and pushes.
+- Built on the branch: the time signature, Auto detect tempo (blank tempo box), Count-in, New Tab (type a fret and press Enter), Rename and Delete, Play and Practice, Upload a recording, Copy, Share, the key and scale line, editing a saved riff's tab (drag to another string, change the fret, mark hammer-ons, pull-offs and slides, delete), faded unsure notes, easier-to-read reds, a how-to-start line, Space to record, and in `?debug`, saving the raw sound as a WAV.
+- Accuracy: 113 of 115 notes, 84/84 strings, 0 wrong. 195 checks pass.
+- My part now: 1. test it all at http://localhost:8000 (Cmd+Shift+R first), 2. record the test takes in `devpost/test-recordings.md` (which string, and hammer-ons, pull-offs and slides), 3. tell Claude to push.
+- Next with Claude: detecting hammer-ons, pull-offs and slides, and trying string detection, with my recordings. Then more ease of use.
+- Still mine: test on my iPhone and with my guitar, the Devpost description and AI part (my words), screenshots, the demo video and submitting.
+
+### A new question for me
+- The lag: the only part Riff Boi controls is waiting for 3 clear readings (33 ms), and cutting it let fake notes in. What it could do instead: show the note name the moment it's heard (like the tuner does), while the tab still waits until it's sure. Want that?
 
 ### My answers to Claude's questions (Sep 26)
 1. Dragging keeps the same note and tapping changes the fret: that's right.
