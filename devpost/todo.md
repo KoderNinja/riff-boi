@@ -38,7 +38,7 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 - [ ] String bends: hear them and write them in the tab, like `7b9`, `7b9r7` and `7pb9r7`
 - [ ] Note values: show quarter notes, half notes, eighth notes and so on for each note. It needs a tempo, so either I set the BPM or Riff Boi guesses it
 - [ ] Input picker and a "Can't hear your guitar" message (slice 4)
-- [ ] App icon so it can go on my phone's home screen
+- [x] App icon so it can go on my phone's home screen (the blackletter R; I picked it from 2 options)
 - [ ] If there's time: precision test (slice 7), final review and code tour
 
 ## Ideas for later

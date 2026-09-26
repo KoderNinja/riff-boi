@@ -93,3 +93,4 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - Then I asked for it to look less AI-made but still professional, so the glowing gradients came out. It's flat red now, with sharp corners and a fine grain.
 - The angled corners are CSS `clip-path`, which cuts the corners off a box. The grain is a tiny SVG noise pattern repeated behind everything.
 - Animations turn off for people who set their device to reduce motion, and keyboard users still get a visible outline inside the angled buttons.
+- I picked the app icon too: the blackletter R from my logo. A small file called a web app manifest tells my phone the app's name, colors and icon, so "Add to Home Screen" opens Riff Boi full-screen like a real app.
