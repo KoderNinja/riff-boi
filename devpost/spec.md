@@ -80,6 +80,7 @@ From `prd.md > Look and Feel`: dark, "kinda metal looking," black and red.
   - muted text: grey `#8a8a8a`
 - **Type:** a heavy, sharp metal-style display font **only for the "Riff Boi" logo and screen titles**, e.g. a Google Font like *Metal Mania* or *New Rocker*, picked by the learner during the build. A clean, bold sans-serif (e.g. *Oswald* or system font) for everything else. **The tab uses a monospace font** so fret numbers line up like real tab.
 - **Layout:** mobile-first. One column, big thumb-sized buttons, and the New Riff and Stop buttons as the biggest red things on screen.
+- **Metal style** *(picked by the learner during the build from two rendered options, "B: Metal", then made flatter at the learner's request so it looks less AI-made but still professional)*: angled cut corners on buttons, cards and panels (CSS `clip-path`), flat colors with no glows or glossy gradients, a fine grain texture behind everything (an SVG noise pattern), and *Oswald* in capitals for buttons and labels. **New Riff** is a big round red record button with Tuner in the top corner; each saved riff is a card with its date, note count, confidence and a mini tab of its first 12 notes. The Recording screen shows a pulsing REC dot with a timer and the last note big; Stop and Done sit at the bottom of the screen, under your thumb. Animations are switched off for people who ask their device for less motion.
 - **Tone of copy:** short and punchy ("New Riff", "Can't hear your guitar").
 - **Home-screen icon:** a small `manifest.webmanifest` + icon so "Add to Home Screen" on a phone opens it full-screen like an app. This is a polish step, done last.
 
@@ -90,7 +91,7 @@ Holds the four screens as sections of one page and shows one at a time: Latest R
 PRD ref: `prd.md > Screens and Layout`, `prd.md > The Core Journey`.
 
 ### Latest Riffs Screen
-The list of saved riffs, newest first. Each row shows the date/time label and note count. Tapping a row opens the Riff View. Shows "No riffs yet" when empty. Holds the **input picker** and the **New Riff** button.
+The list of saved riffs, newest first. Each riff is a card with the date/time label, note count, confidence (if it was saved with one) and a mini tab of its first 12 notes. Tapping a card opens the Riff View. Shows "No riffs yet" when empty. Holds the **input picker** and the **New Riff** button.
 PRD ref: `prd.md > Latest Riffs List`, `prd.md > States and Boundaries`.
 
 ### Input Picker (`audio.js` + home screen)

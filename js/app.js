@@ -20,6 +20,7 @@ const noteFreq = $('note-freq');
 const statusMsg = $('status-msg');
 const stopBtn = $('stop-btn');
 const liveConfidence = $('live-confidence');
+const recTime = $('rec-time');
 
 // The riff being recorded right now. Lives in memory only until Stop saves it.
 let riffNotes = [];
@@ -49,6 +50,12 @@ function noteCount(n) {
   return `${n} note${n === 1 ? '' : 's'}`;
 }
 
+// Seconds → "m:ss", for the time since New Riff.
+function formatTime(seconds) {
+  const s = Math.floor(seconds);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
 // The riff so far, cleaned up (ghost notes dropped, octave glitches fixed) with strings + frets.
 function currentRiff() {
   const notes = cleanUpRiff(riffNotes);
@@ -67,20 +74,31 @@ function showConfidence(element, confidence) {
 
 // --- Home: Latest Riffs ---
 
+const MINI_TAB_NOTES = 12; // how many notes the preview on each riff card shows
+
 function showHome() {
   const riffs = loadRiffs();
   $('riff-list').replaceChildren(...riffs.map((riff) => {
-    const row = document.createElement('button');
-    row.className = 'riff-row';
+    // A card: date and time, note count (+ confidence), and a mini tab of the first notes.
+    const card = document.createElement('button');
+    card.className = 'riff-card';
+    const top = document.createElement('span');
+    top.className = 'riff-card-top';
     const label = document.createElement('span');
     label.textContent = riff.label;
-    const count = document.createElement('span');
-    count.className = 'riff-count';
-    count.textContent = noteCount(riff.notes.length);
-    row.append(label, count);
-    row.addEventListener('click', () => showRiff(riff));
+    const meta = document.createElement('span');
+    meta.className = 'riff-meta';
+    const confidence = riff.confidence ? ` · ${Math.round(riff.confidence.score * 100)}%` : '';
+    meta.textContent = noteCount(riff.notes.length) + confidence;
+    top.append(label, meta);
+    const preview = document.createElement('span');
+    preview.className = 'mini-tab';
+    preview.setAttribute('aria-hidden', 'true'); // screen readers read the label, not the dashes
+    drawTab(preview, riff.notes.slice(0, MINI_TAB_NOTES));
+    card.append(top, preview);
+    card.addEventListener('click', () => showRiff(riff));
     const item = document.createElement('li');
-    item.append(row);
+    item.append(card);
     return item;
   }));
   $('no-riffs-msg').hidden = riffs.length > 0;
@@ -110,6 +128,8 @@ function handleReading(freq, clarity, volume) {
   const t = (performance.now() - startTime) / 1000; // seconds since New Riff
   if (DEBUG) readings.push([round(freq, 2), round(clarity, 3), round(volume, 4), round(t, 3)]);
   volumes.push(volume);
+  const time = formatTime(t);
+  if (recTime.textContent !== time) recTime.textContent = time;
   const peakBefore = riffNotes[riffNotes.length - 1]?.peak;
   const result = trackNote(freq, clarity, volume, t);
   if (result?.fix) {
@@ -144,6 +164,7 @@ $('new-riff-btn').addEventListener('click', async () => {
   trackNote = createNoteTracker();
   drawTab(liveTab, riffNotes);
   showConfidence(liveConfidence, null);
+  recTime.textContent = '0:00';
   noteName.textContent = '–';
   noteFreq.textContent = 'Play a riff';
   statusMsg.textContent = '';

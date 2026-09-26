@@ -7,43 +7,62 @@
   --text: #ececec;        /* main text */
   --muted: #8a8a8a;       /* less important text */
   --title-font: 'UnifrakturCook', 'Times New Roman', serif; /* blackletter, only for the logo and titles */
+  --label-font: 'Oswald', system-ui, -apple-system, "Segoe UI", sans-serif; /* condensed caps for buttons and labels */
+  --tab-font: ui-monospace, Menlo, Consolas, monospace; /* tab: every character the same width */
+  /* Angled corners (the metal look): cut the top-left and bottom-right corners off a box. */
+  --cut: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  --cut-small: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* Flat black with a fine grain texture (an SVG noise pattern), like a printed flyer. */
 body {
   margin: 0;
-  background: var(--bg);
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+    var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   font-weight: 600;
 }
 
-/* Mobile-first: one centered column. */
+/* Mobile-first: one centered column that fills the screen. */
 .screen {
   max-width: 480px;
   margin: 0 auto;
-  padding: 32px 16px;
+  padding: 20px 16px 28px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
   min-height: 100vh;
+  min-height: 100dvh; /* phones: the real visible height, without the browser bars */
 }
 
 .screen[hidden] {
   display: none;
 }
 
+/* --- Home --- */
+
+/* The logo, with the Tuner button tucked in the top corner. */
+.home-top {
+  width: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
 .logo {
   font-family: var(--title-font);
   font-weight: 700;
-  font-size: 4rem;
+  font-size: 4.5rem;
   line-height: 1;
   color: var(--red);
-  margin: 24px 0 0;
+  margin: 40px 0 0;
 }
 
 /* Blackletter is hard to read in ALL CAPS, so titles keep normal capitals. */
@@ -51,22 +70,115 @@ body {
   font-family: var(--title-font);
   font-weight: 700;
   font-size: 1.75rem;
-  color: var(--muted);
+  color: var(--text);
+  opacity: 0.8;
   margin: 0;
 }
 
-/* The big red buttons (New Riff, Stop) — the biggest things on screen. */
-.big-btn {
-  width: 100%;
-  padding: 22px;
-  font-size: 1.5rem;
-  font-weight: 800;
+/* New Riff: a big round record button, the biggest thing on the home screen. */
+.record-btn {
+  width: 168px;
+  height: 168px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--label-font);
+  font-size: 1.1rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.16em;
   color: var(--text);
   background: var(--red);
   border: none;
-  border-radius: 6px;
+  box-shadow: 0 0 0 6px var(--bg), 0 0 0 10px var(--red-dark); /* a dark gap, then a ring */
+  cursor: pointer;
+}
+
+.record-btn:active {
+  background: var(--red-dark);
+}
+
+.record-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--text);
+}
+
+/* Latest Riffs: each riff is a card with its date, note count, confidence and a mini tab. */
+.riff-list {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.riff-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  font: inherit;
+  color: var(--text);
+  text-align: left;
+  background: var(--panel);
+  border: none;
+  border-left: 4px solid var(--red);
+  clip-path: var(--cut);
+  cursor: pointer;
+}
+
+.riff-card:active {
+  background: var(--red-dark);
+}
+
+.riff-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--label-font);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.riff-meta {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.mini-tab {
+  display: block;
+  margin: 0;
+  font-family: var(--tab-font);
+  font-size: 0.72rem;
+  line-height: 1.25;
+  color: var(--muted);
+  white-space: pre;
+  overflow: hidden;
+}
+
+/* --- Buttons --- */
+
+/* The big red buttons (Stop, Done) — full width, with angled corners. */
+.big-btn {
+  width: 100%;
+  padding: 22px;
+  font-family: var(--label-font);
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text);
+  background: var(--red);
+  border: none;
+  clip-path: var(--cut);
   cursor: pointer;
 }
 
@@ -74,24 +186,34 @@ body {
   background: var(--red-dark);
 }
 
-/* Second-most important button (Tuner): outlined in red. */
+/* Stop and Done sit at the bottom of the screen, where your thumb is. */
+.bottom-btn {
+  margin-top: auto;
+}
+
+/* Outlined in red (Tuner). */
 .secondary-btn {
-  width: 100%;
-  padding: 14px;
-  font: inherit;
-  font-size: 1.1rem;
-  font-weight: 800;
+  padding: 8px 12px;
+  font-family: var(--label-font);
+  font-size: 0.85rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--text);
   background: transparent;
   border: 2px solid var(--red);
-  border-radius: 6px;
+  clip-path: var(--cut-small);
   cursor: pointer;
 }
 
 .secondary-btn:active {
   background: var(--red-dark);
+}
+
+.tuner-btn {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .small-btn {
@@ -108,6 +230,74 @@ body {
   display: none;
 }
 
+/* "← Latest Riffs" in the top-left corner of the Riff View. */
+.back-btn {
+  align-self: flex-start;
+  padding: 8px 0;
+  font: inherit;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Keyboard focus: the angled corners would cut off a normal outline, so draw it inside. */
+.big-btn:focus-visible,
+.secondary-btn:focus-visible,
+.riff-card:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: -5px;
+}
+
+/* --- Recording --- */
+
+/* Top bar: a pulsing red dot, "Listening…" and the time since New Riff. */
+.rec-bar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-family: var(--label-font);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+.rec-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--red);
+  animation: rec-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes rec-pulse {
+  50% { opacity: 0.25; }
+}
+
+.rec-time {
+  margin-left: auto;
+  font-family: var(--tab-font);
+  letter-spacing: 0.05em;
+  color: var(--text);
+}
+
+/* The last note heard, big, with the note count under it. */
+.note-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+}
+
+.note-name {
+  font-family: var(--tab-font);
+  font-size: 4rem;
+  line-height: 1;
+  color: var(--red);
+}
+
 /* The tab: six lines in a monospace font so the fret numbers line up like real tab.
    Scrolls sideways when the riff gets long. */
 .tab {
@@ -116,7 +306,8 @@ body {
   padding: 20px 16px;
   background: var(--panel);
   border-left: 4px solid var(--red);
-  font-family: ui-monospace, Menlo, Consolas, monospace;
+  clip-path: var(--cut);
+  font-family: var(--tab-font);
   font-size: 1.25rem;
   line-height: 1.5;
   color: var(--text);
@@ -139,6 +330,10 @@ body {
   display: flex;
   justify-content: space-between;
   color: var(--muted);
+  font-family: var(--label-font);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   font-size: 0.9rem;
 }
 
@@ -167,20 +362,6 @@ body {
   font-size: 0.9rem;
 }
 
-/* The small "last note heard" readout under the tab. */
-.note-display {
-  display: flex;
-  gap: 12px;
-  align-items: baseline;
-  color: var(--muted);
-}
-
-.note-name {
-  font-family: ui-monospace, Menlo, Consolas, monospace;
-  font-size: 1.5rem;
-  color: var(--red);
-}
-
 .status-msg {
   color: var(--red);
   min-height: 1.5em;
@@ -193,42 +374,7 @@ body {
   margin: 0;
 }
 
-/* Latest Riffs list: each riff is a big tappable row. */
-.riff-list {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.riff-row {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  font: inherit;
-  color: var(--text);
-  background: var(--panel);
-  border: none;
-  border-left: 4px solid var(--red);
-  border-radius: 4px;
-  cursor: pointer;
-  text-align: left;
-}
-
-.riff-row:active {
-  background: var(--red-dark);
-}
-
-.riff-count {
-  color: var(--muted);
-}
-
-/* Saving confirmation */
+/* --- Saving confirmation --- */
 .saving-title {
   margin: 20vh 0 0;
   font-family: var(--title-font);
@@ -242,11 +388,12 @@ body {
   font-size: 1.25rem;
 }
 
-/* Tuner */
+/* --- Tuner --- */
 .tuner {
   width: 100%;
   background: var(--panel);
   border-left: 4px solid var(--red);
+  clip-path: var(--cut);
   padding: 24px 16px;
   display: flex;
   flex-direction: column;
@@ -255,7 +402,7 @@ body {
 }
 
 .tuner-note {
-  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-family: var(--tab-font);
   font-size: 5rem;
   line-height: 1;
   color: var(--red);
@@ -302,7 +449,6 @@ body {
 
 .tuner.in-tune .tuner-needle {
   background: var(--text);
-  box-shadow: 0 0 12px var(--red);
 }
 
 .tuner-scale {
@@ -316,4 +462,16 @@ body {
 .tuner-status {
   font-size: 1.25rem;
   color: var(--red);
+}
+
+/* Less movement for people who ask their device for it. */
+@media (prefers-reduced-motion: reduce) {
+  .rec-dot {
+    animation: none;
+  }
+
+  .confidence-fill,
+  .tuner-needle {
+    transition: none;
+  }
 }
