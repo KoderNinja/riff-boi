@@ -79,7 +79,6 @@ The sound says which note, not which string. The same note can be played in up t
 
 - `rhythmOf` snaps each note's start to the nearest sixteenth note at your tempo. A note lasts until the next one starts, and it gets the longest standard value that fits (whole, dotted half, half, dotted quarter, quarter, dotted eighth, eighth, sixteenth).
 - `meterOf` turns a time signature like "7/8" into its bar length in beats (the tempo always counts quarter notes, so 7/8 is 3½) and its beam groups (2+2+3). `barOf` says which bar a beat is in, and `groupOf` which beam group.
-- Count-in: `countInClicks` says where the clicks go in one bar, and after a count-in the beats count from the downbeat (`rhythmOf`'s `origin`; `countInOrigin` finds the bar the first note is in, allowing for the ~60 ms it takes to be sure of a note).
 - `detectTempo` works out the tempo from when the notes started (Auto). It finds the longest steady pulse that every gap between notes fits, lets 1 note in 8 be a bit off, then picks the note value that puts the tempo from 80 up to 160 BPM. With under 4 notes or no steady beat, it says it can't tell (`null`).
 - `tabSvg` draws it all as SVG, which is shapes written as text, so it stays sharp at any size: six string lines, the fret numbers on small dark patches, "TAB" and the time signature, bar lines with measure numbers, the tempo, bends as arrows labelled ½, full or 1½, and the rhythm underneath (stems, beams, flags and dots). With rhythm off, the notes are just evenly spaced.
 
@@ -123,7 +122,7 @@ Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs`
 
 ## `tools/`: the tests
 
-- `check.mjs`: 195 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
+- `check.mjs`: 188 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
 - `score.mjs`: the scoreboard. It replays my 8 real recordings and compares them to what I really played (the `.txt` answer files): 110 of 115 notes, and 83 of 83 on the right string.
 - `replay.mjs`: replays one `?debug` recording through the current code, to compare before and after a change.
 

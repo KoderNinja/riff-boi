@@ -9,7 +9,7 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 ## Next up
 
 Where we left off (Sep 26, 2026, night):
-- Everything is on GitHub and live at https://riffboi.com (pushed Sep 26): the time signature, Auto detect tempo, Count-in, New Tab, Rename and Delete, Play and Practice, Upload a recording, Copy, Share, the key and scale line, editing a saved riff's tab (drag, change the fret, hammer-ons, pull-offs and slides, delete), faded unsure notes, the note name shown right away, easier-to-read reds, a how-to-start line, Space to record, and saving the raw sound in `?debug`.
+- Everything is on GitHub and live at https://riffboi.com (pushed Sep 26): the time signature, Auto detect tempo, New Tab, Rename and Delete, Play and Practice, Upload a recording, Copy, Share, the key and scale line, editing a saved riff's tab (drag, change the fret, hammer-ons, pull-offs and slides, delete), faded unsure notes, the note name shown right away, easier-to-read reds, a how-to-start line, Space to record, and saving the raw sound in `?debug`.
 - Accuracy: 113 of 115 notes, 84/84 strings, 0 wrong. 195 checks pass.
 - Testing on my Mac: use Chrome at http://localhost:8000 and press Cmd+Shift+R after changes (the local server lets Chrome keep old copies of files, and a mix of old and new stops the page from working). The Claude app's browser pane blocks the mic, so record in Chrome.
 - My part next (the deadline is Wednesday Sep 30, 5pm EDT): test on my iPhone at riffboi.com and with my guitar, the precision test, screenshots, the Devpost description and AI part (my words), the README "AI use" part, a practice run, the demo video, then submit Wednesday morning. The list is below.

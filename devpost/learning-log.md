@@ -243,3 +243,6 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 ## Sep 26, 2026: Showing the note right away
 - The tab can't safely confirm notes faster, so the Recording screen now shows the note name as soon as it's heard, in gray, and it turns red when the tab is sure.
 - I measured 6 ways to decide when to show the name, on my recordings: how early the right name shows up vs how often a wrong name flashes. The fastest was wrong 1 time in 3; the strictest was barely faster than the tab. The one I kept is 17 ms ahead and wrong about 1 time in 6, and gray makes it clear it isn't in the tab yet.
+
+## Sep 26, 2026: Taking the count-in back out
+- After trying the count-in, I didn't want it, so it's out. Taking a feature out cleanly is its own skill: every spot it touched went back to how it was before, and old riffs saved with it still open.
