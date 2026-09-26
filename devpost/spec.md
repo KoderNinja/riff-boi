@@ -91,7 +91,7 @@ Holds the four screens as sections of one page and shows one at a time: Latest R
 PRD ref: `prd.md > Screens and Layout`, `prd.md > The Core Journey`.
 
 ### Latest Riffs Screen
-The list of saved riffs, newest first. Each riff is a card with the date/time label, note count, confidence (if it was saved with one) and a mini tab of its first 12 notes. Tapping a card opens the Riff View. Shows "No riffs yet" when empty. Holds the **input picker** and the **New Riff** button.
+The list of saved riffs, newest first. Each riff is a card with the date/time label, note count, confidence (if it was saved with one) and a mini tab of its first 12 notes. Tapping a card opens the Riff View. Under each card are **Rename** and **Delete** *(added after the build, learner request: on every card, the learner's pick over the Riff View)*. Rename swaps them for a name box (up to 40 characters; Enter or Save keeps it, Escape or Cancel doesn't, and an empty name goes back to the date). A renamed card shows the date under the name. Delete asks "Delete ...? This can't be undone." first. Shows "No riffs yet" when empty. Holds the **input picker** and the **New Riff** button.
 PRD ref: `prd.md > Latest Riffs List`, `prd.md > States and Boundaries`.
 
 ### Input Picker (`audio.js` + home screen)
@@ -206,6 +206,7 @@ Everything lives in the browser's localStorage, as text in JSON format (a simple
 - `rhythm` is whether the Rhythm switch was on when the riff was recorded. Riffs from before this don't have it and are drawn with rhythm on.
 - `meter` is the time signature, like `"7/8"`. Riffs from before this don't have it and are 4/4.
 - `written: true` means it was written by hand in New Tab (only saved when true).
+- `name` is the name you gave it with Rename. Without one, the riff shows its `label` (when it was made).
 - `autoTempo: true` means Riff Boi worked out `bpm` itself. It's only saved when true, and typing a new tempo sets it to `false`.
 - `confidence` is how sure Riff Boi was about the riff (the score and each part from 0 to 1, rounded to 2 decimals) plus the hint, or `null` if there was nothing to judge. Riffs saved before the confidence bar don't have it.
 

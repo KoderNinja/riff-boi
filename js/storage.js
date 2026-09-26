@@ -93,6 +93,11 @@ export function updateRiff(id, changes) {
   return riff;
 }
 
+// Delete a saved riff. Throws if the browser won't let us save.
+export function deleteRiff(id) {
+  localStorage.setItem(RIFFS_KEY, JSON.stringify(loadRiffs().filter((riff) => riff.id !== id)));
+}
+
 // How to draw a saved riff's tab: at the tempo it was played (riffs from before tempo
 // existed use `bpm`, today's tempo), with rhythm on or off the way it was recorded, so the
 // Rhythm switch only changes new riffs, and in its time signature. Riffs from before those

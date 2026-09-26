@@ -9,7 +9,7 @@ import { riffConfidence } from '../js/confidence.js';
 import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS } from '../js/rhythm.js';
 import { tabSvg } from '../js/tabsvg.js';
 import { openInput, listInputs } from '../js/audio.js';
-import { saveRiff, loadRiffs, updateRiff, riffTiming } from '../js/storage.js';
+import { saveRiff, loadRiffs, updateRiff, deleteRiff, riffTiming } from '../js/storage.js';
 import { writtenRiff, retime } from '../js/editor.js';
 
 let allOk = true;
@@ -513,6 +513,17 @@ check('saved riff: changing a riff that isn\'t there does nothing', updateRiff('
   check('new tab: a new tempo keeps its note values (the notes move closer together)',
     valueNames(rhythmOf(faster.notes, 180, faster.endTime)) === want && faster.notes[1].t < back.notes[1].t, valueNames(rhythmOf(faster.notes, 180, faster.endTime)));
 }
+
+// --- Rename and Delete ---
+shelf.set('riffboi.riffs', JSON.stringify(['a', 'b', 'c'].map((id) => ({ id, label: `Riff ${id}`, notes: [] }))));
+updateRiff('a', { name: 'Crazy Train intro' });
+check('rename: a riff keeps its new name', loadRiffs()[0].name === 'Crazy Train intro' && loadRiffs()[0].label === 'Riff a');
+updateRiff('a', { name: undefined });
+check('rename: an empty name goes back to the date', !('name' in loadRiffs()[0]));
+deleteRiff('b');
+check('delete: only that riff is gone, the rest stay in order', loadRiffs().map((riff) => riff.id).join(' ') === 'a c', loadRiffs().map((riff) => riff.id).join(' '));
+deleteRiff('gone');
+check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().map((riff) => riff.id).join(' ') === 'a c');
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');
 process.exit(allOk ? 0 : 1);

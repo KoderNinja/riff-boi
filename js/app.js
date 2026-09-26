@@ -5,7 +5,7 @@ import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_C
 import { placeNotes } from './tab.js';
 import { tabSvg } from './tabsvg.js';
 import { METERS, detectTempo } from './rhythm.js';
-import { loadRiffs, saveRiff, updateRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
+import { loadRiffs, saveRiff, updateRiff, deleteRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
 import { riffConfidence } from './confidence.js';
 import { writtenRiff, retime, EDITOR_MAX_FRET } from './editor.js';
 
@@ -180,7 +180,8 @@ function showHome() {
     const top = document.createElement('span');
     top.className = 'riff-card-top';
     const label = document.createElement('span');
-    label.textContent = riff.label;
+    label.className = 'riff-title';
+    label.textContent = riffTitle(riff);
     const meta = document.createElement('span');
     meta.className = 'riff-meta';
     const confidence = riff.confidence ? ` · ${Math.round(riff.confidence.score * 100)}%` : '';
@@ -193,15 +194,86 @@ function showHome() {
     const timing = riffTiming(riff, settings.bpm);
     if (shown.length < riff.notes.length) timing.endTime = null; // the riff goes on past the preview
     preview.innerHTML = tabSvg(shown, { ...timing, rhythm: false });
-    card.append(top, preview);
+    card.append(top);
+    if (riff.name) { // a renamed riff still shows when it was made
+      const date = document.createElement('span');
+      date.className = 'riff-date';
+      date.textContent = riff.label;
+      card.append(date);
+    }
+    card.append(preview);
     card.addEventListener('click', () => showRiff(riff));
     const item = document.createElement('li');
-    item.append(card);
+    item.append(card, riffActions(riff));
     return item;
   }));
   $('no-riffs-msg').hidden = riffs.length > 0;
   showInputs(); // after your first riff, the inputs' real names show up
   showScreen('home');
+}
+
+// A riff's name if you gave it one, or else when it was made (like "Sep 26, 10:12 AM").
+function riffTitle(riff) {
+  return riff.name || riff.label;
+}
+
+// A small text button, like Rename and Delete under each riff card.
+function actionButton(text, label, onClick) {
+  const button = document.createElement('button');
+  button.className = 'riff-action';
+  button.textContent = text;
+  button.setAttribute('aria-label', label);
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+// Rename and Delete, under each riff card.
+function riffActions(riff) {
+  const row = document.createElement('div');
+  row.className = 'riff-actions';
+  const title = riffTitle(riff);
+  const remove = actionButton('Delete', `Delete ${title}`, () => {
+    if (!confirm(`Delete "${title}"? This can't be undone.`)) return;
+    try {
+      deleteRiff(riff.id);
+    } catch (err) {
+      console.error(err); // the browser blocked saving: the riff stays
+    }
+    showHome();
+  });
+  remove.classList.add('riff-delete');
+  row.append(actionButton('Rename', `Rename ${title}`, () => startRename(row, riff)), remove);
+  return row;
+}
+
+// Rename swaps the buttons for a name box. Enter or Save keeps the name, Escape or Cancel
+// doesn't. An empty name goes back to the date.
+function startRename(row, riff) {
+  const input = document.createElement('input');
+  input.className = 'rename-input';
+  input.maxLength = 40;
+  input.value = riff.name ?? '';
+  input.placeholder = riff.label;
+  input.setAttribute('aria-label', 'Riff name');
+  let finished = false;
+  const finish = (keep) => {
+    if (finished) return;
+    finished = true;
+    if (keep) {
+      try {
+        updateRiff(riff.id, { name: input.value.trim() || undefined });
+      } catch (err) {
+        console.error(err); // the browser blocked saving: the old name stays
+      }
+    }
+    showHome();
+  };
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') finish(true);
+    if (event.key === 'Escape') finish(false);
+  });
+  row.replaceChildren(input, actionButton('Save', 'Save the name', () => finish(true)), actionButton('Cancel', 'Cancel renaming', () => finish(false)));
+  input.focus();
 }
 
 // --- Riff View: one saved riff ---
@@ -210,10 +282,10 @@ let shownRiff = null; // the riff on this screen
 
 function showRiff(riff) {
   shownRiff = riff;
-  $('riff-title').textContent = riff.label;
+  $('riff-title').textContent = riffTitle(riff);
   drawRiff(riff);
   $('riff-tab').scrollLeft = 0; // start at the beginning of the riff
-  $('riff-count').textContent = noteCount(riff.notes.length);
+  $('riff-count').textContent = noteCount(riff.notes.length) + (riff.name ? ` · ${riff.label}` : '');
   // Riffs saved before the confidence bar existed don't have a score: hide the bar for those.
   $('riff-confidence').hidden = !riff.confidence;
   if (riff.confidence) showConfidence($('riff-confidence'), riff.confidence);

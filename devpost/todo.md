@@ -76,7 +76,7 @@ In order of priority. "Me" is stuff only I can do, "Claude" is building with Cla
 Ranked by how much each one helps Riff Boi before the deadline, for how much work it is. Claude asks me about the design of each one before building it. Sizes: small is an hour or two, medium is a few hours, big is days.
 
 ### Before the deadline, in this order
-1. Rename or delete riffs. Size: small. Right now there's no way to remove a riff.
+1. [x] Rename or delete riffs. Size: small. Done: Rename and Delete under every riff card (my pick).
 2. Play a riff back so I can hear it. Size: small to medium. It works for riffs I recorded and for tabs I wrote in New Tab.
 3. Upload a recording (like an mp3) and get its tab, not in real time (my idea). Most of the pieces exist: my pentatonic test recording was made from an mp3 with the same Pitchy steps. Size: medium. Judges without a guitar could try Riff Boi this way.
 4. Tap a note to move it to another string. Size: small to medium. It fixes a wrong string guess by hand, and goes with the accuracy work.

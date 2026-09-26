@@ -160,3 +160,8 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - The trick was making a written tab the same kind of thing as a recorded riff. A recorded riff keeps when each note started, in seconds. So the editor works out those seconds from the note values and the tempo, and then the tab picture, saving and the Latest Riffs list all work without changes.
 - Changing the tempo means different things for the two kinds. For a recorded riff, the seconds are the truth (that's how I played it), so a new tempo changes the note values. For a written tab, the note values are the truth, so the notes move closer together or further apart instead.
 - Testing it in the browser found a small problem the checks couldn't: Dotted stayed on from my last tab. Now New Tab starts fresh each time.
+
+## Sep 26, 2026: Rename and Delete
+- A button can't go inside another button. Each riff card is one big button, so Rename and Delete sit under it instead, and the name box replaces them while I type.
+- Renaming saves a separate `name` and keeps the original date, so nothing is lost, and clearing the name brings the date back.
+- Names are shown as plain text (`textContent`), never as HTML, so a name with `<` or `>` in it can't mess up the page.

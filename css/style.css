@@ -254,6 +254,59 @@ body {
   white-space: nowrap;
 }
 
+.riff-title {
+  min-width: 0;
+  overflow-wrap: anywhere; /* a long name wraps instead of pushing the card wider */
+}
+
+/* When a renamed riff was made. */
+.riff-date {
+  margin-top: -4px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* Rename and Delete under each riff card. */
+.riff-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+}
+
+.riff-action {
+  padding: 10px 12px;
+  font-family: var(--label-font);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.riff-action:hover,
+.riff-action:focus-visible {
+  color: var(--text);
+}
+
+.riff-delete:hover {
+  color: var(--red);
+}
+
+.rename-input {
+  flex: 1;
+  min-width: 0;
+  max-width: 260px;
+  padding: 7px 10px;
+  font: inherit;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid #333;
+  border-radius: 0;
+}
+
 .mini-tab {
   display: block;
   overflow: hidden;
