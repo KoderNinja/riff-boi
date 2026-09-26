@@ -201,3 +201,9 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - Slowing a riff down only changes when the notes play, not their pitch, because each note's sound is made on its own. Half speed just means every time is doubled.
 - Loop needed playback to say whether a riff finished or was stopped: finished means go round again, stopped means stop.
 - To check the click in the browser, I measured the sound at 1500 and 2000 Hz with and without Click: about 9 dB louder with it. Measuring with and without is the fair test, because the plucked notes have some sound up there too.
+
+## Sep 26, 2026: Dragging notes to another string
+- Dragging uses pointer events, which work the same for a mouse, a finger or a pen: pointerdown on a note, pointermove while it moves, pointerup to drop it. "Pointer capture" keeps the moves coming even when the finger slides off the little number.
+- To know which string line the finger is over, the app turns the screen position into the tab picture's own coordinates and picks the closest line.
+- On a phone, dragging down normally scrolls the page. `touch-action: none` on the notes tells the browser a drag there is ours.
+- Testing kept breaking in a confusing way: the page loaded a new file next to an old saved copy of another file, so it couldn't start. The fix was a small test server that tells the browser never to keep old copies. When a test fails, check the test before blaming the code.
