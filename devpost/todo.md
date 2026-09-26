@@ -11,9 +11,9 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 Where we left off (Sep 26, 2026, morning):
 - The cloud session's commits are on GitHub now (I brought them to my Mac from the zip and pushed), so riffboi.com has the iPhone fix. My Mac's bar line fix went on top of them.
 - The Rhythm switch fix is done: it only changes the riff I'm recording now.
-- Claude's part, in priority order: finish the time signature and Auto tempo, start the manual tab editor, then update the GitHub descriptions and README, then a quick codebase check (my requests).
-- The time signature and Auto tempo are half built on the `time-signature` branch (not merged into `main`, so riffboi.com doesn't get a half-built screen). Next: merge `main` into it (it will conflict in `tabsvg.js` and `storage.js`, because of the bar line and Rhythm fixes; keep both sides), then wire them up in `app.js`, then styles, checks and a browser test.
-- My part: test on my iPhone and with my guitar.
+- The time signature and Auto tempo are done too (merged from the `time-signature` branch).
+- Claude's part, in priority order: start the manual tab editor (we need to design it first), then update the GitHub descriptions and README, then a quick codebase check (my requests).
+- My part: test on my iPhone and with my guitar, including the time signature and Auto tempo.
 
 ## Before the deadline
 
@@ -46,8 +46,8 @@ In order of priority. "Me" is stuff only I can do, "Claude" is building with Cla
 - [ ] Claude: a quick codebase check, last (my request)
 
 ### 3. If there's time
-- [ ] Claude: change the time signature (like 3/4, 6/8 or 7/8), not just 4/4
-- [ ] Claude: tempo detection (my idea). A choice to let Riff Boi work out the tempo from how I play, instead of setting the BPM myself
+- [x] Claude: change the time signature (like 3/4, 6/8 or 7/8), not just 4/4
+- [x] Claude: tempo detection (my idea). A choice to let Riff Boi work out the tempo from how I play, instead of setting the BPM myself (the Auto switch)
 - [ ] Claude: start a manual tab editor, to write my own tabs from scratch (my request: start it after the tasks above)
 
 ### Later, after the hackathon

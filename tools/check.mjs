@@ -6,10 +6,10 @@ import { readFileSync } from 'node:fs';
 import { readNote, createNoteTracker, cleanUpRiff, tuningOf, stillRinging, RINGING_READINGS } from '../js/notes.js';
 import { placeNotes, positionsFor, drawTab, tabToken } from '../js/tab.js';
 import { riffConfidence } from '../js/confidence.js';
-import { rhythmOf } from '../js/rhythm.js';
+import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS } from '../js/rhythm.js';
 import { tabSvg } from '../js/tabsvg.js';
 import { openInput, listInputs } from '../js/audio.js';
-import { saveRiff, loadRiffs, riffTiming } from '../js/storage.js';
+import { saveRiff, loadRiffs, updateRiff, riffTiming } from '../js/storage.js';
 
 let allOk = true;
 function check(label, ok, detail = '') {
@@ -278,6 +278,77 @@ check('rhythm: two notes very close together never land on the same spot',
     measures === '1 2 3' && (rest.match(/class="t-bar"/g) || []).length === 4 && !rest.includes('NaN'), measures);
 }
 
+// --- Time signatures ---
+// The tempo always counts quarter notes, so a bar is top × 4 / bottom beats. Beams join a beat
+// in x/4, threes in 6/8, 9/8 and 12/8, and 2+2+3 in 7/8.
+check('time signature: each one has the right bar length and beam groups',
+  METERS.map((m) => `${m}=${meterOf(m).barBeats}:${meterOf(m).groups.join('+')}`).join(' ') ===
+  '2/4=2:1+1 3/4=3:1+1+1 4/4=4:1+1+1+1 5/4=5:1+1+1+1+1 6/8=3:1.5+1.5 7/8=3.5:1+1+1.5 9/8=4.5:1.5+1.5+1.5 12/8=6:1.5+1.5+1.5+1.5');
+check('time signature: one that isn\'t in the list is 4/4', meterOf('nonsense').barBeats === 4 && meterOf(undefined).top === 4);
+{
+  const m78 = meterOf('7/8');
+  check('time signature: 7/8 bars are 3½ beats long', [0, 3.25, 3.5, 6.75, 7].map((b) => barOf(b, m78)).join(' ') === '0 0 1 1 2');
+  const groups = [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5].map((b) => groupOf(b, m78)).join(' ');
+  check('time signature: 7/8 eighths group 2+2+3 in every bar', groups === '0 0 1 1 2 2 2 3 3 4 4 5 5 5', groups);
+}
+{
+  // Which notes each beam joins, like "1-2 3-4" (notes counted from 1).
+  const beamsOf = (svg) => {
+    const xs = [...svg.matchAll(/class="t-fret[^"]*" x="([\d.]+)"/g)].map((m) => Number(m[1]));
+    return [...svg.matchAll(/class="t-beam" x1="([\d.]+)" y1="[\d.]+" x2="([\d.]+)"/g)].map((m) => `${xs.indexOf(Number(m[1])) + 1}-${xs.indexOf(Number(m[2])) + 1}`).join(' ');
+  };
+  const eighths = (n) => Array.from({ length: n }, (_, i) => ({ string: 6, fret: i, t: i * 0.25 })); // at 120 BPM
+  const quarters = (n) => Array.from({ length: n }, (_, i) => ({ string: 6, fret: i, t: i * 0.5 }));
+  const waltz = tabSvg(quarters(6), { bpm: 120, endTime: 3, meter: '3/4' });
+  const measures = [...waltz.matchAll(/class="t-measure"[^>]*>(\d+)</g)].map((m) => m[1]).join(' ');
+  check('tab picture: 6 quarter notes in 3/4 are 2 bars, with 3 over 4 at the start',
+    measures === '1 2' && (waltz.match(/class="t-bar"/g) || []).length === 3 && /class="t-time"[^>]*>3<.*class="t-time"[^>]*>4</.test(waltz), measures);
+  const rest = tabSvg([{ string: 6, fret: 0, t: 0.5 }, { string: 6, fret: 3, t: 5 }], { bpm: 120, endTime: 6, meter: '3/4' });
+  const restMeasures = [...rest.matchAll(/class="t-measure"[^>]*>(\d+)</g)].map((m) => m[1]).join(' ');
+  check('tab picture: a long rest in 3/4 still draws every measure (1 2 3 4)', restMeasures === '1 2 3 4', restMeasures);
+  const seven = beamsOf(tabSvg(eighths(7), { bpm: 120, endTime: 1.75, meter: '7/8' }));
+  check('tab picture: 7 eighths in 7/8 are beamed 2+2+3', seven === '1-2 3-4 5-7', seven);
+  const six = beamsOf(tabSvg(eighths(6), { bpm: 120, endTime: 1.5, meter: '6/8' }));
+  check('tab picture: 6 eighths in 6/8 are beamed in threes', six === '1-3 4-6', six);
+  const four = beamsOf(tabSvg(eighths(8), { bpm: 120, endTime: 2 }));
+  check('tab picture: 8 eighths in 4/4 are still beamed in twos', four === '1-2 3-4 5-6 7-8', four);
+}
+
+// --- Auto tempo: working out the tempo from when the notes started ---
+{
+  // A riff from note lengths in sixteenths at a tempo, with a repeatable wobble of up to ±ms,
+  // because real playing isn't perfectly on time.
+  const played = (bpm, sixteenths, wobbleMs = 15) => {
+    const step = 60 / bpm / 4;
+    let t = 1;
+    const notes = sixteenths.map((length, i) => {
+      const note = { t: t + ((((i * 7) % 5) - 2) / 2) * wobbleMs / 1000 };
+      t += length * step;
+      return note;
+    });
+    return [...notes, { t }];
+  };
+  const cases = [
+    ['quarters at 138', played(138, Array(12).fill(4)), 138],
+    ['eighths at 138', played(138, Array(16).fill(2)), 138],
+    ['sixteenths at 138', played(138, Array(16).fill(1), 8), 138],
+    ['eighths and quarters at 100', played(100, [2, 2, 4, 2, 2, 4, 4, 2, 2, 4]), 100],
+    ['dotted 3+3+2 at 138', played(138, [3, 3, 2, 3, 3, 2, 3, 3, 2], 8), 138],
+    ['a gallop (an eighth and two sixteenths) at 160', played(160, [2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1], 6), 160],
+    ['quarters at 60 come out as 120 (the same as half notes at 120)', played(60, Array(8).fill(4)), 120],
+    ['quarters at 150 stay 150 (the guess lands from 80 up to 160)', played(150, Array(12).fill(4)), 150],
+    ['quarters at 138 with one note missed', played(138, [4, 4, 4, 8, 4, 4, 4, 4, 4, 4]), 138],
+    ['quarters at 138 with one extra note', played(138, Array(10).fill(4)).flatMap((n, i) => (i === 5 ? [n, { t: n.t + 0.1 }] : [n])), 138],
+    ['thrash eighths at 180 come out as 90 (type 180 on the riff)', played(180, Array(16).fill(2), 6), 90],
+    ['only 3 notes: can\'t tell', played(120, [4, 4]), null],
+    ['free time, no steady beat: can\'t tell', [0, 0.31, 0.77, 0.93, 1.52, 1.61, 2.34, 2.9, 3.05, 3.71].map((t) => ({ t })), null],
+  ];
+  for (const [label, notes, want] of cases) {
+    const got = detectTempo(notes);
+    check(`auto tempo: ${label}`, (got === null ? null : Math.round(got)) === want, got);
+  }
+}
+
 // --- Where the last note ends (that sets its note value) ---
 // Like app.js: the last note lasts while its own pitch is still heard, RINGING_READINGS in a row.
 // Readings are [frequency, clarity, volume] at 60 a second, or [..., time] from a real recording.
@@ -403,8 +474,22 @@ check('rhythm switch: a riff recorded with rhythm off stays off', riffTiming(loa
 saveRiff([], null, { bpm: 100, endTime: 2, rhythm: true });
 check('rhythm switch: a riff recorded with rhythm on stays on', riffTiming(loadRiffs()[0], 120).timing === true);
 const oldRiff = riffTiming({ notes: [] }, 90);
-check('rhythm switch: an old riff (saved before this) has rhythm on and today\'s tempo',
-  oldRiff.timing === true && oldRiff.bpm === 90 && oldRiff.endTime === null, JSON.stringify(oldRiff));
+check('rhythm switch: an old riff (saved before this) has rhythm on, today\'s tempo and 4/4',
+  oldRiff.timing === true && oldRiff.bpm === 90 && oldRiff.endTime === null && oldRiff.meter === '4/4', JSON.stringify(oldRiff));
+
+// --- Saved riffs keep their time signature, and their tempo can be fixed ---
+saveRiff([], null, { bpm: 90, endTime: 2, rhythm: true, meter: '7/8', autoTempo: true });
+const saved = loadRiffs()[0];
+check('saved riff: keeps its time signature and that the tempo was worked out', riffTiming(saved, 120).meter === '7/8' && saved.autoTempo === true);
+const later = Date.now() + 2;
+while (Date.now() < later); // a riff's id is the time in ms, so wait for the next id to be different
+saveRiff([], null, { bpm: 90, endTime: 2, rhythm: true, meter: '4/4', autoTempo: false });
+check('saved riff: "auto" is only saved when the tempo was worked out', !('autoTempo' in loadRiffs()[0]));
+const fixed = updateRiff(saved.id, { bpm: 180, autoTempo: false });
+const reloaded = loadRiffs().find((riff) => riff.id === saved.id);
+check('saved riff: typing a new tempo saves it, and it\'s not "auto" any more',
+  fixed?.bpm === 180 && reloaded.bpm === 180 && reloaded.autoTempo === false && reloaded.meter === '7/8' && loadRiffs()[0].bpm === 90, JSON.stringify(reloaded));
+check('saved riff: changing a riff that isn\'t there does nothing', updateRiff('gone', { bpm: 100 }) === null && loadRiffs().length === 4);
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');
 process.exit(allOk ? 0 : 1);

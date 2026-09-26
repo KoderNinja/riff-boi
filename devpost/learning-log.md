@@ -138,3 +138,19 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - The code review found 2 more real bugs. With distortion, Pitchy hears the octave above for a moment and Riff Boi fixes the note, but the bend tracking kept the wrong octave, so a bend on that note came out as 3 notes (`B3 B4 B5` instead of `B3b5`).
 - The other: my last note is supposed to end when the guitar goes quiet, but "quiet" was a fixed volume. In my Crazy Train recording, the amp hiss is louder than that, so the last note lasted until I tapped Stop again. Now the last note lasts while its own pitch can still be heard. Hiss is loud but has no pitch. We tried several rules on all 8 of my recordings, with 3 seconds of each one's own room noise added before Stop. Every rule that only looked at the volume got fooled on at least one recording. Following the note's own pitch (two readings in a row) never did.
 - Claude broke each fix on purpose (6 ways) and a check caught every one. 99 checks now, and the scoreboard didn't change (110/115 notes, 83/83 strings).
+
+## Sep 26, 2026: When my Mac and the cloud both had new commits
+- My Mac had a commit the cloud never saw (a fix for missing bar lines after a long rest, and for an old Pitchy start switching off a new riff's mic), and the cloud had 6 commits my Mac never saw. Git calls that a split history, so it couldn't just fast-forward.
+- I picked a rebase: git took my Mac's commit off, added the cloud's 6, then put mine back on top, so the history is one straight line. A merge would have kept both lines and joined them.
+- A conflict is when both sides changed the same line. Here it was only the README's check count (92 on my Mac, 99 in the cloud). The right answer was neither: 100, because both sides added checks.
+
+## Sep 26, 2026: The Rhythm switch only changes the new riff
+- The switch was a setting that every saved riff read when it was drawn, so flipping it changed all of them. The fix: each riff saves whether rhythm was on, like it already saved its tempo.
+- Old riffs don't have that saved. Code has to decide what missing data means, so old riffs count as rhythm on.
+
+## Sep 26, 2026: Time signatures and Auto tempo
+- The tempo always counts quarter notes, so a bar is the top number × 4 / the bottom number, in beats. 3/4 is 3 beats and 7/8 is 3½. I picked 7/8 grouped 2+2+3.
+- Auto works out the tempo when I tap Stop. It looks for the longest steady beat that all the gaps between my notes fit, and lets 1 note in 8 be a bit early, late or extra.
+- The sound can't tell a riff at 180 from the same riff at 90 with notes twice as short. So Auto picks a tempo from 80 up to 160, and if it's wrong, I type the right one on the saved riff. With under 4 notes or no steady beat, it says it can't tell instead of guessing.
+- Mutation testing found a hole in the checks: I changed the tempo range and nothing failed, because none of the test riffs were between 140 and 160. A new riff at 150 now catches it. 129 checks.
+- The browser kept an old copy of one file after switching branches, so the page mixed new and old code and broke ("does not provide an export named barOf"). A browser reuses saved copies of files to be fast, so after big changes, reload without the saved copies.

@@ -12,7 +12,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 
 - Writes tab live while you play single notes.
 - Hears string bends and writes them like real tab: `7b9` for a bend, `7b9r7` for a bend and release, `7pb9r7` for a pre-bend.
-- Draws the tab like a tab site (Songsterr style): string lines with the fret numbers on them, bar lines, and the rhythm underneath, at the tempo you set. You can switch rhythm off to just see the notes.
+- Draws the tab like a tab site (Songsterr style): string lines with the fret numbers on them, bar lines, and the rhythm underneath, at the tempo you set, in the time signature you pick (2/4 to 12/8). It can also work out the tempo from how you played (Auto), and you can fix a saved riff's tempo by typing it. You can switch rhythm off to just see the notes.
 - Saves each riff to a Latest Riffs list that's still there next time you open it.
 - Shows how sure it is about the tab, with a hint when something's off, like background noise or an out-of-tune guitar.
 - Has a tuner built in.
@@ -57,7 +57,7 @@ node tools/check.mjs
 node tools/score.mjs
 ```
 
-`check.mjs` runs 103 checks on the note, bend, rhythm, tab, confidence and input picker logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
+`check.mjs` runs 129 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, input picker and saving logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
 
 ## What it can't do yet
 

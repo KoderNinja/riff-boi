@@ -164,9 +164,12 @@ Checked on the learner's 8 recordings (which have no bends): the same 110/115 no
 PRD ref: `prd.md > What We're Building` (bends).
 
 ### Tab Picture and Rhythm (`tabsvg.js` + `rhythm.js`) *(added during the build, learner request)*
-The tab is drawn as a picture (SVG) like a Songsterr tab, the learner's pick from 3 rendered options: six string lines with the fret numbers on them, "TAB" and 4/4 at the start, bar lines every 4 beats with measure numbers, the tempo (♩ = 120), bends as curved arrows labelled ½, full or 1½, and the rhythm underneath: no stem for a whole note, a short stem for a half note, a full stem for shorter notes, beams joining eighths and sixteenths in the same beat (flags for a lone one) and a dot for dotted notes.
+The tab is drawn as a picture (SVG) like a Songsterr tab, the learner's pick from 3 rendered options: six string lines with the fret numbers on them, "TAB" and the time signature at the start, bar lines with measure numbers, the tempo (♩ = 120), bends as curved arrows labelled ½, full or 1½, and the rhythm underneath: no stem for a whole note, a short stem for a half note, a full stem for shorter notes, beams joining eighths and sixteenths in the same beat (flags for a lone one) and a dot for dotted notes.
 - **Tempo:** the learner sets the BPM on the home screen (− / + or typing, 40 to 240, default 120). Each riff saves the BPM it was played at.
 - **Note values:** each note's start is snapped to the nearest sixteenth note at that tempo, and it lasts until the next note starts. The last note lasts while its own pitch can still be heard (in any octave, or at its bent pitch, with clarity 0.5 or more, 2 readings in a row), or until Stop. The longest value that fits is used; leftover time is just space. *(Changed after the code review: it used to last until the volume dropped below the volume limit, but amp hiss can be louder than that, and then the last note lasted until Stop.)*
+- **Time signature** *(added after the build, learner request)*: a "Time" dropdown with 2/4, 3/4, 4/4, 5/4, 6/8, 7/8, 9/8 and 12/8 (default 4/4). The tempo always counts quarter notes, so a bar is top × 4 / bottom beats (7/8 is 3½). Beams join one beat in x/4, threes in 6/8, 9/8 and 12/8, and 2+2+3 in 7/8. Each riff saves its time signature.
+- **Auto tempo** *(added after the build, learner idea)*: an "Auto" switch next to the tempo. When you tap Stop, `detectTempo` works out the tempo from when the notes started: the longest steady pulse every gap fits (within 15%, with 1 note in 8 allowed to be early, late or extra), fine-tuned with a best-fit line, then read as a half, quarter, eighth or sixteenth note so the tempo lands from 80 up to 160 BPM. Under 4 notes or no steady beat, it can't tell, so the riff uses the tempo in the box and the Saving screen says so. A worked-out tempo also goes in the box for the next riff. The live tab uses the box's tempo while you play. Auto does nothing with rhythm off.
+- **Fixing a tempo:** a saved riff shows its tempo in a box (with "auto" if Riff Boi worked it out). A wrong guess is usually double or half speed, so you type the right tempo, 40 to 240, and the tab is redrawn. Hidden when rhythm was off.
 - **Rhythm switch:** with rhythm off, the tab is just the notes, evenly spaced, with no bars, tempo or stems. It only changes the riff being recorded: each riff saves whether rhythm was on and is always drawn that way. *(Changed after the build, learner request: it used to redraw every saved riff too.)*
 - The newest note is red while recording. The old text tab (`drawTab`) stays for the checks and a future "copy as text".
 PRD ref: `prd.md > What We're Building` (note values).
@@ -195,9 +198,11 @@ Everything lives in the browser's localStorage, as text in JSON format (a simple
 - Bent notes also have `bend` (semitones, 1 to 3), and `release: true` and/or `prebend: true` when those happened. `fret` is always the fretted note, so `{ "fret": 7, "bend": 2, "release": true }` is drawn as `7b9r7`.
 - `bpm` is the tempo the riff was played at, and `endTime` is when the last note ended (seconds since New Riff), so the note values can be drawn again. Riffs from before this don't have them: they use today's tempo, and the last note counts as a quarter note.
 - `rhythm` is whether the Rhythm switch was on when the riff was recorded. Riffs from before this don't have it and are drawn with rhythm on.
+- `meter` is the time signature, like `"7/8"`. Riffs from before this don't have it and are 4/4.
+- `autoTempo: true` means Riff Boi worked out `bpm` itself. It's only saved when true, and typing a new tempo sets it to `false`.
 - `confidence` is how sure Riff Boi was about the riff (the score and each part from 0 to 1, rounded to 2 decimals) plus the hint, or `null` if there was nothing to judge. Riffs saved before the confidence bar don't have it.
 
-**`riffboi.settings`**: `{ "bpm": 120, "rhythm": true }`, the tempo and the rhythm switch.
+**`riffboi.settings`**: `{ "bpm": 120, "autoTempo": false, "meter": "4/4", "rhythm": true }`, the tempo, the Auto switch, the time signature and the rhythm switch.
 
 **`riffboi.inputDeviceId`**: which audio input you picked.
 
@@ -252,7 +257,7 @@ beginners-paradise/          # the project folder = the GitHub repo
 - **Pitchy** instead of writing pitch detection from scratch: the math is a project on its own. We still write the note-start logic, which is the Riff Boi-specific part.
 - **Simple position rule** instead of editing positions or using a camera (learner decisions in `prd.md > Product Decisions` and `scope.md > Explicitly Cut`).
 - **Standard tuning only**: drop tunings would need a tuning setting (later).
-- ~~No rhythm in the tab~~ *(rhythm was added during the build)*: note values come from a tempo you set. Riff Boi doesn't work out the tempo by itself, and the time signature is always 4/4.
+- ~~No rhythm in the tab~~ *(rhythm was added during the build)*: note values come from a tempo you set. ~~Riff Boi doesn't work out the tempo by itself, and the time signature is always 4/4.~~ *(both added after the build: Auto tempo and the time signature)*
 
 ## Decisions and Open Issues
 

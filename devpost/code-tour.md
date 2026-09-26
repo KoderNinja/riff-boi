@@ -30,7 +30,7 @@ It wires up the buttons and switches screens. The important part is `handleReadi
 - After 5 seconds (300 readings) with no notes, it shows "Can't hear your guitar".
 - It keeps track of when the last note's own pitch was last heard (`stillRinging`), so on Stop the last note ends there, not when you tapped Stop.
 
-It also handles the tempo (40 to 240 BPM), the Rhythm switch and the input picker, all remembered between visits. With `?debug` in the address, it records every raw reading so you can save them as a file, and shows the mic's numbers on screen.
+It also handles the tempo (40 to 240 BPM), the Auto switch, the time signature, the Rhythm switch and the input picker, all remembered between visits. On Stop, with Auto on, it asks `detectTempo` for the tempo and saves it with the riff. On a saved riff, typing a new tempo saves it and redraws the tab. With `?debug` in the address, it records every raw reading so you can save them as a file, and shows the mic's numbers on screen.
 
 ## `js/audio.js`: the ears
 
@@ -72,7 +72,9 @@ The sound says which note, not which string. The same note can be played in up t
 ## `js/rhythm.js` and `js/tabsvg.js`: the page of tab
 
 - `rhythmOf` snaps each note's start to the nearest sixteenth note at your tempo. A note lasts until the next one starts, and it gets the longest standard value that fits (whole, dotted half, half, dotted quarter, quarter, dotted eighth, eighth, sixteenth).
-- `tabSvg` draws it all as SVG, which is shapes written as text, so it stays sharp at any size: six string lines, the fret numbers on small dark patches, "TAB" and 4/4, bar lines every 4 beats with measure numbers, the tempo, bends as arrows labelled ½, full or 1½, and the rhythm underneath (stems, beams, flags and dots). With rhythm off, the notes are just evenly spaced.
+- `meterOf` turns a time signature like "7/8" into its bar length in beats (the tempo always counts quarter notes, so 7/8 is 3½) and its beam groups (2+2+3). `barOf` says which bar a beat is in, and `groupOf` which beam group.
+- `detectTempo` works out the tempo from when the notes started (Auto). It finds the longest steady pulse that every gap between notes fits, lets 1 note in 8 be a bit off, then picks the note value that puts the tempo from 80 up to 160 BPM. With under 4 notes or no steady beat, it says it can't tell (`null`).
+- `tabSvg` draws it all as SVG, which is shapes written as text, so it stays sharp at any size: six string lines, the fret numbers on small dark patches, "TAB" and the time signature, bar lines with measure numbers, the tempo, bends as arrows labelled ½, full or 1½, and the rhythm underneath (stems, beams, flags and dots). With rhythm off, the notes are just evenly spaced.
 
 ## `js/confidence.js`: the honesty meter
 
@@ -86,11 +88,11 @@ They're mixed 35% tone, 25% steadiness, 20% tuning, 20% noise. If Riff Boi had t
 
 ## `js/storage.js`: the notebook
 
-Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs` (the riffs), `riffboi.settings` (tempo and rhythm) and `riffboi.inputDeviceId` (your input). A riff keeps only what's needed to draw it again: each note's pitch, string, fret, time and bend, plus the confidence, the tempo, when the last note ended and whether rhythm was on. `riffTiming` reads those back, so a saved riff is always drawn the way it was recorded. Every save is wrapped in `try`, because some private windows block storage.
+Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs` (the riffs), `riffboi.settings` (tempo and rhythm) and `riffboi.inputDeviceId` (your input). A riff keeps only what's needed to draw it again: each note's pitch, string, fret, time and bend, plus the confidence, the tempo, when the last note ended, whether rhythm was on, the time signature and whether the tempo was worked out. `riffTiming` reads those back, so a saved riff is always drawn the way it was recorded, and `updateRiff` saves a change, like a tempo you typed. Every save is wrapped in `try`, because some private windows block storage.
 
 ## `tools/`: the tests
 
-- `check.mjs`: 99 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
+- `check.mjs`: 129 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
 - `score.mjs`: the scoreboard. It replays my 8 real recordings and compares them to what I really played (the `.txt` answer files): 110 of 115 notes, and 83 of 83 on the right string.
 - `replay.mjs`: replays one `?debug` recording through the current code, to compare before and after a change.
 
@@ -109,6 +111,7 @@ Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs`
 | Hand box | 4 frets | `tab.js` |
 | "Can't hear your guitar" | 5 seconds with no note | `app.js` |
 | Tempo | 40 to 240 BPM, default 120 | `app.js` |
+| Auto tempo guess | 80 up to 160 BPM when it can, needs 4 notes | `rhythm.js` |
 
 ## Check yourself
 

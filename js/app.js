@@ -4,7 +4,8 @@ import { startListening, stopListening, listInputs, onInputsChange, soundInfo } 
 import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS } from './notes.js';
 import { placeNotes } from './tab.js';
 import { tabSvg } from './tabsvg.js';
-import { loadRiffs, saveRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
+import { METERS, detectTempo } from './rhythm.js';
+import { loadRiffs, saveRiff, updateRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
 import { riffConfidence } from './confidence.js';
 
 const screens = {
@@ -83,14 +84,19 @@ function currentRiff() {
   return notes;
 }
 
-// --- Settings: tempo (BPM) and rhythm on/off, remembered between visits ---
+// --- Settings: tempo (BPM) or Auto, time signature and rhythm on/off, remembered between visits ---
 
 const settings = loadSettings();
 const BPM_MIN = 40;
 const BPM_MAX = 240;
 
+// A whole-number tempo from 40 to 240 BPM, or `fallback` if it isn't a number.
+function clampBpm(bpm, fallback) {
+  return Math.min(BPM_MAX, Math.max(BPM_MIN, Math.round(bpm) || fallback));
+}
+
 function setBpm(bpm) {
-  settings.bpm = Math.min(BPM_MAX, Math.max(BPM_MIN, Math.round(bpm) || DEFAULT_SETTINGS.bpm));
+  settings.bpm = clampBpm(bpm, DEFAULT_SETTINGS.bpm);
   $('bpm-input').value = settings.bpm;
   saveSettings(settings);
 }
@@ -103,6 +109,23 @@ $('bpm-input').addEventListener('change', (event) => setBpm(Number(event.target.
 $('rhythm-input').addEventListener('change', (event) => {
   settings.rhythm = event.target.checked;
   saveSettings(settings); // only for new riffs: saved riffs keep the rhythm they were recorded with
+});
+
+// Auto: Riff Boi works out the tempo from your notes when you tap Stop (see detectTempo).
+$('auto-tempo-input').checked = settings.autoTempo;
+$('auto-tempo-input').addEventListener('change', (event) => {
+  settings.autoTempo = event.target.checked;
+  saveSettings(settings);
+});
+
+// The time signature, for new riffs (saved riffs keep theirs). A saved setting that isn't in
+// the list goes back to 4/4.
+if (!METERS.includes(settings.meter)) settings.meter = DEFAULT_SETTINGS.meter;
+$('meter-select').replaceChildren(...METERS.map((meter) => new Option(meter, meter)));
+$('meter-select').value = settings.meter;
+$('meter-select').addEventListener('change', (event) => {
+  settings.meter = event.target.value;
+  saveSettings(settings);
 });
 
 // --- Input picker: the mic or your audio interface, remembered between visits ---
@@ -129,7 +152,7 @@ onInputsChange(showInputs); // an input was plugged in or unplugged
 
 // The live tab, redrawn when a note is added or changes. The newest note is red.
 function drawLiveTab(notes) {
-  liveTab.innerHTML = tabSvg(notes, { bpm: settings.bpm, timing: settings.rhythm, highlightLast: true });
+  liveTab.innerHTML = tabSvg(notes, { bpm: settings.bpm, timing: settings.rhythm, meter: settings.meter, highlightLast: true });
   liveTab.scrollLeft = liveTab.scrollWidth; // keep the newest notes in view
 }
 
@@ -181,9 +204,12 @@ function showHome() {
 
 // --- Riff View: one saved riff ---
 
+let shownRiff = null; // the riff on this screen
+
 function showRiff(riff) {
+  shownRiff = riff;
   $('riff-title').textContent = riff.label;
-  $('riff-tab').innerHTML = tabSvg(riff.notes, riffTiming(riff, settings.bpm));
+  drawRiff(riff);
   $('riff-tab').scrollLeft = 0; // start at the beginning of the riff
   $('riff-count').textContent = noteCount(riff.notes.length);
   // Riffs saved before the confidence bar existed don't have a score: hide the bar for those.
@@ -191,6 +217,28 @@ function showRiff(riff) {
   if (riff.confidence) showConfidence($('riff-confidence'), riff.confidence);
   showScreen('riff');
 }
+
+// The riff's tab and its tempo. The tempo is hidden if rhythm was off (the tab has no tempo then),
+// and "auto" shows if Riff Boi worked it out.
+function drawRiff(riff) {
+  const timing = riffTiming(riff, settings.bpm);
+  $('riff-tab').innerHTML = tabSvg(riff.notes, timing);
+  $('riff-tempo').hidden = !timing.timing;
+  $('riff-bpm-input').value = timing.bpm;
+  $('riff-auto-tag').hidden = !riff.autoTempo;
+}
+
+// Type a new tempo to fix a riff's tempo (like an Auto guess that came out double or half speed).
+$('riff-bpm-input').addEventListener('change', (event) => {
+  const bpm = clampBpm(Number(event.target.value), riffTiming(shownRiff, settings.bpm).bpm);
+  try {
+    shownRiff = updateRiff(shownRiff.id, { bpm, autoTempo: false }) ?? { ...shownRiff, bpm, autoTempo: false };
+  } catch (err) {
+    console.error(err); // the browser blocked saving: the tab still changes, but won't be remembered
+    shownRiff = { ...shownRiff, bpm, autoTempo: false };
+  }
+  drawRiff(shownRiff);
+});
 
 $('back-btn').addEventListener('click', showHome);
 
@@ -315,9 +363,14 @@ stopBtn.addEventListener('click', async () => {
   $('saving-details').textContent = '';
   $('saving-where').textContent = '';
   showScreen('saving');
+  // With Auto on, work out the tempo from the notes (not with rhythm off: that tab has no tempo).
+  // If Riff Boi can't tell (under 4 notes, or no steady beat), the riff uses the tempo in the box.
+  const auto = settings.autoTempo && settings.rhythm;
+  const detected = auto ? detectTempo(notes) : null;
+  const bpm = detected === null ? settings.bpm : clampBpm(detected, settings.bpm);
   let riff;
   try {
-    riff = saveRiff(notes, riffConfidence(notes, volumes), { bpm: settings.bpm, endTime, rhythm: settings.rhythm });
+    riff = saveRiff(notes, riffConfidence(notes, volumes), { bpm, endTime, rhythm: settings.rhythm, meter: settings.meter, autoTempo: detected !== null });
   } catch (err) {
     console.error(err);
     $('saving-title').textContent = "Couldn't save";
@@ -328,9 +381,11 @@ stopBtn.addEventListener('click', async () => {
   }
   await wait(500);
   $('saving-title').textContent = 'Saved';
-  $('saving-details').textContent = `${riff.label} · ${noteCount(riff.notes.length)}`;
+  const tempo = !auto ? '' : detected === null ? ` · Couldn't tell the tempo, used ${bpm} BPM` : ` · Tempo ${bpm} BPM`;
+  $('saving-details').textContent = `${riff.label} · ${noteCount(riff.notes.length)}${tempo}`;
   $('saving-where').textContent = 'Saved to Latest Riffs';
-  await wait(1500);
+  if (detected !== null) setBpm(bpm); // the next riff's live tab starts at this tempo
+  await wait(auto ? 2500 : 1500); // a little longer, to read the tempo
   showHome();
 });
 

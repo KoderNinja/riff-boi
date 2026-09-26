@@ -181,8 +181,10 @@ body {
   accent-color: var(--red);
 }
 
-/* Input picker: which mic or audio interface Riff Boi listens to. */
-.input-picker {
+/* Input picker: which mic or audio interface Riff Boi listens to. The time signature picker
+   looks the same. */
+.input-picker,
+.meter-picker {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -693,4 +695,16 @@ body {
   .tuner-needle {
     transition: none;
   }
+}
+
+/* A saved riff's tempo, under its tab. */
+.riff-tempo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.riff-tempo[hidden] {
+  display: none; /* display: flex above would beat the hidden attribute */
 }
