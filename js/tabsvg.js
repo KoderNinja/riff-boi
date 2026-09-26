@@ -24,15 +24,15 @@ const stringY = (string) => TOP + (string - 1) * LINE_GAP; // string 1 (high e) 
 
 // notes: the riff's notes in order (string, fret, t, and bend info).
 // Options: bpm (beats per minute), endTime (seconds, sets the last note's length),
-// meter (the time signature, like '4/4' or '7/8'),
+// meter (the time signature, like '4/4' or '7/8'), origin (where beat 0 is, in seconds, after a count-in),
 // timing (false = rhythm switched off: notes evenly spaced, no bars, tempo or stems),
 // rhythm (draw stems and beams), bendArrows (bends as arrows; false = text like 7b9r7),
 // highlightLast (the newest note in red, while recording).
 // Returns the picture as SVG text.
-export function tabSvg(notes, { bpm = 120, endTime = null, meter = '4/4', timing = true, rhythm = true, bendArrows = true, highlightLast = false } = {}) {
+export function tabSvg(notes, { bpm = 120, endTime = null, meter = '4/4', origin = null, timing = true, rhythm = true, bendArrows = true, highlightLast = false } = {}) {
   const time = meterOf(meter);
   // With rhythm off, pretend every note is a quarter note in one long bar: evenly spaced.
-  const beats = timing ? rhythmOf(notes, bpm, endTime) : notes.map(() => ({ beat: 0, value: { beats: 0, name: 'none' } }));
+  const beats = timing ? rhythmOf(notes, bpm, endTime, origin) : notes.map(() => ({ beat: 0, value: { beats: 0, name: 'none' } }));
   if (!timing) rhythm = false;
   const start = timing ? START : 36; // no 4/4 to make room for when rhythm is off
   const labels = notes.map((note) => (bendArrows ? String(note.fret) : tabToken(note)));
@@ -43,7 +43,8 @@ export function tabSvg(notes, { bpm = 120, endTime = null, meter = '4/4', timing
   const bars = [];
   notes.forEach((note, i) => {
     if (i === 0) {
-      xs.push(start + widths[0] / 2);
+      // After a count-in, the first note may come after the bar's first beat: leave that space.
+      xs.push(start + widths[0] / 2 + beats[0].beat * BEAT_WIDTH);
       return;
     }
     const prev = xs[i - 1];

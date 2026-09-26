@@ -194,6 +194,12 @@ body {
   cursor: pointer;
 }
 
+/* A switch that can't be used right now (like Count-in while Auto detect tempo is on). */
+.rhythm-switch.off {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .rhythm-switch input {
   width: 18px;
   height: 18px;

@@ -11,11 +11,11 @@ const DECAY = 0.996;     // how much of the sound is left each time round the lo
 // follows the tab: each note starts on its beat and lasts its note value at the riff's tempo
 // (leftover time is silence). With rhythm off, the notes play when they were played. `speed`
 // slows it down for practice (0.5 = half speed); the notes keep their pitch.
-export function playbackPlan(notes, { bpm = 120, endTime = null, timing = true, speed = 1 } = {}) {
+export function playbackPlan(notes, { bpm = 120, endTime = null, timing = true, speed = 1, origin = null } = {}) {
   if (notes.length === 0) return [];
   if (timing) {
     const secondsPerBeat = 60 / bpm / speed;
-    return rhythmOf(notes, bpm, endTime).map(({ beat, value }, i) => ({
+    return rhythmOf(notes, bpm, endTime, origin).map(({ beat, value }, i) => ({
       note: notes[i], start: beat * secondsPerBeat, length: Math.min(LONGEST, value.beats * secondsPerBeat),
     }));
   }
@@ -98,6 +98,46 @@ function pluck(midi) {
   return strings.get(midi);
 }
 
+// A metronome click at time `at` (on the sound system's clock): a short, high blip that dies
+// away fast. The first beat of a bar (`accent`) is higher and louder.
+function blip(at, accent, destination) {
+  const tone = context.createOscillator();
+  const level = context.createGain();
+  tone.frequency.value = accent ? 2000 : 1500;
+  level.gain.setValueAtTime(accent ? 0.5 : 0.3, at);
+  level.gain.exponentialRampToValueAtTime(0.001, at + 0.03);
+  tone.connect(level).connect(destination);
+  tone.start(at);
+  tone.stop(at + 0.03);
+}
+
+// Get the sound system going. Call it in a tap (phones only allow sound after one), before
+// anything that has to wait, like opening the mic.
+export function wakeSound() {
+  context ??= new AudioContext();
+  context.resume();
+}
+
+// A count-in: a click at each of `times` (seconds from the start of the bar; the first is
+// louder), then the downbeat after `barLength` seconds. `onClick(i)` is called as click i is
+// heard. Returns { downbeatIn: seconds from now until the downbeat is heard, stop }.
+export function playCountIn(times, barLength, onClick) {
+  wakeSound();
+  const t0 = context.currentTime + 0.15; // a moment to schedule it all
+  const volume = context.createGain();
+  volume.gain.value = 0.5;
+  volume.connect(context.destination);
+  times.forEach((at, i) => blip(t0 + at, i === 0, volume));
+  const heard = t0 - context.currentTime + (context.outputLatency || 0); // seconds until the first click is heard
+  const timers = times.map((at, i) => setTimeout(() => onClick(i), (heard + at) * 1000));
+  const stop = () => {
+    timers.forEach(clearTimeout);
+    volume.gain.setTargetAtTime(0, context.currentTime, 0.01);
+    setTimeout(() => volume.disconnect(), 100);
+  };
+  return { downbeatIn: heard + barLength, stop };
+}
+
 // Play notes (see playbackPlan for the options, plus `click: true` for a metronome click, which
 // needs `meter`). Call it from a tap: phones only let a page make sound after one. `onNote(i)` is
 // called as note i starts, and `onEnd(finished)` once: finished is true if it played to the end,
@@ -127,17 +167,7 @@ export function playNotes(notes, options, onNote, onEnd) {
     source.stop(t0 + start + length + FADE);
   }
   if (options.click && options.timing !== false) {
-    for (const [at, accent] of clickTimes(plan, options)) {
-      // A short, high blip that dies away fast; the first beat of a bar is higher and louder.
-      const blip = context.createOscillator();
-      const level = context.createGain();
-      blip.frequency.value = accent ? 2000 : 1500;
-      level.gain.setValueAtTime(accent ? 0.5 : 0.3, t0 + at);
-      level.gain.exponentialRampToValueAtTime(0.001, t0 + at + 0.03);
-      blip.connect(level).connect(volume);
-      blip.start(t0 + at);
-      blip.stop(t0 + at + 0.03);
-    }
+    for (const [at, accent] of clickTimes(plan, options)) blip(t0 + at, accent, volume);
   }
 
   // Follow along on screen, and finish after the last note. These are timers, not animation

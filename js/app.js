@@ -5,11 +5,11 @@ import { wavFile } from './wav.js';
 import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS } from './notes.js';
 import { placeNotes, otherSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken } from './tab.js';
 import { tabSvg } from './tabsvg.js';
-import { METERS, detectTempo, barStarts } from './rhythm.js';
+import { METERS, detectTempo, barStarts, meterOf, countInClicks, countInOrigin } from './rhythm.js';
 import { loadRiffs, saveRiff, updateRiff, deleteRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
 import { riffConfidence, isUnsure } from './confidence.js';
 import { writtenRiff, retime, EDITOR_MAX_FRET, typedFret } from './editor.js';
-import { playNotes } from './playback.js';
+import { playNotes, wakeSound, playCountIn } from './playback.js';
 import { riffFromRecording } from './upload.js';
 import { findScale } from './scale.js';
 import { riffToLink, riffFromLink } from './share.js';
@@ -35,6 +35,9 @@ const recTime = $('rec-time');
 // The riff being recorded right now. Lives in memory only until Stop saves it.
 let riffNotes = [];
 let startTime = 0;
+let countedIn = false;    // did this riff start with a count-in? (then t = 0 is the downbeat)
+let stopCountIn = null;   // stops a count-in that's still clicking
+let countInTimer = 0;
 let trackNote = null;
 let volumes = []; // every reading's volume, to measure background noise for the confidence bar
 let lastSound = 0; // when the last note could last be heard (seconds): where it ends
@@ -124,14 +127,38 @@ $('bpm-up').addEventListener('click', () => setBpm(settings.bpm + 1));
 $('bpm-input').addEventListener('change', (event) => setBpm(Number(event.target.value)));
 $('rhythm-input').addEventListener('change', (event) => {
   settings.rhythm = event.target.checked;
+  showCountIn();
   saveSettings(settings); // only for new riffs: saved riffs keep the rhythm they were recorded with
 });
+
+// Count-in: one bar of clicks at the tempo before recording, so the first note lands on a beat.
+// It needs a set tempo (not Auto detect tempo) and note lengths (a beat to land on).
+function countInReady() {
+  return settings.countIn && settings.rhythm && !settings.autoTempo;
+}
+
+function showCountIn() {
+  const usable = settings.rhythm && !settings.autoTempo;
+  $('count-in-input').disabled = !usable;
+  $('count-in-switch').classList.toggle('off', !usable);
+  $('count-in-switch').title = usable
+    ? 'One bar of clicks before recording, so your first note lands on a beat'
+    : 'Count-in needs a set tempo (Auto detect tempo off) and Show note lengths on';
+}
+
+$('count-in-input').checked = settings.countIn;
+$('count-in-input').addEventListener('change', (event) => {
+  settings.countIn = event.target.checked;
+  saveSettings(settings);
+});
+showCountIn();
 
 // Auto: Riff Boi works out the tempo from your notes when you tap Stop (see detectTempo).
 $('auto-tempo-input').checked = settings.autoTempo;
 $('auto-tempo-input').addEventListener('change', (event) => {
   settings.autoTempo = event.target.checked;
   showTempo();
+  showCountIn();
   saveSettings(settings);
 });
 
@@ -179,7 +206,8 @@ function markUnsure(notes, live = false) {
 }
 
 function drawLiveTab(notes) {
-  liveTab.innerHTML = tabSvg(markUnsure(notes, true), { bpm: settings.bpm, timing: settings.rhythm, meter: settings.meter, highlightLast: true });
+  const origin = countedIn && notes.length ? countInOrigin(notes[0].t, settings.bpm, settings.meter) : null;
+  liveTab.innerHTML = tabSvg(markUnsure(notes, true), { bpm: settings.bpm, timing: settings.rhythm, meter: settings.meter, origin, highlightLast: true });
   liveTab.scrollLeft = liveTab.scrollWidth; // keep the newest notes in view
 }
 
@@ -349,7 +377,8 @@ function drawRiff(riff) {
 $('riff-bpm-input').addEventListener('change', (event) => {
   const bpm = clampBpm(Number(event.target.value), riffTiming(shownRiff, settings.bpm).bpm);
   // A written tab keeps its note values (see retime). A recorded riff keeps its times.
-  const changes = { ...(shownRiff.written ? retime(shownRiff, bpm) : { bpm }), autoTempo: false };
+  // (A count-in's downbeat was at the old tempo, so a recorded riff counts from its first note after this.)
+  const changes = { ...(shownRiff.written ? retime(shownRiff, bpm) : { bpm, countIn: undefined }), autoTempo: false };
   try {
     shownRiff = updateRiff(shownRiff.id, changes) ?? { ...shownRiff, ...changes };
   } catch (err) {
@@ -390,7 +419,8 @@ const CANT_HEAR = ["Can't hear your guitar", 'Play a little louder, or check you
 // Called for every reading from the mic (~60 times a second).
 // When a new note starts (or the last one's octave gets fixed), redraw the tab.
 function handleReading(freq, clarity, volume) {
-  const t = (performance.now() - startTime) / 1000; // seconds since New Riff
+  if (performance.now() < startTime) return; // still counting in: listening starts at the downbeat
+  const t = (performance.now() - startTime) / 1000; // seconds since New Riff (or since the downbeat)
   if (DEBUG) readings.push([round(freq, 2), round(clarity, 3), round(volume, 4), round(t, 3)]);
   volumes.push(volume);
   // volumes has one entry per reading, so this is 5 seconds after listening started.
@@ -443,7 +473,9 @@ $('new-riff-btn').addEventListener('click', async () => {
   ringing = 0;
   heardNote = false;
   $('debug-info').textContent = '';
-  startTime = performance.now();
+  countedIn = countInReady();
+  if (countedIn) wakeSound(); // the clicks come later, but phones only allow sound in the tap
+  startTime = countedIn ? Infinity : performance.now(); // with a count-in, listening starts at the downbeat
   trackNote = createNoteTracker();
   drawLiveTab([]); // an empty staff, ready for notes
   showConfidence(liveConfidence, null);
@@ -458,8 +490,27 @@ $('new-riff-btn').addEventListener('click', async () => {
   } catch (err) {
     console.error(err);
     showMessage(statusMsg, statusHint, problemFor(err));
+    return;
   }
+  if (countedIn && !stopBtn.disabled) startCountIn(); // (not if Stop was tapped while the mic opened)
 });
+
+// One bar of clicks, counted on screen too (a phone's speaker can be quiet while the mic is on).
+// Readings before the downbeat are ignored, so the clicks never become notes.
+function startCountIn() {
+  const secondsPerBeat = 60 / settings.bpm;
+  const clicks = countInClicks(settings.meter).map((beat) => beat * secondsPerBeat);
+  noteFreq.textContent = 'Count-in…';
+  const { downbeatIn, stop } = playCountIn(clicks, meterOf(settings.meter).barBeats * secondsPerBeat, (i) => {
+    noteName.textContent = String(i + 1);
+  });
+  stopCountIn = stop;
+  startTime = performance.now() + downbeatIn * 1000;
+  countInTimer = setTimeout(() => {
+    noteName.textContent = '–';
+    noteFreq.textContent = 'Play a riff';
+  }, downbeatIn * 1000);
+}
 
 // The tempo to save a riff at. With Auto detect tempo on, work it out from the notes (not with
 // rhythm off: that tab has no tempo). If Riff Boi can't tell (under 4 notes, or no steady beat),
@@ -474,6 +525,9 @@ function tempoFor(notes) {
 
 stopBtn.addEventListener('click', async () => {
   stopBtn.disabled = true; // one tap is enough
+  stopCountIn?.(); // stopped during the count-in
+  stopCountIn = null;
+  clearTimeout(countInTimer);
   // The last note lasts until it couldn't be heard any more (or until Stop, if it was still ringing).
   const endTime = Math.min((performance.now() - startTime) / 1000, lastSound);
   stopListening();
@@ -495,7 +549,7 @@ stopBtn.addEventListener('click', async () => {
   const { auto, detected, bpm } = tempoFor(notes);
   let riff;
   try {
-    riff = saveRiff(markUnsure(notes), riffConfidence(notes, volumes), { bpm, endTime, rhythm: settings.rhythm, meter: settings.meter, autoTempo: detected !== null });
+    riff = saveRiff(markUnsure(notes), riffConfidence(notes, volumes), { bpm, endTime, rhythm: settings.rhythm, meter: settings.meter, autoTempo: detected !== null, countIn: countedIn });
   } catch (err) {
     console.error(err);
     $('saving-title').textContent = "Couldn't save";
@@ -520,7 +574,7 @@ stopBtn.addEventListener('click', async () => {
 // rhythm), then six lines of tab with bar lines.
 function riffAsText(riff) {
   const timing = riffTiming(riff, settings.bpm);
-  const newBar = timing.timing ? barStarts(riff.notes, timing.bpm, timing.endTime, timing.meter) : [];
+  const newBar = timing.timing ? barStarts(riff.notes, timing.bpm, timing.endTime, timing.meter, timing.origin) : [];
   const about = timing.timing ? ` (${Math.round(timing.bpm)} BPM, ${timing.meter})` : '';
   return `${riffTitle(riff)}${about}\n${tabText(riff.notes, newBar)}\n`;
 }

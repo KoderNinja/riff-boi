@@ -229,3 +229,9 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 ## Sep 26, 2026: Easier to read, easier to start
 - Text has to stand out enough from its background to be easy to read: the guideline is a contrast of 4.5 to 1 for normal text. White on my red buttons was 4.43, just under, and small red text on the dark background was 3.5. One red can't do both jobs (dark enough behind white text, light enough as text on black), so there are two now, and the button red changed so little you can't see it.
 - The empty home screen now says how to start, and on a computer, Space starts and stops recording. Space already presses whatever button is picked, so the shortcut stays out of the way when a button or box is in use.
+
+## Sep 26, 2026: Count-in, and when is a note "played"?
+- The count-in plays one bar of clicks, then listening starts on the downbeat, so my first note lands on a beat and the bars line up with how I really played.
+- Testing it showed something hidden: Riff Boi writes down a note's time when it's SURE of it, 60 to 100 ms after I played it. That never mattered before, because the rhythm counted from my first note and every note was late by the same amount. With a count-in, the downbeat is fixed, so the delay pushed notes a sixteenth late.
+- I tried stamping each note when it was first heard instead. The timing got less even, because that first reading isn't always the real start. So the times stay as they were, and only the count-in takes a fixed 60 ms off. Measuring before and after is how I knew which idea was better.
+- The lag: the only part the app controls is waiting for 3 clear readings (33 ms), and cutting it to 2 let fake notes in (2 wrong, 3 extra). The rest is the attack of the note and the mic.

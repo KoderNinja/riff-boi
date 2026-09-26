@@ -51,12 +51,14 @@ const VALUES = [
 
 // notes: the riff's notes in order, each with `t` (seconds since New Riff).
 // endTime: when the riff ended (seconds), for the last note's length (null = a quarter note).
-// Returns one { beat, value } per note: `beat` is where it starts (the first note is beat 0),
+// Returns one { beat, value } per note: `beat` is where it starts (the first note is beat 0,
+// unless `origin` says where beat 0 is, in seconds, like the downbeat after a count-in),
 // `value` is its note value. A note lasts until the next one starts; any leftover time
 // that no note value fits is just space (like a short rest).
-export function rhythmOf(notes, bpm, endTime = null) {
+export function rhythmOf(notes, bpm, endTime = null, origin = null) {
   if (notes.length === 0) return [];
-  const toBeats = (t) => ((t - notes[0].t) * bpm) / 60;
+  const zero = origin ?? notes[0].t;
+  const toBeats = (t) => ((t - zero) * bpm) / 60;
   const snap = (beats) => Math.round(beats / GRID) * GRID;
   // Snap every start to the nearest sixteenth; two notes can't share a spot.
   const starts = [];
@@ -70,10 +72,38 @@ export function rhythmOf(notes, bpm, endTime = null) {
   return starts.map((beat, i) => ({ beat, value: valueFor((i + 1 < starts.length ? starts[i + 1] : end) - beat) }));
 }
 
+// --- Count-in ---
+
+// Where the clicks go in a one-bar count-in, in beats: on each beat group of the time signature
+// (every quarter in x/4, every dotted quarter in 6/8, 9/8 and 12/8, and 2+2+3 in 7/8).
+export function countInClicks(meter) {
+  let at = 0;
+  return meterOf(meter).groups.map((group) => {
+    const click = at;
+    at += group;
+    return click;
+  });
+}
+
+// A note is confirmed about this long after it's played: the mic's own delay, plus the 3 readings
+// it takes to be sure. Without a count-in that doesn't matter (every note is late by the same
+// amount, and beats count from the first note). After a count-in, beats count from the downbeat,
+// so it's taken off. (Measured: notes played on the beat were confirmed 60 to 100 ms late.)
+export const HEARD_LATE = 0.06; // seconds
+
+// After a count-in, beat 0 is the downbeat (t = 0). The tab starts at the bar the first note is
+// in, so bars before it that were just waiting don't show. Returns where that bar starts on the
+// notes' clock (seconds; notes are HEARD_LATE late, so it's that much after the bar's start).
+export function countInOrigin(firstT, bpm, meter) {
+  const firstBeat = Math.round((((firstT - HEARD_LATE) * bpm) / 60) / GRID) * GRID; // on the sixteenth grid, like rhythmOf
+  const bar = Math.max(0, Math.floor(firstBeat / meterOf(meter).barBeats + 1e-9));
+  return bar * meterOf(meter).barBeats * (60 / bpm) + HEARD_LATE;
+}
+
 // Which notes start a new bar (their index), for bar lines in text tab.
-export function barStarts(notes, bpm, endTime, meter) {
+export function barStarts(notes, bpm, endTime, meter, origin = null) {
   const time = meterOf(meter);
-  const beats = rhythmOf(notes, bpm, endTime);
+  const beats = rhythmOf(notes, bpm, endTime, origin);
   return beats.flatMap(({ beat }, i) => (i > 0 && barOf(beat, time) > barOf(beats[i - 1].beat, time) ? [i] : []));
 }
 

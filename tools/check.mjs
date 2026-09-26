@@ -6,7 +6,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { readNote, createNoteTracker, cleanUpRiff, tuningOf, stillRinging, RINGING_READINGS, notesFromReadings } from '../js/notes.js';
 import { placeNotes, positionsFor, drawTab, tabToken, otherSpots, tabText, fretOn, withFret } from '../js/tab.js';
 import { riffConfidence, isUnsure } from '../js/confidence.js';
-import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS, barStarts } from '../js/rhythm.js';
+import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS, barStarts, countInClicks, countInOrigin, HEARD_LATE } from '../js/rhythm.js';
 import { tabSvg } from '../js/tabsvg.js';
 import { openInput, listInputs } from '../js/audio.js';
 import { saveRiff, loadRiffs, updateRiff, deleteRiff, riffTiming } from '../js/storage.js';
@@ -789,6 +789,35 @@ check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().m
   check('unsure notes: none on the clean fret runs', clean.length === 0, clean.map((n) => n.name).join(' '));
   check('unsure notes: on Crazy Train, the hardest notes (like the B2 and D3 found only by the distortion rules)',
     crazy.includes('B2@5.83') && crazy.includes('D3@8.33') && crazy.length <= 10, crazy.join(' '));
+}
+
+// --- Count-in ---
+{
+  const clicks = ['4/4', '3/4', '6/8', '7/8', '12/8'].map((m) => `${m}:${countInClicks(m).join(',')}`).join(' ');
+  check('count-in: one bar of clicks on the beats (quarters in x/4, dotted quarters in 6/8 and 12/8, 2+2+3 in 7/8)',
+    clicks === '4/4:0,1,2,3 3/4:0,1,2 6/8:0,1.5 7/8:0,1,2 12/8:0,1.5,3,4.5', clicks);
+  // At 120 BPM in 4/4, a bar is 2 seconds. Notes are confirmed HEARD_LATE after they're played.
+  const heard = (played) => played + HEARD_LATE;
+  const near = (a, b) => Math.abs(a - b) < 1e-9;
+  check('count-in: the tab starts at the bar the first note is in (a note a hair early snaps into it)',
+    near(countInOrigin(heard(0.02), 120, '4/4'), heard(0)) && near(countInOrigin(heard(2.6), 120, '4/4'), heard(2)) &&
+    near(countInOrigin(heard(1.99), 120, '4/4'), heard(2)) && near(countInOrigin(heard(1.5), 120, '3/4'), heard(1.5)) && near(countInOrigin(heard(-0.03), 120, '4/4'), heard(0)),
+    [0.02, 2.6, 1.99].map((p) => countInOrigin(heard(p), 120, '4/4')).join(' '));
+  check('count-in: notes played on the beat, confirmed HEARD_LATE later, land on the beat',
+    rhythmOf([1, 1.5, 2].map((p) => ({ t: heard(p) })), 120, heard(2.5), countInOrigin(heard(1), 120, '4/4')).map((r) => r.beat).join(' ') === '2 3 4');
+  // A riff whose first note came on beat 3 (1 s after the downbeat at 120 BPM).
+  const late = [{ string: 6, fret: 0, t: 1.0 }, { string: 6, fret: 3, t: 1.5 }, { string: 6, fret: 5, t: 2.0 }];
+  check('count-in: beats count from the downbeat, so the first note is on beat 3, and bars line up',
+    rhythmOf(late, 120, 2.5, 0).map((r) => r.beat).join(' ') === '2 3 4' && barStarts(late, 120, 2.5, '4/4', 0).join(' ') === '2' && barStarts(late, 120, 2.5, '4/4').join(' ') === '',
+    rhythmOf(late, 120, 2.5, 0).map((r) => r.beat).join(' '));
+  const xOf = (svg) => Number(svg.match(/class="t-fret[^"]*" x="([\d.]+)"/)[1]);
+  check('count-in: the tab leaves space before a first note that comes after beat 1',
+    Math.abs(xOf(tabSvg(late, { bpm: 120, endTime: 2.5, origin: 0 })) - xOf(tabSvg(late, { bpm: 120, endTime: 2.5 })) - 2 * 46) < 1e-9);
+  const played = playbackPlan(late, { bpm: 120, endTime: 2.5, origin: 0 }).map((p) => p.start).join(' ');
+  check('count-in: playback keeps the space before the first note too', played === '1 1.5 2', played);
+  const saved = (extra) => riffTiming({ notes: late, bpm: 120, endTime: 2.5, meter: '4/4', ...extra }, 120).origin;
+  check('count-in: a saved riff counts from its downbeat only if it had a count-in (and rhythm on)',
+    near(saved({ countIn: true }), HEARD_LATE) && saved({}) === null && saved({ countIn: true, rhythm: false }) === null);
 }
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');

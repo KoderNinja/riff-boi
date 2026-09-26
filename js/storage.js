@@ -1,5 +1,7 @@
 // storage.js — saves and loads riffs in localStorage (the browser's notebook for this site).
 
+import { countInOrigin } from './rhythm.js';
+
 const RIFFS_KEY = 'riffboi.riffs';
 
 // All saved riffs, newest first. Returns an empty list if nothing is saved yet,
@@ -16,7 +18,7 @@ export function loadRiffs() {
 // Settings: the tempo (BPM), whether Riff Boi works the tempo out by itself (Auto), the time
 // signature, and whether the tab shows rhythm. Remembered between visits.
 const SETTINGS_KEY = 'riffboi.settings';
-export const DEFAULT_SETTINGS = { bpm: 120, autoTempo: false, meter: '4/4', rhythm: true };
+export const DEFAULT_SETTINGS = { bpm: 120, autoTempo: false, meter: '4/4', rhythm: true, countIn: false };
 
 export function loadSettings() {
   try {
@@ -56,10 +58,11 @@ export function saveInputId(deviceId) {
 
 // Save a new riff at the top of the list and return it.
 // `confidence` is how sure Riff Boi was about it (see confidence.js), or null.
-// `details` is { bpm, endTime, rhythm, meter, autoTempo, written, name }: the tempo it was played
-// at, when its last note ended (seconds), whether rhythm was on, its time signature, whether Riff
-// Boi worked the tempo out by itself, and whether it was written by hand (New Tab), so its tab can
-// be drawn the same way later. And its name, if it has one (like an uploaded file's).
+// `details` is { bpm, endTime, rhythm, meter, autoTempo, written, countIn, name }: the tempo it was
+// played at, when its last note ended (seconds), whether rhythm was on, its time signature, whether
+// Riff Boi worked the tempo out by itself, whether it was written by hand (New Tab), and whether it
+// started with a count-in (then t = 0 is the downbeat), so its tab can be drawn the same way later.
+// And its name, if it has one (like an uploaded file's).
 // Throws if the browser won't let us save (the app shows a message).
 export function saveRiff(notes, confidence = null, details = {}) {
   const now = new Date();
@@ -77,6 +80,7 @@ export function saveRiff(notes, confidence = null, details = {}) {
     meter: details.meter,
     autoTempo: details.autoTempo || undefined, // only saved when it's true
     written: details.written || undefined, // the same
+    countIn: details.countIn || undefined, // the same
     name: details.name || undefined,
   };
   localStorage.setItem(RIFFS_KEY, JSON.stringify([riff, ...loadRiffs()]));
@@ -102,9 +106,12 @@ export function deleteRiff(id) {
 // How to draw a saved riff's tab: at the tempo it was played (riffs from before tempo
 // existed use `bpm`, today's tempo), with rhythm on or off the way it was recorded, so the
 // Rhythm switch only changes new riffs, and in its time signature. Riffs from before those
-// were saved had rhythm on and were in 4/4.
+// were saved had rhythm on and were in 4/4. After a count-in, the beats count from the
+// downbeat (`origin`), starting at the bar the first note is in.
 export function riffTiming(riff, bpm) {
-  return { bpm: riff.bpm ?? bpm, endTime: riff.endTime ?? null, timing: riff.rhythm ?? true, meter: riff.meter ?? '4/4' };
+  const timing = { bpm: riff.bpm ?? bpm, endTime: riff.endTime ?? null, timing: riff.rhythm ?? true, meter: riff.meter ?? '4/4', origin: null };
+  if (riff.countIn && timing.timing && riff.notes.length) timing.origin = countInOrigin(riff.notes[0].t, timing.bpm, timing.meter);
+  return timing;
 }
 
 // 0.873456 → 0.87, so saved riffs stay small. Text (like the hint) stays as it is.
