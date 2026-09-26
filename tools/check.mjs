@@ -14,6 +14,7 @@ import { writtenRiff, retime } from '../js/editor.js';
 import { playbackPlan, pitchPoints, pluckSamples, loopFor } from '../js/playback.js';
 import { readingsFrom } from '../js/upload.js';
 import { findScale } from '../js/scale.js';
+import { riffToLink, riffFromLink } from '../js/share.js';
 
 let allOk = true;
 function check(label, ok, detail = '') {
@@ -670,6 +671,41 @@ check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().m
   // D# between D and E: no scale here has D, D# and E together, so it's a passing note.
   const passing = findScale(riff('E2 G2 A2 B2 D3 D#3 E3 D3 B2'));
   check('key and scale: a riff with a passing note outside its scale still gets it, and says how many', passing?.name === 'E minor pentatonic' && passing.outside === 1, JSON.stringify(passing));
+}
+
+// --- Share a riff with a link ---
+{
+  // The name's plain base64 has + and /, which links can't carry, so the link-safe swap is tested.
+  const riff = {
+    label: 'Sep 26, 1:00 PM', name: 'Riff é 🎸 <b> ??? >>>', bpm: 138, endTime: 2.5, rhythm: false, meter: '7/8', written: true,
+    notes: [{ midi: 45, string: 5, fret: 0, t: 0 }, { midi: 50, string: 4, fret: 0, t: 0.433, bend: 2, release: true }, { midi: 57, string: 3, fret: 2, t: 1, bend: 1, prebend: true }],
+  };
+  const link = riffToLink(riff, 'https://riffboi.com/?x=1#old');
+  const back = riffFromLink(new URL(link).hash);
+  const tabOfRiff = (r) => r.notes.map((n) => `${n.name}@${n.string}/${tabToken(n)}@${n.t}`).join(' ');
+  check('share: a riff comes back from its link the same (notes, bends, name, tempo, time signature, rhythm)',
+    link.startsWith('https://riffboi.com/?x=1#riff=') && /^[A-Za-z0-9_-]+$/.test(link.split('#riff=')[1]) &&
+    tabOfRiff(back) === 'A2@5/0@0 D3@4/0b2r0@0.43 A3@3/2pb3@1' && back.name === 'Riff é 🎸 <b> ??? >>>' &&
+    back.bpm === 138 && back.endTime === 2.5 && back.rhythm === false && back.meter === '7/8' && back.written === true && back.shared === true,
+    JSON.stringify(back));
+  const pack = (data) => '#riff=' + Buffer.from(JSON.stringify(data)).toString('base64url');
+  const good = { v: 1, n: 'x', b: 120, e: 1, r: 1, m: '4/4', s: [[45, 5, 0, 0, 0, 0, 0]] };
+  const bad = [
+    ['not a riff link', '#top'],
+    ['cut off', link.split('#')[1].slice(0, 20).replace(/^/, '#')],
+    ['garbled', '#riff=%%%%'],
+    ['a newer link format', pack({ ...good, v: 2 })],
+    ['no notes', pack({ ...good, s: [] })],
+    ['a string and fret that don\'t give that note', pack({ ...good, s: [[46, 5, 0, 0, 0, 0, 0]] })],
+    ['string 7', pack({ ...good, s: [[45, 7, 0, 0, 0, 0, 0]] })],
+    ['a made-up time', pack({ ...good, s: [[45, 5, 0, 'soon', 0, 0, 0]] })],
+    ['too many notes', pack({ ...good, s: Array(2001).fill([45, 5, 0, 0, 0, 0, 0]) })],
+  ];
+  const accepted = bad.filter(([, hash]) => riffFromLink(hash) !== null).map(([label]) => label);
+  check('share: links that are cut off, garbled, made up or too long are turned down', accepted.length === 0, accepted.join(', '));
+  const odd = riffFromLink(pack({ ...good, n: '   ', b: 999, m: '13/8', e: -1 }));
+  check('share: odd values fall back to safe ones (name, tempo, time signature, end)',
+    odd?.name === 'Shared riff' && odd.bpm === 120 && odd.meter === '4/4' && odd.endTime === null, JSON.stringify(odd));
 }
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');

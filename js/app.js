@@ -11,6 +11,7 @@ import { writtenRiff, retime, EDITOR_MAX_FRET } from './editor.js';
 import { playNotes } from './playback.js';
 import { riffFromRecording } from './upload.js';
 import { findScale } from './scale.js';
+import { riffToLink, riffFromLink } from './share.js';
 
 const screens = {
   home: document.getElementById('screen-home'),
@@ -176,6 +177,8 @@ function showConfidence(element, confidence) {
 const MINI_TAB_NOTES = 12; // how many notes the preview on each riff card shows
 
 function showHome() {
+  // Leaving a shared riff: take it out of the address, so a reload doesn't open it again.
+  if (location.hash.startsWith('#riff=')) history.replaceState(null, '', location.pathname + location.search);
   const riffs = loadRiffs();
   $('riff-list').replaceChildren(...riffs.map((riff) => {
     // A card: date and time, note count (+ confidence), and a mini tab of the first notes.
@@ -286,6 +289,7 @@ let shownRiff = null; // the riff on this screen
 
 function showRiff(riff) {
   shownRiff = riff;
+  $('riff-save-btn').hidden = !riff.shared;
   $('riff-title').textContent = riffTitle(riff);
   drawRiff(riff);
   $('riff-tab').scrollLeft = 0; // start at the beginning of the riff
@@ -531,6 +535,53 @@ $('riff-copy-btn').addEventListener('click', async () => {
   button.focus(); // the hidden box took the focus
   clearTimeout(copiedTimer);
   copiedTimer = setTimeout(() => (button.textContent = 'Copy'), 2000);
+});
+
+// --- Share a riff with a link ---
+
+// Phones get their share menu (Messages, WhatsApp...); otherwise the link is copied.
+let sharedTimer = 0;
+$('riff-share-btn').addEventListener('click', async () => {
+  const button = $('riff-share-btn');
+  const url = riffToLink(shownRiff, location.href);
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: riffTitle(shownRiff), url });
+      return;
+    } catch (err) {
+      if (err.name === 'AbortError') return; // the share menu was closed
+      console.error(err); // couldn't share: copy the link instead
+    }
+  }
+  button.textContent = (await copyText(url)) ? 'Link copied' : "Couldn't copy";
+  button.focus(); // copying may have moved the focus
+  clearTimeout(sharedTimer);
+  sharedTimer = setTimeout(() => (button.textContent = 'Share'), 2000);
+});
+
+// A riff opened from a link isn't saved until you say so.
+$('riff-save-btn').addEventListener('click', () => {
+  const { notes, bpm, endTime, rhythm, meter, written, name } = shownRiff;
+  try {
+    showRiff(saveRiff(notes, null, { bpm, endTime, rhythm, meter, written, name }));
+  } catch (err) {
+    console.error(err);
+    $('riff-save-btn').textContent = "Couldn't save";
+    return;
+  }
+  history.replaceState(null, '', location.pathname + location.search); // the link's job is done
+});
+
+// Open the riff in the address, if there is one. A link pasted while Riff Boi is open only
+// changes the part after "#", so that's watched too.
+function openSharedRiff() {
+  const riff = riffFromLink(location.hash);
+  if (riff) return showRiff(riff);
+  if (location.hash.startsWith('#riff=')) return showProblem("That riff link can't be read", 'It may have been cut off when it was sent');
+  showHome();
+}
+window.addEventListener('hashchange', () => {
+  if (location.hash.startsWith('#riff=')) openSharedRiff();
 });
 
 // --- Move a note to another string ---
@@ -871,4 +922,4 @@ saveReadingsBtn.addEventListener('click', () => {
   link.click();
 });
 
-showHome();
+openSharedRiff(); // a shared riff's link, or home

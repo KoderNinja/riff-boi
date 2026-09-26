@@ -191,3 +191,8 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - Riff Boi tries 7 scales starting on each of the 12 notes (84 in all) and keeps the one with the fewest notes outside it. When several fit, the "home" note decides (the first note counts most, then the lowest, then the last), then the smaller scale.
 - Many scales share their notes: C major and A minor are the same 7 notes, just with a different home. So Riff Boi names both, like "C# major pentatonic (the same notes as A# minor pentatonic)" for my sample. My sample starts on C# because the first A# was missed; with it, it says A# minor pentatonic.
 - Mutation testing changed the design: the tests didn't notice when I swapped two rules. Trying a riff that lives on A showed the order matters: size first said "E minor pentatonic", home note first says "A minor", which is what a guitarist would say.
+
+## Sep 26, 2026: Sharing a riff with a link
+- The whole riff fits in the link: it's turned into short text (JSON), then into base64, which is letters and digits that are safe in a link. It goes after a `#`, and browsers never send that part to the website, so no server or account is needed and nothing is stored anywhere.
+- Anyone can type any link, so the app treats a link like a stranger's input: it checks every value before using it (a string and fret must really make the note it says, there can't be a string 7, and so on) and turns down anything odd.
+- A test only proves something if it can fail. My first test link happened to have no `+` or `/` in it, so removing the code that makes links safe went unnoticed. A riff name that produces both fixed the test.

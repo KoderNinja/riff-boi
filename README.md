@@ -20,6 +20,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 - Lets you move a note to another string by tapping it, since the string is a best guess.
 - Copies a riff as text tab (with bar lines), to paste into a message or a forum.
 - Says which key and scale a riff sounds like, like E minor pentatonic.
+- Shares a riff with a link: the riff is packed into the link itself, so nothing is uploaded anywhere.
 - Gets the tab of a recording too: upload an mp3, wav or m4a, or tap Try a sample (my pentatonic scale) if there's no guitar around.
 - Has a tuner built in.
 - Lets you pick your mic or audio interface, remembers it, and tells you when it can't hear your guitar.
@@ -46,7 +47,7 @@ If it can't hear your guitar, add `?debug` to the address (like https://riffboi.
 
 ## How it works
 
-The browser's Web Audio API listens to the mic 60 times a second, and [Pitchy](https://github.com/ianprime0509/pitchy) works out the pitch of each slice of sound and how clear it is. `js/notes.js` turns those pitches into notes. It decides when a new note starts (a pick, a pitch change, a hammer-on) and ignores harmonics and background noise. It also follows the pitch closely to hear bends: a bend glides smoothly through the pitches in between, while a hammer-on or slide jumps from fret to fret. `js/tab.js` picks a string and fret for each note. The sound can't tell you which string you played, so it goes with the spot that needs the least hand movement. `js/rhythm.js` turns when each note started into note values (quarter, eighth and so on) using your tempo and time signature, and it can work out the tempo from your playing when Auto is on. `js/tabsvg.js` draws the tab picture. `js/confidence.js` scores how clear, in tune, quiet and steady the notes were, and `js/editor.js` turns a tab you write by hand into the same kind of riff, `js/playback.js` plays a tab back with a plucked-string sound made from noise (the Karplus-Strong trick), `js/upload.js` reads a recording with the same steps as listening live, just all at once, `js/scale.js` works out the key and scale, and `js/storage.js` saves riffs in the browser's localStorage, so there's no server and no accounts.
+The browser's Web Audio API listens to the mic 60 times a second, and [Pitchy](https://github.com/ianprime0509/pitchy) works out the pitch of each slice of sound and how clear it is. `js/notes.js` turns those pitches into notes. It decides when a new note starts (a pick, a pitch change, a hammer-on) and ignores harmonics and background noise. It also follows the pitch closely to hear bends: a bend glides smoothly through the pitches in between, while a hammer-on or slide jumps from fret to fret. `js/tab.js` picks a string and fret for each note. The sound can't tell you which string you played, so it goes with the spot that needs the least hand movement. `js/rhythm.js` turns when each note started into note values (quarter, eighth and so on) using your tempo and time signature, and it can work out the tempo from your playing when Auto is on. `js/tabsvg.js` draws the tab picture. `js/confidence.js` scores how clear, in tune, quiet and steady the notes were, and `js/editor.js` turns a tab you write by hand into the same kind of riff, `js/playback.js` plays a tab back with a plucked-string sound made from noise (the Karplus-Strong trick), `js/upload.js` reads a recording with the same steps as listening live, just all at once, `js/scale.js` works out the key and scale, `js/share.js` packs a riff into a link, and `js/storage.js` saves riffs in the browser's localStorage, so there's no server and no accounts.
 
 The full plan is in [`devpost/spec.md`](devpost/spec.md).
 
@@ -63,7 +64,7 @@ node tools/check.mjs
 node tools/score.mjs
 ```
 
-`check.mjs` runs 157 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, input picker, saving, tab editor, playback, upload and scale finder logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
+`check.mjs` runs 160 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, input picker, saving, tab editor, playback, upload, scale finder and share link logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 110 of 115 notes right (96%) and puts all 83 checked notes on the right string.
 
 ## What it can't do yet
 
