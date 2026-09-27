@@ -9,11 +9,13 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 ## Next up
 
 Where we left off (Sep 27, 2026):
+- Feature freeze (my call, Sep 27): no new features before the deadline, only fixes from my tests.
+- The video script is back in `devpost/video/script.md` (it got deleted by accident on Sep 26), with the camera setup added. The README's "AI use" part is now the "How I used AI" part of my project story: I still need to check the wording.
 - Camera (beta) got a 5-second setup, because on my guitar the dots weren't on my fretting hand. To test it: turn on Camera (beta), tap Set up camera, play the 3rd fret and then the 12th fret on the low E with my first finger, and check the white lines sit on my frets. Then record a riff and see if the strings come out right.
 - Everything is pushed and live at https://riffboi.com: new tempo detection and rhythm, bends and vibrato fixes, Save .txt, marking harmonics, Camera (beta), Your sound (the real recording of each riff), Delete all, and the input picker taken out (pick the audio interface in the Mac's sound settings).
 - Submission stuff is ready in `devpost/`: the project story (`project-story.md`, copy the raw Markdown into Devpost), the video script and diagram (`video/`), screenshots (`screenshots/`) and the submission kit (`submission-kit.md`). A reminder is scheduled for Sunday 10am.
 - Accuracy: 113 of 115 notes, 84/84 strings, 0 wrong. 235 checks pass.
-- My part next (the deadline is Wednesday Sep 30, 5pm EDT): test the new features with my guitar and iPhone, the elevator pitch (my words), paste the story, tags, links and screenshots into Devpost, the README "AI use" part, a practice run, record and upload the video, then submit Wednesday morning.
+- My part next (the deadline is Wednesday Sep 30, 5pm EDT): test the new features with my guitar and iPhone, the elevator pitch (my words), paste the story, tags, links and screenshots into Devpost, checking the README "AI use" part, a practice run, record and upload the video, then submit Wednesday morning.
 - Later: the camera beta (if it still loses my hand, zoom the picture in on the neck), hearing harmonics, an AI agent for accuracy, and the ideas below. I'll send mp3s of bends, slides and vibrato with the tabs.
 
 ### My answers to Claude's questions (Sep 26)
@@ -50,7 +52,7 @@ In order of priority. "Me" is stuff only I can do, "Claude" is building with Cla
 - [ ] Me: submit on Devpost, Wednesday morning if I can, not at 4:59
 
 ### 2. Should do, to make it better
-- [ ] Me: write the "AI use" part of the README (my words)
+- [ ] Me: check the "AI use" part of the README (Claude copied it from my project story on Sep 27, my call)
 - [ ] Me: put the live link in Devpost's "Try it out" field (the GitHub About box is ready)
 - [ ] Me: fill in Devpost's "Built with" tags (like javascript, html, css, web audio api, pitchy)
 - [ ] Me: record a few string bends with `?debug`, so Claude can tune the bends feature
@@ -80,7 +82,7 @@ In order of priority. "Me" is stuff only I can do, "Claude" is building with Cla
 - [x] Get a live link: https://riffboi.com, on Vercel. It updates whenever I push to GitHub
 - [x] Buy riffboi.com and point it at the live link
 - [x] Join the hackathon on Devpost
-- [x] README (the AI part is still mine to write; the live link is in; add a screenshot later)
+- [x] README (the AI part is in, copied from my project story; the live link is in; add a screenshot later)
 - [x] New layout and the Metal look (I picked it from 2 options)
 - [x] A switch to turn rhythm off and just get the notes (evenly spaced, no bars, stems or tempo)
 - [x] App icon so it can go on my phone's home screen (the blackletter R; I picked it from 2 options)

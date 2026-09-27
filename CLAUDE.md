@@ -45,7 +45,7 @@ A new session doesn't remember the last one, so start here:
 Required:
 - [ ] A working project made during the hackathon
 - [x] A **public GitHub repository** with the source code: https://github.com/riff-boi/riff-boi
-- [x] A **README** with clear setup and run instructions for judges (`README.md`; the "AI use" part is still mine to write)
+- [x] A **README** with clear setup and run instructions for judges (`README.md`; the "AI use" part is copied from my project story)
 - [ ] A Devpost project description: what I built, the problem it solves, who it's for, and how it works
 - [ ] A **demo video (3–5 min)**: live demo, how it works, the tech used, challenges I overcame, what I learned
 - [ ] Disclosure of significant AI help (Claude Code) in the project description

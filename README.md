@@ -78,7 +78,6 @@ My planning docs and learning log are in [`devpost/`](devpost/): the scope, the 
 
 ## AI use
 
-<!-- Colton: write this part yourself: what Claude Code helped with, and what you decided and did. -->
-Coming soon.
+I built Riff Boi with Claude Code as a coding partner. The idea, the features and the design choices were mine, and I recorded and labeled the test riffs and tested everything on my guitar. Claude Code wrote most of the code and tests and explained it to me as we went. It also helped write the docs, like this README and my Devpost story, from my notes.
 
 Made by [KoderNinja](https://github.com/KoderNinja).
