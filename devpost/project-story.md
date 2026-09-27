@@ -9,6 +9,16 @@ On a saved riff I can fix any note (drag it to another string, change the fret, 
 ## How I built it
 It's plain HTML, CSS and JavaScript, with no framework. The Web Audio API listens to the mic, and the Pitchy library works out the pitch 60 times a second. From there my code decides when a new note starts (a pick, a hammer-on, the same note picked again), follows the pitch to hear bends, picks a string and fret for each note, and reads the rhythm. Riffs are saved in the browser's localStorage, so there's no server. It's hosted on Vercel and updates every time I push to GitHub.
 
+The math that ties it together: every pitch $f$ turns into a note number
+
+$$n = 69 + 12\log_2\left(\frac{f}{440\ \text{Hz}}\right)$$
+
+so A4 (440 Hz) is 69, and each fret is exactly 1. How far a pitch is from the nearest note, in cents, is $100\,(n - \operatorname{round}(n))$. That's how Riff Boi tells a bend (the pitch glides through the in-between values) from a hammer-on (it jumps straight to the next whole number). For playback, the plucked-string sound is the Karplus-Strong trick: a burst of noise goes around a loop, and each new sample is the average of two samples one loop back, a little quieter each time:
+
+$$y[t] = 0.996 \cdot \frac{y[t-N] + y[t-N-1]}{2}$$
+
+The averaging smooths the noise into a tone that fades like a real string, and the loop length $N$ sets the pitch.
+
 To know if a change actually made it better, I recorded myself playing riffs and wrote down exactly what I played. A scoreboard script runs Riff Boi on those recordings and counts right, missed and extra notes. Another script runs 230 automatic checks, so I don't break something that already worked.
 
 ## Challenges I ran into
