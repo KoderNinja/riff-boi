@@ -4,7 +4,7 @@ import { startListening, stopListening, soundInfo, recordedSound, recording } fr
 import { wavFile } from './wav.js';
 import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS, readNote, midiToName } from './notes.js';
 import { saveSound, loadSound, deleteSound, deleteAllSounds, soundExtension } from './sounds.js';
-import { prepareHandTracking, startCamera, stopCamera, handAt, showNeck } from './camera.js';
+import { prepareHandTracking, handTrackingReady, startCamera, stopCamera, handAt, showNeck } from './camera.js';
 import { learnNeck, spotForHand, MIN_NOTES } from './neck.js';
 import { placeNotes, otherSpots, positionsFor, harmonicSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken, linkMark, textFileName } from './tab.js';
 import { tabSvg } from './tabsvg.js';
@@ -132,7 +132,7 @@ async function readyCameraIfOn() {
 }
 
 async function startCameraIfOn() {
-  if (!settings.camera || !(await prepareHandTracking().then(() => true, () => false))) return;
+  if (!settings.camera || !handTrackingReady()) return; // never load it mid-recording: it freezes listening
   const status = (text) => ($('camera-status').textContent = text);
   try {
     await startCamera($('camera-video'), $('camera-canvas'), status);

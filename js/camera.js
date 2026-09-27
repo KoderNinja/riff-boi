@@ -14,7 +14,7 @@ const KNUCKLES = [5, 17];      // index and pinky knuckles
 let landmarker = null;
 let preparing = null;          // the promise while hand tracking loads
 let stream = null;
-let running = false;
+let running = 0;               // which look loop is running (0 = none), so an old one stops
 let history = [];              // [{ at (performance.now() ms), hand }]
 
 // Loads the hand tracking and warms it up. The very first look takes seconds (the graphics chip
@@ -50,14 +50,19 @@ export async function startCamera(video, canvas, onStatus) {
   video.srcObject = stream;
   await video.play();
   if (!stream) return; // stopped while starting
-  running = true;
+  running++;
   history = [];
   onStatus('Looking for your fretting hand…');
-  loop(video, canvas);
+  loop(video, canvas, running);
+}
+
+// Is hand tracking loaded and warmed up? (Starting it during a recording would freeze listening.)
+export function handTrackingReady() {
+  return landmarker !== null;
 }
 
 export function stopCamera(video) {
-  running = false;
+  running = 0;
   stream?.getTracks().forEach((track) => track.stop());
   stream = null;
   if (video) video.srcObject = null;
@@ -79,8 +84,8 @@ export function showNeck(neck) {
   neckToDraw = neck;
 }
 
-function loop(video, canvas) {
-  if (!running) return;
+function loop(video, canvas, mine) {
+  if (running !== mine) return; // stopped, or a newer loop took over
   const started = performance.now();
   let hands = null;
   if (video.readyState >= 2) {
@@ -96,7 +101,7 @@ function loop(video, canvas) {
   draw(canvas, video, hand);
   // Take a break of at least EVERY_MS, and longer if looking took long, so listening stays smooth.
   const took = performance.now() - started;
-  setTimeout(() => loop(video, canvas), Math.max(EVERY_MS, took * 2));
+  setTimeout(() => loop(video, canvas, mine), Math.max(EVERY_MS, took * 2));
 }
 
 // The fretting hand, in camera pixels. MediaPipe names hands as if the picture were mirrored, and

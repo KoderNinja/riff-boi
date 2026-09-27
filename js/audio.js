@@ -19,6 +19,7 @@ let session = 0; // goes up every time listening stops, so a start that's still 
 // `keepSound` (only with ?debug) also keeps the raw sound, for recordedSound().
 export async function startListening(onReading, { keepSound = false, record = false } = {}) {
   const mySession = ++session;
+  if (record) take = lastTake = null; // no leftover from the last riff
   // Create the audio context right away, while we're still inside the button tap
   // (browsers only allow sound to start from something the user did). iPhones often
   // start it paused anyway, so ask it to start now, while it's still the tap.
@@ -130,7 +131,9 @@ function startTake(micStream) {
 
 // The last recording (after stopListening): resolves with a Blob, or null if there isn't one.
 export function recording() {
-  return lastTake ?? Promise.resolve(null);
+  // The recorder always says when it's done, but just in case: don't hold up saving the riff.
+  const giveUp = new Promise((resolve) => setTimeout(() => resolve(null), 3000));
+  return lastTake ? Promise.race([lastTake, giveUp]) : Promise.resolve(null);
 }
 
 export function stopListening() {
