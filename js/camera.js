@@ -4,41 +4,50 @@
 
 import { fingerFrets } from './neck.js';
 
-const VISION_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1';
-const MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task';
-const EVERY_MS = 50;           // look for the hand up to 20 times a second
+const EVERY_MS = 33;           // look for the hand up to 30 times a second
 const KEEP_MS = 2000;          // remember the last 2 seconds of hand positions
+const SMOOTH_MS = 100;         // a note's hand is the middle of the looks in the 100 ms before it
 const TIPS = [8, 12, 16, 20];  // MediaPipe's points: index, middle, ring and pinky fingertips
 const KNUCKLES = [5, 17];      // index and pinky knuckles
 
-let landmarker = null;
+// The hand tracking runs in a worker (hand-worker.js), in the background, so the page never
+// waits for it and listening stays exactly as smooth with the camera on.
+let worker = null;
 let preparing = null;          // the promise while hand tracking loads
+let ready = false;
 let stream = null;
 let running = 0;               // which look loop is running (0 = none), so an old one stops
 let history = [];              // [{ at (performance.now() ms), hand }]
 
-// Loads the hand tracking and warms it up. The very first look takes seconds (the graphics chip
-// gets ready), and that would freeze listening, so this runs before recording starts (and in
-// the background as soon as the Camera switch is on). Safe to call again.
+// Loads the hand tracking in the worker and warms it up (the very first look takes a moment).
+// Safe to call again.
 export function prepareHandTracking() {
-  preparing ??= (async () => {
-    const { FilesetResolver, HandLandmarker } = await import(`${VISION_URL}/vision_bundle.mjs`);
-    const files = await FilesetResolver.forVisionTasks(`${VISION_URL}/wasm`);
-    const ready = await HandLandmarker.createFromOptions(files, {
-      baseOptions: { modelAssetPath: MODEL_URL, delegate: 'GPU' },
-      runningMode: 'VIDEO',
-      numHands: 2,
-    });
-    const blank = document.createElement('canvas');
-    Object.assign(blank, { width: 64, height: 48 });
-    blank.getContext('2d').fillRect(0, 0, 64, 48);
-    ready.detectForVideo(blank, performance.now());
-    landmarker = ready;
-  })().catch((err) => {
+  preparing ??= new Promise((resolve, reject) => {
+    worker = new Worker(new URL('./hand-worker.js', import.meta.url), { type: 'module' });
+    worker.onmessage = ({ data }) => {
+      if (data.type === 'ready') {
+        ready = true;
+        resolve();
+      } else if (data.type === 'failed') {
+        reject(new Error(data.message));
+      } else if (data.type === 'hands') {
+        onHands(data);
+      }
+    };
+    worker.onerror = (event) => reject(new Error(event.message));
+    worker.postMessage({ type: 'load' });
+  }).catch((err) => {
+    worker?.terminate();
+    worker = null;
     preparing = null; // try again next time
     throw err;
   });
   return preparing;
+}
+
+// Is hand tracking loaded and warmed up?
+export function handTrackingReady() {
+  return ready;
 }
 
 // Starts the camera in `video` and draws the hand on `canvas` (hand tracking must be ready, see
@@ -52,13 +61,9 @@ export async function startCamera(video, canvas, onStatus) {
   if (!stream) return; // stopped while starting
   running++;
   history = [];
+  view = { video, canvas };
   onStatus('Looking for your fretting hand…');
-  loop(video, canvas, running);
-}
-
-// Is hand tracking loaded and warmed up? (Starting it during a recording would freeze listening.)
-export function handTrackingReady() {
-  return landmarker !== null;
+  loop(running);
 }
 
 export function stopCamera(video) {
@@ -67,15 +72,18 @@ export function stopCamera(video) {
   stream = null;
   if (video) video.srcObject = null;
   history = [];
+  view = null;
 }
 
-// Where the fretting hand was at `at` (performance.now() ms): the latest look at or before it,
-// if it's recent (a note is usually heard a moment after the finger is already down).
+// Where the fretting hand was at `at` (performance.now() ms): the middle of the looks in the
+// 100 ms before it (a note is heard a moment after the finger is already down), which evens out
+// the little jumps in the tracking. null if the camera didn't see the hand then.
 export function handAt(at) {
-  for (let i = history.length - 1; i >= 0; i--) {
-    if (history[i].at <= at) return at - history[i].at < 250 ? history[i].hand : null;
-  }
-  return null;
+  const looks = history.filter((look) => look.at <= at && at - look.at <= SMOOTH_MS + 150).slice(-Math.ceil(SMOOTH_MS / EVERY_MS));
+  if (looks.length === 0) return null;
+  const middle = (values) => values.sort((a, b) => a - b)[Math.floor(values.length / 2)];
+  const point = (key, i) => [0, 1].map((xy) => middle(looks.map((look) => look.hand[key][i][xy])));
+  return { tips: TIPS.map((_, i) => point('tips', i)), knuckles: KNUCKLES.map((_, i) => point('knuckles', i)) };
 }
 
 // The learned neck, to draw its frets on the video (set by app.js).
@@ -84,24 +92,36 @@ export function showNeck(neck) {
   neckToDraw = neck;
 }
 
-function loop(video, canvas, mine) {
+let view = null;               // { video, canvas } while the camera runs
+let waiting = false;           // is a frame out with the worker?
+let sentAt = 0;                // ...since when (if it never answers, send another after 1 s)
+
+// Send the worker a frame whenever it's free (at most every EVERY_MS).
+async function loop(mine) {
   if (running !== mine) return; // stopped, or a newer loop took over
-  const started = performance.now();
-  let hands = null;
-  if (video.readyState >= 2) {
+  if (waiting && performance.now() - sentAt > 1000) waiting = false;
+  if (!waiting && view.video.readyState >= 2) {
     try {
-      hands = landmarker.detectForVideo(video, started);
+      const at = performance.now();
+      const frame = await createImageBitmap(view.video);
+      waiting = true;
+      sentAt = performance.now();
+      worker.postMessage({ type: 'look', frame, at, width: view.video.videoWidth, height: view.video.videoHeight }, [frame]);
     } catch (err) {
       console.error(err);
     }
   }
-  const hand = hands && frettingHand(hands, video);
-  if (hand) history.push({ at: started, hand });
-  while (history.length && started - history[0].at > KEEP_MS) history.shift();
-  draw(canvas, video, hand);
-  // Take a break of at least EVERY_MS, and longer if looking took long, so listening stays smooth.
-  const took = performance.now() - started;
-  setTimeout(() => loop(video, canvas, mine), Math.max(EVERY_MS, took * 2));
+  setTimeout(() => loop(mine), EVERY_MS);
+}
+
+// What the worker saw in a frame.
+function onHands({ at, landmarks, handedness }) {
+  waiting = false;
+  if (!view) return;
+  const hand = frettingHand({ landmarks, handedness }, view.video);
+  if (hand) history.push({ at, hand });
+  while (history.length && at - history[0].at > KEEP_MS) history.shift();
+  draw(view.canvas, view.video, hand);
 }
 
 // The fretting hand, in camera pixels. MediaPipe names hands as if the picture were mirrored, and

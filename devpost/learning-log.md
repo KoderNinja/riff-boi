@@ -279,3 +279,7 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 ## Sep 26, 2026: Less clutter, and Delete all
 - I took out the input picker. Riff Boi just uses my computer's default input now, and I pick my audio interface in the Mac's sound settings. One less thing on the home screen.
 - Delete all clears every riff and its sound, but only after a pop-up asks if I'm sure, with how many riffs will be gone.
+
+## Sep 27, 2026: The camera in the background
+- The hand tracking used to run on the same "thread" as the listening, so while it looked at a camera frame, the listening had to wait. Now it runs in a worker, a separate thread in the browser, and the page only spends a tiny moment passing it each frame. That keeps the note timing just as exact with the camera on.
+- It also smooths the hand: each note uses the middle of the last few camera looks, so one shaky frame doesn't move a note to the wrong string.

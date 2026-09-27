@@ -105,7 +105,11 @@ function placeWithCamera(notes) {
   const neck = learnNeck(seen.map((note) => ({ hand: note.hand, spots: positionsFor(note.midi) })));
   showNeck(neck);
   if (!neck) {
-    if (cameraOn) $('camera-status').textContent = `Play ${MIN_NOTES - seen.length > 0 ? MIN_NOTES - seen.length : 'a few'} more notes so the camera can learn your neck`;
+    if (cameraOn) {
+      $('camera-status').textContent = seen.length === 0 && notes.length > 0
+        ? "Can't see your fretting hand yet. Get your hand and the neck in the picture"
+        : `Play ${MIN_NOTES - seen.length > 0 ? MIN_NOTES - seen.length : 'a few'} more notes so the camera can learn your neck`;
+    }
     return;
   }
   for (const note of notes) {
@@ -118,22 +122,21 @@ function placeWithCamera(notes) {
 // Camera on or off, remembered. It runs while you record.
 let cameraOn = false;
 
-// Before listening starts: hand tracking must be ready, since getting it ready freezes the page for a moment.
-async function readyCameraIfOn() {
+
+// The camera joins in once hand tracking has loaded (it loads in the background, so listening
+// starts right away and never waits for it). Notes before that use the usual string rule.
+async function startCameraIfOn() {
   $('camera-box').hidden = !settings.camera;
   if (!settings.camera) return;
-  $('camera-status').textContent = 'Loading hand tracking (the first time takes a moment)…';
+  const status = (text) => ($('camera-status').textContent = text);
+  if (!handTrackingReady()) status('Loading hand tracking (the first time takes a moment)…');
   try {
     await prepareHandTracking();
   } catch (err) {
     console.error(err);
-    $('camera-status').textContent = "Couldn't load hand tracking. Check your internet";
+    return status("Couldn't load hand tracking. Check your internet");
   }
-}
-
-async function startCameraIfOn() {
-  if (!settings.camera || !handTrackingReady()) return; // never load it mid-recording: it freezes listening
-  const status = (text) => ($('camera-status').textContent = text);
+  if (stopBtn.disabled) return; // Stop was tapped while it loaded
   try {
     await startCamera($('camera-video'), $('camera-canvas'), status);
     cameraOn = true;
@@ -563,9 +566,6 @@ $('new-riff-btn').addEventListener('click', async () => {
   showMessage(statusMsg, statusHint);
   stopBtn.disabled = false;
   showScreen('recording');
-  await readyCameraIfOn();
-  if (stopBtn.disabled) return; // Stop was tapped while hand tracking loaded
-  startTime = performance.now(); // the clock starts once it's really listening
   try {
     await startListening(handleReading, { keepSound: DEBUG, record: true });
   } catch (err) {
