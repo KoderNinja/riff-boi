@@ -179,6 +179,8 @@ check('confidence: no notes = no score (the bar stays empty)', riffConfidence([]
 // D4 (MIDI 62) lands on the B string, fret 3, so a whole-step bend is written B3b5.
 const glide = (from, to, n, v = 0.2) => Array.from({ length: n }, (_, i) => [hz(from + ((to - from) * (i + 1)) / n), 0.97, v]);
 const hold = (midi, n, v = 0.18) => Array.from({ length: n }, () => [hz(midi), 0.97, v]);
+// A glide that slows down as it gets there, like a real bend.
+const easeUp = (from, to, n) => Array.from({ length: n }, (_, i) => [hz(from + (to - from) * (1 - (1 - (i + 1) / n) ** 2)), 0.97, 0.2]);
 function tabOf(readings) {
   const notes = riffFrom(readings);
   placeNotes(notes);
@@ -199,6 +201,18 @@ const bendCases = [
   ['a bend that pauses between two notes on its way up is still one bend (RIFFTEST)', [...pick(62), ...glide(62, 62.63, 2), ...hold(62.63, 3), ...glide(62.63, 64, 3), ...hold(64, 20)], 'B3b5'],
   // Vibrato on a held bend makes the volume swell and fade (RIFFTEST): not new picks.
   ['vibrato on a held bend doesn\'t add notes (RIFFTEST)', [...pick(62), ...glide(62, 64, 10), ...Array.from({ length: 60 }, (_, i) => [hz(64 + 0.15 * Math.sin(i / 2)), 0.98, 0.1 + 0.06 * Math.sin(i / 2)])], 'B3b5'],
+  // The learner's 7b9 on the G string (Sep 27): the D was a little sharp, and the bend started right
+  // after the pick, slowed down near the top, and was let down while muting or as it faded.
+  ['a bend that starts right after the pick, on a note played a bit sharp (Sep 27, the real readings)',
+    [...silence(5), ...[[0.23, 0.59, 0.083], [0.29, 0.83, 0.094], [0.31, 0.92, 0.105], [0.36, 0.97, 0.117], [0.42, 0.97, 0.113], [0.5, 0.98, 0.107],
+      [0.58, 0.97, 0.101], [0.66, 0.97, 0.106], [0.75, 0.97, 0.122], [0.87, 0.98, 0.143], [0.99, 0.98, 0.143], [1.11, 0.98, 0.122], [1.21, 0.97, 0.105],
+      [1.33, 0.96, 0.104], [1.42, 0.96, 0.115], [1.49, 0.96, 0.111], [1.55, 0.97, 0.108], [1.63, 0.97, 0.092], [1.66, 0.98, 0.103], [1.71, 0.99, 0.108],
+      [1.74, 0.99, 0.103], [1.8, 0.99, 0.077], [1.86, 0.99, 0.086]].map(([o, c, v]) => [hz(62 + o), c, v]), ...hold(63.95, 20, 0.1)], 'B3b5'],
+  ['a bend from a sharp note that slows down as it reaches the next note (Sep 27)', [...pick(62.28), ...easeUp(62.28, 64.02, 24), ...hold(64.02, 20)], 'B3b5'],
+  ['letting a bend down while muting it doesn\'t add a note (Sep 27)',
+    [...pick(62), ...glide(62, 64, 10), ...hold(64, 20, 0.1), ...[[1.8, 0.99, 0.08], [1.66, 0.97, 0.064], [1.52, 0.96, 0.059], [1.2, 0.97, 0.075], [1.02, 0.98, 0.101], [0.9, 0.98, 0.109], [0.95, 0.84, 0.104]].map(([o, c, v]) => [hz(62 + o), c, v]), ...silence(10)], 'B3b5'],
+  ['a release that wobbles as the note fades still counts (Sep 27)',
+    [...pick(62.28), ...glide(62.28, 63.9, 12), ...hold(63.9, 20, 0.1), ...[[1.78, 1, 0.066], [1.73, 1, 0.06], [1.67, 0.99, 0.052], [1.59, 0.98, 0.045], [1.5, 0.97, 0.048], [1.29, 0.98, 0.072], [1.09, 0.99, 0.095], [0.96, 0.99, 0.101], [0.81, 0.99, 0.097], [0.57, 0.98, 0.095], [0.35, 0.97, 0.094], [0.19, 0.97, 0.087], [0.23, 0.97, 0.071], [0.35, 0.95, 0.048], [0.38, 0.87, 0.019], [0.45, 0.82, 0.014], [0.73, 0.74, 0.013], [0.73, 0.59, 0.011]].map(([o, c, v]) => [hz(62 + o), c, v]), ...silence(10)], 'B3b5r3'],
 ];
 for (const [label, readings, expected] of bendCases) {
   const got = tabOf(readings);

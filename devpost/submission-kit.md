@@ -18,7 +18,7 @@ Headings and what to show. The words are mine.
 2. **Live demo** (about 1:40): play a riff and the tab shows up live (a bend, the rhythm); Stop saves it; fix a note (drag it, change the fret, mark a hammer-on or a harmonic); Play it back slower; Copy, Share or Save .txt; upload a recording; the tuner.
 3. **How it works** (about 50 s): mic → Web Audio → Pitchy 60 times a second → the note tracker (picks, bends, distortion overtones) → picking the string → reading the rhythm (the Viterbi idea) → drawing the tab.
 4. **The tech** (about 20 s): plain HTML, CSS and JavaScript, Web Audio, Pitchy, MediaPipe (camera beta), localStorage, Vercel, the test scripts.
-5. **Challenges** (about 50 s): pick 2 or 3, with numbers: distortion overtones, tempo stuck on 141 (right 76% of the time now instead of 14%), vibrato that looked like picks, bends that paused, the scoreboard going from 110 to 113 of 115.
+5. **Challenges** (about 50 s): pick 2 or 3, with numbers: distortion overtones, tempo stuck on 141 (right 76% of the time now instead of 14%), vibrato that looked like picks, bends that paused, the scoreboard going from 110 to 113 of 115, and my own bends coming out as separate notes (now 3 of 3 right).
 6. **What I learned and what's next** (about 40 s): the camera beta, hearing harmonics, Drop D.
 Keep it under 5:00. A practice run with the audio interface first.
 

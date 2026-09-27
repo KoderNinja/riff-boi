@@ -59,7 +59,7 @@ It's all plain HTML, CSS and JavaScript, no framework. The Web Audio API handles
 
 The hardest part was making it accurate on my real rig. Distortion makes the overtones really loud, so at first it kept writing notes an octave or a fifth too high. The tempo was another one. It kept saying 141 no matter what I played, because it only worked if you played perfectly on the beat. I rebuilt it so it tries every tempo and keeps the one where the rhythm makes the most sense.
 
-To know if a fix actually worked, I recorded myself and wrote down exactly what I played. This script scores Riff Boi on those recordings, and right now it gets 113 out of 115 notes right. And these 235 checks make sure a fix doesn't break something that already worked.
+To know if a fix actually worked, I recorded myself and wrote down exactly what I played. This script scores Riff Boi on those recordings, and right now it gets 116 out of 118 notes right. And these 239 checks make sure a fix doesn't break something that already worked.
 
 ## 6. What I learned and what's next (3:50 to 4:20)
 [Turn on Camera (beta), tap Set up camera, play the 3rd and then the 12th fret on the low E, and show the white fret lines on your neck]

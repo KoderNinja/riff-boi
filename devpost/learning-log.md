@@ -289,3 +289,11 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - Now it uses the whole picture, draws every hand it sees (red for my fretting hand, gray for the other one), and tells them apart by shape: my fretting hand's knuckles point down the neck toward my other hand. That works for left-handed players too.
 - Guessing where the frets are from my notes didn't work well, because the camera can't see where the nut is. So now there's a 5-second setup: I play the 3rd fret and then the 12th fret on the low E. Frets get closer together by the same rule on every guitar, so two measured frets are enough to work out all the others, and it draws them on the video so I can check.
 - I thought about an AI that looks at the picture instead. It would be too slow to keep up while I play, cost money for every picture, and need a secret key on a server. Two measured frets and some math are free and instant.
+
+## Sep 27, 2026: Fixing my bends
+- My 7b9 on the G string came out as separate notes (D, D#, E). I recorded it with ?debug, and the pitch numbers showed what went wrong.
+- My D was about a quarter step sharp, and I start bending right after I pick. Riff Boi measured the note's own pitch from the readings after the pick, but by then I was already bending, so it never followed the bend. Now it uses the readings that started the note, but only when the pitch climbs smoothly out of it (a jump to the next fret is still a new note).
+- Near the top, my bend slowed down right on E. Measured from my sharp D, that looked like it had stopped between two notes, so Riff Boi called it a new note. Now a pitch that glides onto a real note is a bend to that note, because you bend to the note's real pitch even when the fretted note is a bit off.
+- Letting the bend down while muting it made the volume swell like a pick, which added a note, and a release that wobbled as it faded didn't count. Both are fixed.
+- My first try broke Crazy Train (a few notes got lost), so I narrowed each fix until the scoreboard was back where it was. My bend recording is on the scoreboard now, with 3 of 3 bends right.
+

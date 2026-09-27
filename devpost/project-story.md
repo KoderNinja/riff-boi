@@ -21,7 +21,7 @@ Vibrato was a weird one. When I added vibrato to a note, Riff Boi thought I was 
 And bends: if I paused halfway up a bend, it wrote three separate notes. Now it keeps following the bend through the pause.
 
 ## Accomplishments that I'm proud of
-On my test recordings it gets **113 out of 115 notes** right and puts every checked note on the right string. And it works with my actual rig, distortion and all, not just a clean guitar.
+On my test recordings it gets **116 out of 118 notes** right, every bend included, and puts 84 of 87 on the right string. And it works with my actual rig, distortion and all, not just a clean guitar.
 
 ## What I learned
 Way more than I expected about how sound works: pitch, overtones, why distortion makes everything harder. I learned that fixing one thing can break another (that happened a lot), which is why the automatic checks matter. And I learned how to take an idea all the way to something live on a real website that other people can use.

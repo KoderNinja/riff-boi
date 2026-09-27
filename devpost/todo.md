@@ -14,7 +14,8 @@ Where we left off (Sep 27, 2026):
 - Camera (beta) got a 5-second setup, because on my guitar the dots weren't on my fretting hand. To test it: turn on Camera (beta), tap Set up camera, play the 3rd fret and then the 12th fret on the low E with my first finger, and check the white lines sit on my frets. Then record a riff and see if the strings come out right. (Sep 27: the setup works really well on my guitar.)
 - Everything is pushed and live at https://riffboi.com: new tempo detection and rhythm, bends and vibrato fixes, Save .txt, marking harmonics, Camera (beta), Your sound (the real recording of each riff), Delete all, and the input picker taken out (pick the audio interface in the Mac's sound settings).
 - Submission stuff is ready in `devpost/`: the project story (`project-story.md`, copy the raw Markdown into Devpost), the video script and diagram (`video/`), screenshots (`screenshots/`) and the submission kit (`submission-kit.md`). A reminder is scheduled for Sunday 10am.
-- Accuracy: 113 of 115 notes, 84/84 strings, 0 wrong. 235 checks pass.
+- Accuracy: 116 of 118 notes, 84/87 strings, 3/3 bends, 0 wrong. 239 checks pass. (The 3 string misses are my bends on the G string: the sound alone puts them on the B string.)
+- Bends fixed (Sep 27): my 7b9 came out as separate notes. My bend recording is on the scoreboard now (`bend-G`).
 - My part next (the deadline is Wednesday Sep 30, 5pm EDT): test the new features with my guitar and iPhone, the elevator pitch (my words), paste the story, tags, links and screenshots into Devpost, checking the README "AI use" part, a practice run, record and upload the video, then submit Wednesday morning.
 - Later: the camera beta (if it still loses my hand, zoom the picture in on the neck), hearing harmonics, an AI agent for accuracy, and the ideas below. I'll send mp3s of bends, slides and vibrato with the tabs.
 

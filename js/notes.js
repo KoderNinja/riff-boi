@@ -111,6 +111,12 @@ function isLikelyHarmonic(midi, ringingMidi) {
   return jump > 0 && (jump % 12 === 7 || jump === 28);
 }
 
+// How many of these pitches (in semitones, like MIDI) are in between two notes: a bend glides
+// through them, a jump from fret to fret doesn't.
+function inBetween(pitches) {
+  return pitches.filter((x) => Math.abs(x - Math.round(x)) > BEND_BETWEEN).length;
+}
+
 // Makes a note tracker. Feed it every reading. It returns:
 // - a new note { midi, name, t, peak, quality } when one starts (peak = how loud it got while
 //   its pitch was heard; quality = how clear, steady and in tune its first readings were;
@@ -143,9 +149,12 @@ export function createNoteTracker() {
   let pickUsed = true;      // has the last pick already started a note?
   let sinceBlur = Infinity; // readings since the last blurry one (see STRUCK_CLARITY)
   let pickJumped = false;   // did the last pick make the volume jump in one go?
+  let recentPitches = [];   // the last few clear pitches (a new note's own pitch comes from these)
+  let gapless = false;      // was the reading just before this one clear too?
   // Bends (see followBend), reset every time a note starts:
   let base = null;          // the ringing note's own pitch, in semitones with decimals (like MIDI)
   let baseReadings = [];    // its first clear readings, to find `base`
+  let startPitch = null;    // its pitch from the readings that started it (for a bend that starts at once)
   let bendMove = 'none';    // 'none', 'moving' (glide or jump?), 'bent', 'jumped' or 'done'
   let level = 0;            // where the pitch last settled, in semitones above `base` (0 or the bend)
   let move = [];            // the pitch on each reading since it left `level`
@@ -159,6 +168,10 @@ export function createNoteTracker() {
     repickCount = 0;
     base = null;
     baseReadings = [];
+    // In case it bends right after the pick (see followBend): its pitch from the clear readings
+    // that just started it, if they're in tune with it.
+    const heard = recentPitches.filter((p) => Math.abs(p - midi) < 0.5);
+    startPitch = heard.length === BASE_READINGS ? median(heard) : null;
     bendMove = 'none';
     level = 0;
     move = [];
@@ -174,9 +187,18 @@ export function createNoteTracker() {
   function followBend(freq) {
     const pitch = 69 + 12 * Math.log2(freq / 440);
     if (base === null) {
-      if (Math.abs(pitch - current.midi) < 0.5) baseReadings.push(pitch);
-      if (baseReadings.length === BASE_READINGS) base = median(baseReadings);
-      return false;
+      const off = pitch - current.midi;
+      // Bending already, before its own pitch was measured (right after the pick)? Then go by the
+      // readings that started it. Only for a smooth climb out of the note, reading after clear
+      // reading: a jump to the next fret (like a hammer-on) isn't a bend.
+      const before = recentPitches.length >= 2 ? recentPitches[recentPitches.length - 2] - current.midi : null;
+      if (startPitch !== null && gapless && before !== null && Math.abs(before) < 0.5 && off >= 0.5 && off - before <= 0.25) {
+        base = startPitch;
+      } else {
+        if (Math.abs(off) < 0.5) baseReadings.push(pitch);
+        if (baseReadings.length === BASE_READINGS) base = median(baseReadings);
+        return false;
+      }
     }
     if (bendMove === 'done') return false;
     const offset = pitch - base;
@@ -197,6 +219,9 @@ export function createNoteTracker() {
 
     // Wait until the pitch settles: the last few readings stay close together.
     const recent = move.slice(-SETTLE_READINGS);
+    // Bent, and back at the note's own pitch for a few readings: released (a fading note can
+    // wobble a little, so it doesn't have to hold perfectly still).
+    if (level > 0 && recent.length === SETTLE_READINGS && recent.every((x) => Math.abs(x) <= BEND_NEAR)) return settle(0, true);
     const unsettled = recent.length < SETTLE_READINGS || Math.max(...recent) - Math.min(...recent) > BEND_STEADY;
     if (unsettled && (level > 0 || move.length <= GLIDE_MAX)) return true;
     const settled = average(recent);
@@ -207,6 +232,12 @@ export function createNoteTracker() {
       // bend can pause on its way up, so keep following it (for up to GLIDE_MAX readings).
       const pitchNow = base + settled;
       const onANote = Math.abs(pitchNow - Math.round(pitchNow)) <= BEND_NEAR;
+      // Glided onto a real note: a bend to that note (or back down to the fretted one). You bend
+      // to the note's real pitch even when the fretted note was a bit sharp or flat, so count
+      // from the note itself here, not from the fretted pitch.
+      const toNote = Math.round(pitchNow) - current.midi;
+      const glided = inBetween(move.slice(0, -SETTLE_READINGS).map((x) => base + x)) >= GLIDE_READINGS;
+      if (!unsettled && onANote && glided && toNote !== level && toNote >= 0 && toNote <= BEND_MAX) return settle(toNote, true);
       if (!unsettled && settled >= BEND_PAUSE && !onANote && move.length <= GLIDE_MAX) return true;
       // Never settled, or settled between two notes below that: that's a smeared note change or
       // a wobble, not a bend we can write. Leave it to the normal note rules (unless the note is bent).
@@ -214,8 +245,7 @@ export function createNoteTracker() {
       bendMove = 'jumped';
       return false;
     }
-    const between = move.slice(0, -SETTLE_READINGS).filter((x) => Math.abs(x - Math.round(x)) > BEND_BETWEEN).length;
-    return settle(steps, between >= GLIDE_READINGS);
+    return settle(steps, inBetween(move.slice(0, -SETTLE_READINGS)) >= GLIDE_READINGS);
   }
 
   // The pitch settled `steps` semitones above the note's own pitch. `glided` = it got there smoothly.
@@ -319,7 +349,9 @@ export function createNoteTracker() {
       return null;
     }
     const pitchBreak = junk >= 2; // the pitch just broke up for a moment, like a new attack does
+    gapless = junk === 0;
     junk = 0;
+    recentPitches = [...recentPitches.slice(1 - BASE_READINGS), 69 + 12 * Math.log2(freq / 440)];
     const name = note.midi % 12;
 
     // Is the ringing note being bent? (A new pick always means a new note, so only without one.
@@ -348,6 +380,7 @@ export function createNoteTracker() {
         // The bend tracking measured the note's pitch in the wrong octave: start it over.
         base = null;
         baseReadings = [];
+        startPitch = null;
         return { fix: { midi: note.midi, name: note.name } };
       }
       // Picked again, as loud as the note's attack? Wait until the pitch holds (it might be
@@ -385,7 +418,15 @@ export function createNoteTracker() {
       candidateLow = note.midi;
       candidateBreak = pitchBreak;
     }
-    if (bending) return null; // the bent pitch isn't a new note
+    if (bending) {
+      // The bent pitch isn't a new note. While a bend is held or let down, it doesn't count toward
+      // one either (a note picked on the bend needs readings of its own).
+      if (level > 0) {
+        candidate = null;
+        candidateCount = 0;
+      }
+      return null;
+    }
     return confirm(t, volume, picked);
   };
 
