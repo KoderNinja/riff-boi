@@ -9,16 +9,11 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 ## Next up
 
 Where we left off (Sep 26, 2026, late night):
-- Pushed and live (Sep 26, late): the new tempo detection and rhythm reader, bends and vibrato, Save .txt, marking harmonics.
-- The camera is a beta for now (the switch says "Camera (beta)"), to work on later: test it with a real camera and guitar in Chrome, then make it more accurate.
-- Also new and not pushed: bends that pause halfway and vibrato no longer make extra notes (RIFFTEST now comes out right: ...G4b2 at the end).
-- Also new and not pushed: Save .txt (next to Share on a saved riff).
-- Also new and not pushed: mark a natural harmonic by hand (tap a note, pick Harmonic, the tab shows <12>).
-- Later (after the hackathon, or if there's time): Riff Boi hearing natural harmonics by itself (their tone is purer than a fretted note). Needs my recordings of harmonics.
-- I'll send mp3s of bends, slides and vibrato with the tab of what I played, like RIFFTEST.mp3.
-- Accuracy: 113 of 115 notes, 84/84 strings, 0 wrong. 230 checks pass.
-- Testing on my Mac: use Chrome at http://localhost:8000 and press Cmd+Shift+R after changes (the local server lets Chrome keep old copies of files, and a mix of old and new stops the page from working). The Claude app's browser pane blocks the mic, so record in Chrome.
-- My part next (the deadline is Wednesday Sep 30, 5pm EDT): test on my iPhone at riffboi.com and with my guitar, the precision test, screenshots, the Devpost description and AI part (my words), the README "AI use" part, a practice run, the demo video, then submit Wednesday morning. The list is below.
+- Everything is pushed and live at https://riffboi.com: new tempo detection and rhythm, bends and vibrato fixes, Save .txt, marking harmonics, Camera (beta), Your sound (the real recording of each riff), Delete all, and the input picker taken out (pick the audio interface in the Mac's sound settings).
+- Submission stuff is ready in `devpost/`: the project story (`project-story.md`, copy the raw Markdown into Devpost), the video script and diagram (`video/`), screenshots (`screenshots/`) and the submission kit (`submission-kit.md`). A reminder is scheduled for Sunday 10am.
+- Accuracy: 113 of 115 notes, 84/84 strings, 0 wrong. 232 checks pass.
+- My part next (the deadline is Wednesday Sep 30, 5pm EDT): test the new features with my guitar and iPhone, the elevator pitch (my words), paste the story, tags, links and screenshots into Devpost, the README "AI use" part, a practice run, record and upload the video, then submit Wednesday morning.
+- Later: the camera beta (test with a real camera, then make it more accurate), hearing harmonics, an AI agent for accuracy, and the ideas below. I'll send mp3s of bends, slides and vibrato with the tabs.
 
 ### My answers to Claude's questions (Sep 26)
 1. Dragging keeps the same note and tapping changes the fret: that's right.
