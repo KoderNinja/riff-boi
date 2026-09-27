@@ -5,7 +5,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { readNote, createNoteTracker, cleanUpRiff, tuningOf, stillRinging, RINGING_READINGS, notesFromReadings } from '../js/notes.js';
-import { placeNotes, positionsFor, drawTab, tabToken, otherSpots, tabText, fretOn, withFret, linkMark, textFileName } from '../js/tab.js';
+import { placeNotes, positionsFor, drawTab, tabToken, otherSpots, tabText, fretOn, withFret, linkMark, textFileName, harmonicSpots } from '../js/tab.js';
 import { riffConfidence, isUnsure } from '../js/confidence.js';
 import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS, barStarts } from '../js/rhythm.js';
 import { tabSvg } from '../js/tabsvg.js';
@@ -884,6 +884,23 @@ check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().m
   const pack = (s) => '#riff=' + Buffer.from(JSON.stringify({ v: 1, n: 'x', b: 120, e: 1, r: 1, m: '4/4', s })).toString('base64url');
   check('marks: share links carry them, older links without them still open, and a made-up mark is turned down',
     shared?.notes[1].link === 'slide' && !('link' in shared.notes[0]) && riffFromLink(pack([[60, 3, 5, 0, 0, 0, 0]])) !== null && riffFromLink(pack([[60, 3, 5, 0, 0, 0, 0, 7]])) === null);
+
+  // --- Natural harmonics, marked by hand ---
+  const spots = (midi) => harmonicSpots(midi).map((spot) => `${'eBGDAE'[spot.string - 1]}<${spot.fret}>`).join(' ');
+  check('harmonics: where a note can be a natural harmonic (G4, E4, B5), and a note that can\'t (C4)',
+    spots(67) === 'G<12>' && spots(64) === 'A<7> E<5>' && spots(83) === 'e<7> B<5> G<4>' && spots(60) === '', `${spots(67)} / ${spots(64)} / ${spots(83)} / ${spots(60)}`);
+  const harmonic = { midi: 67, name: 'G4', string: 3, fret: 12, t: 0.5, harmonic: true };
+  check('harmonics: written <12> in the tab, with no hammer-on or slide mark to or from it',
+    tabToken(harmonic) === '<12>' && tabText([{ midi: 57, string: 3, fret: 2, t: 0 }, harmonic]).split('\n')[2] === 'G|-2-<12>-|'
+    && linkMark({ midi: 64, string: 3, fret: 9, t: 0 }, { ...harmonic, link: 'slide' }) === null, tabText([{ midi: 57, string: 3, fret: 2, t: 0 }, harmonic]));
+  check('harmonics: typing a fret makes it a fretted note again', withFret(harmonic, 5).harmonic === undefined && withFret(harmonic, 5).midi === 60);
+  shelf.set('riffboi.riffs', '[]');
+  saveRiff([{ midi: 57, string: 3, fret: 2, t: 0 }, harmonic], null, { bpm: 120 });
+  check('harmonics: saved with the riff', loadRiffs()[0].notes[1].harmonic === true && !('harmonic' in loadRiffs()[0].notes[0]));
+  const sharedHarmonic = riffFromLink(new URL(riffToLink({ name: 'x', bpm: 120, endTime: 1, notes: [{ midi: 57, string: 3, fret: 2, t: 0 }, harmonic] }, 'https://riffboi.com/')).hash);
+  check('harmonics: share links carry them, and a harmonic at a fret that can\'t make that note is turned down',
+    sharedHarmonic?.notes[1].harmonic === true && sharedHarmonic.notes[1].fret === 12 && !('harmonic' in sharedHarmonic.notes[0])
+    && riffFromLink(pack([[67, 3, 7, 0, 0, 0, 0, 0, 1]])) === null && riffFromLink(pack([[74, 3, 7, 0, 0, 0, 0, 0, 1]]))?.notes[0].harmonic === true);
 }
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');

@@ -3,7 +3,7 @@
 import { startListening, stopListening, listInputs, onInputsChange, soundInfo, recordedSound } from './audio.js';
 import { wavFile } from './wav.js';
 import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS, readNote, midiToName } from './notes.js';
-import { placeNotes, otherSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken, linkMark, textFileName } from './tab.js';
+import { placeNotes, otherSpots, positionsFor, harmonicSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken, linkMark, textFileName } from './tab.js';
 import { tabSvg } from './tabsvg.js';
 import { METERS, detectTempo, barStarts } from './rhythm.js';
 import { loadRiffs, saveRiff, updateRiff, deleteRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
@@ -681,7 +681,7 @@ function openEdit(i) {
   const note = shownRiff.notes[i];
   const title = document.createElement('span');
   title.className = 'move-title';
-  title.textContent = `${note.name} on the ${STRING_NAMES[note.string - 1]} string, fret ${note.fret}`;
+  title.textContent = `${note.name} on the ${STRING_NAMES[note.string - 1]} string, ${note.harmonic ? 'harmonic at fret' : 'fret'} ${note.fret}`;
 
   // The fret: type it and press Enter, or − and +. A new fret is a new note.
   const fretRow = document.createElement('div');
@@ -715,9 +715,21 @@ function openEdit(i) {
     const button = document.createElement('button');
     button.className = 'choice-btn';
     button.textContent = `${STRING_NAMES[spot.string - 1]} string, fret ${spot.fret}`;
-    button.addEventListener('click', () => changeNote(i, spot));
+    button.addEventListener('click', () => changeNote(i, { ...spot, harmonic: undefined }));
     return button;
   });
+
+  // A natural harmonic (see HARMONIC_FRETS): the sound can't tell it from a fretted note, so you
+  // mark it. Each string it can be played on is a choice; a harmonic can go back to being fretted.
+  const harmonicRow = [];
+  if (note.harmonic) {
+    const fretted = positionsFor(note.midi, EDITOR_MAX_FRET);
+    const spot = fretted.find((s) => s.string === note.string) ?? fretted[0];
+    if (spot) harmonicRow.push(choiceButton('Not a harmonic', () => changeNote(i, { ...spot, harmonic: undefined })));
+  } else {
+    harmonicRow.push(...harmonicSpots(note.midi).map((spot) => choiceButton(`Harmonic <${spot.fret}> on the ${STRING_NAMES[spot.string - 1]} string`,
+      () => changeNote(i, { ...spot, harmonic: true, link: undefined, bend: undefined, release: undefined, prebend: undefined }))));
+  }
   const sameLabel = document.createElement('span');
   sameLabel.className = 'move-title';
   sameLabel.textContent = spots.length ? 'The same note on:' : `${note.name} can only be played on the ${STRING_NAMES[note.string - 1]} string`;
@@ -743,7 +755,7 @@ function openEdit(i) {
   // pull-off, or a slide. The tab shows h, p, / or \ between the two notes.
   const prev = shownRiff.notes[i - 1];
   const linkRow = [];
-  if (prev && prev.string === note.string && prev.fret !== note.fret) {
+  if (prev && prev.string === note.string && prev.fret !== note.fret && !prev.harmonic && !note.harmonic) {
     const up = note.fret > prev.fret;
     const label = document.createElement('span');
     label.className = 'move-title';
@@ -759,12 +771,20 @@ function openEdit(i) {
     }));
   }
 
-  $('move-row').replaceChildren(title, fretRow, ...actions, ...linkRow, sameLabel, ...same);
+  $('move-row').replaceChildren(title, fretRow, ...actions, ...linkRow, ...harmonicRow, sameLabel, ...same);
   $('move-row').hidden = false;
   $('move-hint').hidden = true;
   $('riff-tab').querySelectorAll('.t-fret').forEach((fret, j) => fret.classList.toggle('t-now', j === i));
   box.focus();
   box.select();
+}
+
+function choiceButton(text, onClick) {
+  const button = document.createElement('button');
+  button.className = 'choice-btn';
+  button.textContent = text;
+  button.addEventListener('click', onClick);
+  return button;
 }
 
 function stepButton(text, label, onClick) {
@@ -859,7 +879,7 @@ $('riff-tab').addEventListener('pointermove', (event) => {
   drag.target = fret === null ? null : { string, fret };
   drag.text.setAttribute('y', lines[nearest]);
   drag.gap?.setAttribute('y', lines[nearest] - 8);
-  drag.text.textContent = fret === null ? '×' : tabToken({ ...note, string, fret });
+  drag.text.textContent = fret === null ? '×' : tabToken({ ...note, string, fret, harmonic: string === note.string && note.harmonic });
   drag.text.classList.toggle('t-drop-bad', fret === null);
 });
 
@@ -876,7 +896,7 @@ $('riff-tab').addEventListener('pointerup', () => {
     return flashHint(`${note.name} can't be played on that string`);
   }
   if (target.string === note.string) return drawRiff(shownRiff);
-  saveNotes(shownRiff.notes.map((n, j) => (j === i ? { ...n, ...target, unsure: undefined } : n))); // you checked it
+  saveNotes(shownRiff.notes.map((n, j) => (j === i ? { ...n, ...target, harmonic: undefined, unsure: undefined } : n))); // you checked it
   focusNote(i);
 });
 

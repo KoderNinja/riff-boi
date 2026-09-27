@@ -35,7 +35,7 @@ export function tabSvg(notes, { bpm = 120, endTime = null, meter = '4/4', timing
   const beats = timing ? rhythmOf(notes, bpm, endTime) : notes.map(() => ({ beat: 0, value: { beats: 0, name: 'none' } }));
   if (!timing) rhythm = false;
   const start = timing ? START : 36; // no 4/4 to make room for when rhythm is off
-  const labels = notes.map((note) => (bendArrows ? String(note.fret) : tabToken(note)));
+  const labels = notes.map((note) => (bendArrows && !note.harmonic ? String(note.fret) : tabToken(note)));
   const widths = labels.map((label) => label.length * DIGIT + 4);
 
   // Across the page: each note's x, and the bar lines (one every bar) in between.

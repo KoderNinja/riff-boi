@@ -37,11 +37,21 @@ export function otherSpots(note, maxFret = MAX_FRET) {
   return positionsFor(note.midi, maxFret).filter((spot) => spot.string !== note.string);
 }
 
+// Natural harmonics: touching a string lightly right over the 12th, 7th, 5th or 4th fret while
+// picking it sounds a pure note: an octave, an octave and a fifth, two octaves, or two octaves
+// and a major third above the open string. Semitones above the open string → that fret.
+export const HARMONIC_FRETS = { 12: 12, 19: 7, 24: 5, 28: 4 };
+
+// Where this note can be played as a natural harmonic: [{ string, fret }], or [] if nowhere.
+export function harmonicSpots(midi) {
+  return TUNING.flatMap((open, i) => (HARMONIC_FRETS[midi - open] ? [{ string: i + 1, fret: HARMONIC_FRETS[midi - open] }] : []));
+}
+
 // How a note was played from the note before it, as a tab mark: a hammer-on 'h' or pull-off 'p'
 // (note.link = 'legato'), or a slide '/' up or '\' down (note.link = 'slide'). Only between two
-// notes on the same string at different frets; otherwise null.
+// fretted notes on the same string at different frets; otherwise null.
 export function linkMark(prev, note) {
-  if (!note.link || !prev || prev.string !== note.string || prev.fret === note.fret) return null;
+  if (!note.link || !prev || prev.string !== note.string || prev.fret === note.fret || prev.harmonic || note.harmonic) return null;
   const up = note.fret > prev.fret;
   if (note.link === 'legato') return up ? 'h' : 'p';
   if (note.link === 'slide') return up ? '/' : '\\';
@@ -51,7 +61,7 @@ export function linkMark(prev, note) {
 // The note on its string at another fret, so it becomes a different note (a bend stays a bend).
 export function withFret(note, fret) {
   const midi = TUNING[note.string - 1] + fret;
-  return { ...note, fret, midi, name: midiToName(midi) };
+  return { ...note, fret, midi, name: midiToName(midi), harmonic: undefined }; // a fretted note now
 }
 
 export function createPositionPicker(first = null, finger = 0) {
@@ -149,6 +159,7 @@ function firstNoteOrder(a, b) {
 // sounds like fret 9), "7b9r7" (bent, then released back to 7) or "7pb9r7" (bent before
 // it was picked, then released).
 export function tabToken(note) {
+  if (note.harmonic) return `<${note.fret}>`; // a natural harmonic, like <12>
   const fret = String(note.fret);
   if (!note.bend) return fret;
   return `${fret}${note.prebend ? 'pb' : 'b'}${note.fret + note.bend}${note.release ? `r${fret}` : ''}`;

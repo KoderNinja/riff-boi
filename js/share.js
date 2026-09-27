@@ -3,7 +3,7 @@
 
 import { METERS } from './rhythm.js';
 import { midiToName } from './notes.js';
-import { TUNING } from './tab.js';
+import { TUNING, HARMONIC_FRETS } from './tab.js';
 
 const PREFIX = '#riff=';
 const MOST_NOTES = 2000; // a riff this long is already a whole song
@@ -19,7 +19,7 @@ export function riffToLink(riff, pageUrl) {
     r: riff.rhythm === false ? 0 : 1,
     m: riff.meter,
     w: riff.written ? 1 : 0,
-    s: riff.notes.map((note) => [note.midi, note.string, note.fret, Math.round(note.t * 100) / 100, note.bend || 0, note.release ? 1 : 0, note.prebend ? 1 : 0, LINKS.indexOf(note.link ?? null)]),
+    s: riff.notes.map((note) => [note.midi, note.string, note.fret, Math.round(note.t * 100) / 100, note.bend || 0, note.release ? 1 : 0, note.prebend ? 1 : 0, LINKS.indexOf(note.link ?? null), note.harmonic ? 1 : 0]),
   };
   return pageUrl.split('#')[0] + PREFIX + toBase64Url(JSON.stringify(data));
 }
@@ -40,10 +40,13 @@ export function riffFromLink(hash) {
   const notes = [];
   for (const item of data.s) {
     if (!Array.isArray(item)) return null;
-    const [midi, string, fret, t, bend, release, prebend, link = 0] = item; // (links made before marks were added have no 8th number)
-    if (!whole(string, 1, 6) || !whole(fret, 0, 24) || !number(t, 0, 3600) || !whole(bend, 0, 3) || !whole(link, 0, LINKS.length - 1)) return null;
-    if (midi !== TUNING[string - 1] + fret) return null; // the string and fret must give that note
+    // (Links made before marks or harmonics were added have no 8th or 9th number.)
+    const [midi, string, fret, t, bend, release, prebend, link = 0, harmonic = 0] = item;
+    if (!whole(string, 1, 6) || !whole(fret, 0, 24) || !number(t, 0, 3600) || !whole(bend, 0, 3) || !whole(link, 0, LINKS.length - 1) || !whole(harmonic, 0, 1)) return null;
+    // The string and fret must give that note (a harmonic's fret gives it the harmonic way).
+    if (harmonic ? HARMONIC_FRETS[midi - TUNING[string - 1]] !== fret : midi !== TUNING[string - 1] + fret) return null;
     const note = { midi, name: midiToName(midi), string, fret, t };
+    if (harmonic) note.harmonic = true;
     if (bend) Object.assign(note, { bend }, release === 1 && { release: true }, prebend === 1 && { prebend: true });
     if (link) note.link = LINKS[link];
     notes.push(note);

@@ -263,3 +263,7 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 
 ## Sep 26, 2026: Saving a riff as a file
 - Save .txt saves the same tab as Copy into a text file. The browser makes the file from the text in memory (a Blob) and downloads it, so there's still no server. File names can't have / or :, so a riff called "Sep 26, 9:26 PM" saves as "Sep 26, 9.26 PM.txt".
+
+## Sep 26, 2026: Marking natural harmonics
+- A harmonic at the 12th fret is the exact same note as fret 12, so Riff Boi can't hear the difference yet (the tone is purer, which might work later). For now I mark them by hand: tap a note and pick where it was played as a harmonic, and the tab shows `<12>`.
+- The math: touching the string over the 12th, 7th, 5th and 4th frets gives notes 12, 19, 24 and 28 semitones above the open string. So E4 can be a harmonic at the 7th fret of the A string or the 5th fret of the low E.
