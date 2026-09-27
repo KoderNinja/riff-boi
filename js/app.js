@@ -179,8 +179,22 @@ function markUnsure(notes, live = false) {
   });
 }
 
+// With Auto detect tempo on, the live tab works the tempo out as you play: from 4 notes on, and
+// again every 4 notes after that, from your last 24 notes (so it stays quick while you play).
+// Until then it uses the last tempo.
+const LIVE_TEMPO_NOTES = 24;
+let liveTempo = null; // { count, bpm }: the tempo worked out when there were `count` notes
+
+function liveBpm(notes) {
+  if (!settings.autoTempo || !settings.rhythm || notes.length < 4) return settings.bpm;
+  if (!liveTempo || notes.length >= liveTempo.count + 4) {
+    liveTempo = { count: notes.length, bpm: clampBpm(detectTempo(notes.slice(-LIVE_TEMPO_NOTES)).bpm, settings.bpm) };
+  }
+  return liveTempo.bpm;
+}
+
 function drawLiveTab(notes) {
-  liveTab.innerHTML = tabSvg(markUnsure(notes, true), { bpm: settings.bpm, timing: settings.rhythm, meter: settings.meter, highlightLast: true });
+  liveTab.innerHTML = tabSvg(markUnsure(notes, true), { bpm: liveBpm(notes), timing: settings.rhythm, meter: settings.meter, highlightLast: true });
   liveTab.scrollLeft = liveTab.scrollWidth; // keep the newest notes in view
 }
 
@@ -344,13 +358,26 @@ function drawRiff(riff) {
   $('click-switch').hidden = !timing.timing; // no beat to click along to without rhythm
   $('riff-bpm-input').value = timing.bpm;
   $('riff-auto-tag').hidden = !riff.autoTempo;
+  $('riff-auto-tag').textContent = riff.unsureTempo ? 'auto, not sure' : 'auto';
+  $('riff-detect-btn').hidden = !timing.timing || Boolean(riff.written); // a written tab's rhythm is exact
 }
 
-// Type a new tempo to fix a riff's tempo (like an Auto guess that came out double or half speed).
+// Type a new tempo to speed a riff up or slow it down: its note values stay the same (see retime).
 $('riff-bpm-input').addEventListener('change', (event) => {
-  const bpm = clampBpm(Number(event.target.value), riffTiming(shownRiff, settings.bpm).bpm);
-  // A written tab keeps its note values (see retime). A recorded riff keeps its times.
-  const changes = { ...(shownRiff.written ? retime(shownRiff, bpm) : { bpm }), autoTempo: false };
+  const now = riffTiming(shownRiff, settings.bpm).bpm;
+  const bpm = clampBpm(Number(event.target.value), now);
+  changeRiff({ ...retime({ ...shownRiff, bpm: now }, bpm), autoTempo: undefined, unsureTempo: undefined });
+});
+
+// Detect tempo: for a recorded riff whose tempo was wrong. Riff Boi works the tempo out from how
+// it was played and reads the rhythm again at that tempo (the notes' times stay the same).
+$('riff-detect-btn').addEventListener('click', () => {
+  const detected = detectTempo(shownRiff.notes);
+  if (detected) changeRiff({ bpm: clampBpm(detected.bpm, settings.bpm), ...tempoDetails(detected) });
+});
+
+// Save changes to the riff on screen and draw it again.
+function changeRiff(changes) {
   try {
     shownRiff = updateRiff(shownRiff.id, changes) ?? { ...shownRiff, ...changes };
   } catch (err) {
@@ -358,7 +385,7 @@ $('riff-bpm-input').addEventListener('change', (event) => {
     shownRiff = { ...shownRiff, ...changes };
   }
   drawRiff(shownRiff);
-});
+}
 
 $('back-btn').addEventListener('click', showHome);
 
@@ -453,6 +480,7 @@ function round(x, digits) {
 
 $('new-riff-btn').addEventListener('click', async () => {
   riffNotes = [];
+  liveTempo = null;
   readings = [];
   volumes = [];
   lastSound = 0;
@@ -480,12 +508,17 @@ $('new-riff-btn').addEventListener('click', async () => {
 });
 
 // The tempo to save a riff at. With Auto detect tempo on, work it out from the notes (not with
-// rhythm off: that tab has no tempo). If Riff Boi can't tell (under 4 notes, or no steady beat),
-// it's the tempo in the box.
+// rhythm off: that tab has no tempo). It's always a guess, and `detected.sure` says whether
+// Riff Boi is sure of it. With only 1 note there's nothing to go on, so it's the last tempo.
 function tempoFor(notes) {
   const auto = settings.autoTempo && settings.rhythm;
   const detected = auto ? detectTempo(notes) : null;
-  return { auto, detected, bpm: detected === null ? settings.bpm : clampBpm(detected, settings.bpm) };
+  return { auto, detected, bpm: detected === null ? settings.bpm : clampBpm(detected.bpm, settings.bpm) };
+}
+
+// What a riff saves about its tempo: whether Riff Boi worked it out, and if it wasn't sure.
+function tempoDetails(detected) {
+  return { autoTempo: detected !== null, unsureTempo: detected !== null && !detected.sure };
 }
 
 // --- Stop: save the riff ---
@@ -513,7 +546,7 @@ stopBtn.addEventListener('click', async () => {
   const { auto, detected, bpm } = tempoFor(notes);
   let riff;
   try {
-    riff = saveRiff(markUnsure(notes), riffConfidence(notes, volumes), { bpm, endTime, rhythm: settings.rhythm, meter: settings.meter, autoTempo: detected !== null });
+    riff = saveRiff(markUnsure(notes), riffConfidence(notes, volumes), { bpm, endTime, rhythm: settings.rhythm, meter: settings.meter, ...tempoDetails(detected) });
   } catch (err) {
     console.error(err);
     $('saving-title').textContent = "Couldn't save";
@@ -524,10 +557,10 @@ stopBtn.addEventListener('click', async () => {
   }
   await wait(500);
   $('saving-title').textContent = 'Saved';
-  const tempo = !auto ? '' : detected === null ? ` · Couldn't tell the tempo, used ${bpm} BPM` : ` · Tempo ${bpm} BPM`;
+  const tempo = !auto ? '' : detected === null ? ` · Couldn't tell the tempo, used ${bpm} BPM` : ` · Tempo ${bpm} BPM${detected.sure ? '' : ' (not sure)'}`;
   $('saving-details').textContent = `${riff.label} · ${noteCount(riff.notes.length)}${tempo}`;
   $('saving-where').textContent = 'Saved to Latest Riffs';
-  if (detected !== null) setBpm(bpm); // the next riff's live tab starts at this tempo
+  if (detected?.sure) setBpm(bpm); // the next riff's live tab starts at this tempo
   await wait(auto ? 2500 : 1500); // a little longer, to read the tempo
   showHome();
 });
@@ -903,13 +936,13 @@ async function tabFromRecording(file, name) {
   let riff;
   try {
     riff = saveRiff(markUnsure(result.notes), riffConfidence(result.notes, result.volumes), {
-      bpm, endTime: result.endTime, rhythm: settings.rhythm, meter: settings.meter, autoTempo: detected !== null, name,
+      bpm, endTime: result.endTime, rhythm: settings.rhythm, meter: settings.meter, ...tempoDetails(detected), name,
     });
   } catch (err) {
     console.error(err);
     return showProblem("Couldn't save", 'Your browser blocked saving (private window?)');
   }
-  if (detected !== null) setBpm(bpm); // the next riff's live tab starts at this tempo
+  if (detected?.sure) setBpm(bpm); // the next riff's live tab starts at this tempo
   showRiff(riff);
 }
 

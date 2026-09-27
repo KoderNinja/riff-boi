@@ -77,9 +77,9 @@ The sound says which note, not which string. The same note can be played in up t
 
 ## `js/rhythm.js` and `js/tabsvg.js`: the page of tab
 
-- `rhythmOf` snaps each note's start to the nearest sixteenth note at your tempo. A note lasts until the next one starts, and it gets the longest standard value that fits (whole, dotted half, half, dotted quarter, quarter, dotted eighth, eighth, sixteenth).
+- `rhythmOf` works out each note's value at your tempo. Real playing is never exactly on the beat and the tempo drifts, so `readRhythm` tries every way the riff could be written and keeps the most likely one (the Viterbi algorithm). It weighs how far each gap is from its note value, lets the beat speed up or slow down gradually, and prefers simple beats: each note is read as quarters, eighths or sixteenths, finer ones cost a bit more, and switching costs more, so one late note in a riff of quarters doesn't become a stray sixteenth. A tab written by hand is already exact, so it's used as it is. A note lasts until the next one starts, and it gets the longest standard value that fits (whole, dotted half, half, dotted quarter, quarter, dotted eighth, eighth, sixteenth).
 - `meterOf` turns a time signature like "7/8" into its bar length in beats (the tempo always counts quarter notes, so 7/8 is 3½) and its beam groups (2+2+3). `barOf` says which bar a beat is in, and `groupOf` which beam group.
-- `detectTempo` works out the tempo from when the notes started (Auto). It finds the longest steady pulse that every gap between notes fits, lets 1 note in 8 be a bit off, then picks the note value that puts the tempo from 80 up to 160 BPM. With under 4 notes or no steady beat, it says it can't tell (`null`).
+- `detectTempo` works out the tempo from when the notes started (Auto). It tries every tempo from 80 up to 160 BPM, 1% apart, reads the rhythm at each one with `readRhythm`, and keeps the tempo with the most likely reading (a faster tempo has a finer grid that fits any timing a bit better, so that gets evened out). Then a best-fit line through the notes' times and beats gives the exact tempo. It always guesses, and says `sure: false` with under 4 notes or when even the best reading fits badly (like playing freely).
 - `tabSvg` draws it all as SVG, which is shapes written as text, so it stays sharp at any size: six string lines, the fret numbers on small dark patches, "TAB" and the time signature, bar lines with measure numbers, the tempo, bends as arrows labelled ½, full or 1½, and the rhythm underneath (stems, beams, flags and dots). With rhythm off, the notes are just evenly spaced.
 
 ## `js/confidence.js`: the honesty meter
@@ -122,7 +122,7 @@ Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs`
 
 ## `tools/`: the tests
 
-- `check.mjs`: 188 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
+- `check.mjs`: 212 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
 - `score.mjs`: the scoreboard. It replays my 8 real recordings and compares them to what I really played (the `.txt` answer files): 110 of 115 notes, and 83 of 83 on the right string.
 - `replay.mjs`: replays one `?debug` recording through the current code, to compare before and after a change.
 
@@ -141,7 +141,7 @@ Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs`
 | Hand box | 4 frets | `tab.js` |
 | "Can't hear your guitar" | 5 seconds with no note | `app.js` |
 | Tempo | 40 to 240 BPM, default 120 | `app.js` |
-| Auto tempo guess | 80 up to 160 BPM when it can, needs 4 notes | `rhythm.js` |
+| Auto tempo guess | 80 up to 160 BPM when it can, sure from 4 notes | `rhythm.js` |
 
 ## Check yourself
 

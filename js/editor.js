@@ -29,10 +29,9 @@ export function writtenRiff(written, bpm) {
   return { notes, endTime: beat * secondsPerBeat };
 }
 
-// A new tempo for a written tab. Its note values stay the same, so the notes move closer
-// together or further apart. (A recorded riff keeps its times instead, since that's how it
-// was played, and the new tempo changes its note values.)
+// A new tempo for a riff. Its note values stay the same, so the notes move closer together or
+// further apart, and it plays faster or slower. (An old riff saved without an end time keeps none.)
 export function retime(riff, bpm) {
   const scale = riff.bpm / bpm;
-  return { bpm, notes: riff.notes.map((note) => ({ ...note, t: note.t * scale })), endTime: riff.endTime * scale };
+  return { bpm, notes: riff.notes.map((note) => ({ ...note, t: note.t * scale })), endTime: riff.endTime == null ? riff.endTime : riff.endTime * scale };
 }

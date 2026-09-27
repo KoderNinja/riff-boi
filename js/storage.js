@@ -56,10 +56,11 @@ export function saveInputId(deviceId) {
 
 // Save a new riff at the top of the list and return it.
 // `confidence` is how sure Riff Boi was about it (see confidence.js), or null.
-// `details` is { bpm, endTime, rhythm, meter, autoTempo, written, name }: the tempo it was played
-// at, when its last note ended (seconds), whether rhythm was on, its time signature, whether Riff
-// Boi worked the tempo out by itself, and whether it was written by hand (New Tab), so its tab can
-// be drawn the same way later. And its name, if it has one (like an uploaded file's).
+// `details` is { bpm, endTime, rhythm, meter, autoTempo, unsureTempo, written, name }: the tempo it
+// was played at, when its last note ended (seconds), whether rhythm was on, its time signature,
+// whether Riff Boi worked the tempo out by itself (and wasn't sure of it), and whether it was
+// written by hand (New Tab), so its tab can be drawn the same way later. And its name, if it has
+// one (like an uploaded file's).
 // Throws if the browser won't let us save (the app shows a message).
 export function saveRiff(notes, confidence = null, details = {}) {
   const now = new Date();
@@ -76,6 +77,7 @@ export function saveRiff(notes, confidence = null, details = {}) {
     rhythm: details.rhythm,
     meter: details.meter,
     autoTempo: details.autoTempo || undefined, // only saved when it's true
+    unsureTempo: details.unsureTempo || undefined, // the same: Riff Boi guessed the tempo but wasn't sure
     written: details.written || undefined, // the same
     name: details.name || undefined,
   };

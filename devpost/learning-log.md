@@ -246,3 +246,11 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 
 ## Sep 26, 2026: Taking the count-in back out
 - After trying the count-in, I didn't want it, so it's out. Taking a feature out cleanly is its own skill: every spot it touched went back to how it was before, and old riffs saved with it still open.
+
+## Sep 26, 2026: Tempo that actually gets detected, and better rhythm
+- Auto tempo looked stuck on 141. The real problem: it only worked if every gap between notes fit one steady pulse, so on real playing it gave up almost every time (87% of made-up riffs with normal human timing), and then it quietly used the last tempo it had found, which was 141.
+- The new way tries every tempo from 80 to 160 BPM and asks "how likely is this rhythm at this tempo?", then keeps the best one. It's called the Viterbi algorithm: instead of snapping each note on its own, it looks at every way the whole riff could be written and picks the cheapest one, where timing errors, tempo drift and complicated beats all cost something.
+- A faster tempo means a finer grid, and a finer grid fits any timing better, so at first it always picked tempos near the top. I had to add a cost that evens that out.
+- "Modes" fixed the stray dotted notes: a riff of quarter notes stays quarters even when one note is 60 ms late, because switching to sixteenths costs more than one late note.
+- I tested it on made-up riffs (15 rhythms, random tempos, timing wobble and drift) and on my recordings. With normal timing, it finds the tempo 76% of the time instead of 14%, and when it says it's sure, it was right every time in the test. All my steady runs now come out as clean quarter notes.
+- Typing a new tempo on a saved riff now keeps the notes and plays faster or slower, and Detect tempo reads the rhythm again when the tempo was wrong.

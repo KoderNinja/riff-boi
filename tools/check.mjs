@@ -3,6 +3,7 @@
 // Uses made-up readings (no guitar needed). Run it after changing notes.js or tab.js.
 
 import { readFileSync, readdirSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { readNote, createNoteTracker, cleanUpRiff, tuningOf, stillRinging, RINGING_READINGS, notesFromReadings } from '../js/notes.js';
 import { placeNotes, positionsFor, drawTab, tabToken, otherSpots, tabText, fretOn, withFret, linkMark } from '../js/tab.js';
 import { riffConfidence, isUnsure } from '../js/confidence.js';
@@ -21,6 +22,18 @@ let allOk = true;
 function check(label, ok, detail = '') {
   console.log(`${ok ? 'OK  ' : 'FAIL'} ${label}${ok ? '' : `   got: ${detail}`}`);
   if (!ok) allOk = false;
+}
+
+// --- Every script loads: no typos that would stop the page (app.js can't run here, but Node can
+// still check that it's valid JavaScript) ---
+for (const file of readdirSync(new URL('../js/', import.meta.url)).filter((name) => name.endsWith('.js'))) {
+  let ok = true;
+  try {
+    execFileSync(process.execPath, ['--check', new URL(`../js/${file}`, import.meta.url).pathname], { stdio: 'pipe' });
+  } catch {
+    ok = false;
+  }
+  check(`${file} has no syntax errors`, ok);
 }
 
 // --- Frequency → note ---
@@ -346,13 +359,55 @@ check('time signature: one that isn\'t in the list is 4/4', meterOf('nonsense').
     ['quarters at 138 with one note missed', played(138, [4, 4, 4, 8, 4, 4, 4, 4, 4, 4]), 138],
     ['quarters at 138 with one extra note', played(138, Array(10).fill(4)).flatMap((n, i) => (i === 5 ? [n, { t: n.t + 0.1 }] : [n])), 138],
     ['thrash eighths at 180 come out as 90 (type 180 on the riff)', played(180, Array(16).fill(2), 6), 90],
-    ['only 3 notes: can\'t tell', played(120, [4, 4]), null],
-    ['free time, no steady beat: can\'t tell', [0, 0.31, 0.77, 0.93, 1.52, 1.61, 2.34, 2.9, 3.05, 3.71].map((t) => ({ t })), null],
   ];
   for (const [label, notes, want] of cases) {
     const got = detectTempo(notes);
-    check(`auto tempo: ${label}`, (got === null ? null : Math.round(got)) === want, got);
+    check(`auto tempo: ${label}`, got.bpm === want && got.sure, JSON.stringify(got));
   }
+  // It always guesses, but says when it isn't sure.
+  const three = detectTempo(played(120, [4, 4]));
+  check('auto tempo: only 3 notes: a guess, marked not sure', Math.abs(three.bpm - 120) <= 4 && !three.sure, JSON.stringify(three));
+  const free = detectTempo([0, 0.31, 0.77, 0.93, 1.52, 1.61, 2.34, 2.9, 3.05, 3.71].map((t) => ({ t })));
+  check('auto tempo: free time, no steady beat: not sure', !free.sure, JSON.stringify(free));
+  check('auto tempo: a single note can\'t have a tempo', detectTempo([{ t: 1 }]) === null);
+
+  // Real playing: the tempo drifts and notes come early or late. (This used to be where Auto gave
+  // up and used the last tempo instead.)
+  const drifting = (bpm, sixteenths, speedUp, wobbleMs) => {
+    let t = 1;
+    return [...sixteenths, 0].map((length, i) => {
+      const note = { t: t + ((((i * 7) % 5) - 2) / 2) * wobbleMs / 1000 };
+      t += (length * 15) / (bpm * (1 + (speedUp * i) / sixteenths.length));
+      return note;
+    });
+  };
+  const rushing = drifting(120, Array(16).fill(4), 0.07, 20); // quarters that speed up 7%
+  const rushed = detectTempo(rushing);
+  check('auto tempo: quarters that speed up from 120 to 128', rushed.bpm >= 120 && rushed.bpm <= 128 && rushed.sure, JSON.stringify(rushed));
+  check('rhythm: ...and they all stay quarter notes', new Set(rhythmOf(rushing, rushed.bpm, null).slice(0, -1).map((r) => r.value.name)).size === 1, valueNames(rhythmOf(rushing, rushed.bpm, null)));
+  const gallop = drifting(140, [2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2, 1, 1, 4], -0.03, 15);
+  const galloped = detectTempo(gallop);
+  check('auto tempo: a gallop at 140 that slows down a bit', Math.abs(galloped.bpm - 138) <= 3 && galloped.sure, JSON.stringify(galloped));
+  check('rhythm: ...written as an eighth and two sixteenths every time',
+    rhythmOf(gallop, galloped.bpm, null).slice(0, 15).map((r) => r.value.name[0]).join('') === 'ess'.repeat(5), valueNames(rhythmOf(gallop, galloped.bpm, null)));
+}
+{
+  // Quarter notes at 140 where one note is 60 ms late: that's a late note, not a sixteenth.
+  const late = Array.from({ length: 12 }, (_, i) => ({ t: 1 + (i * 60) / 140 + (i === 3 ? 0.06 : 0) }));
+  check('rhythm: one late note in a riff of quarters doesn\'t make a stray sixteenth',
+    new Set(rhythmOf(late, 140, null).map((r) => r.value.name)).size === 1, valueNames(rhythmOf(late, 140, null)));
+  // Eighths with four real sixteenths in the middle: those stay sixteenths.
+  const mixed = [2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2, 2];
+  let at = 1;
+  const mixedNotes = mixed.map((length, i) => { const note = { t: at + (i % 3 === 1 ? 0.012 : -0.008) }; at += length * 60 / 140 / 4; return note; });
+  check('rhythm: real sixteenths among eighths are still sixteenths',
+    rhythmOf(mixedNotes, 140, null).slice(0, -1).map((r) => r.value.name[0]).join('') === 'eeeessssee' + 'e', valueNames(rhythmOf(mixedNotes, 140, null)));
+  // A played riff sped up with a new tempo keeps its note values (the tempo box on a saved riff).
+  const wobbly = timed.map((n, i) => ({ ...n, t: n.t + (i % 2 ? 0.025 : -0.02) * (i ? 1 : 0) }));
+  const faster = retime({ bpm: 120, notes: wobbly, endTime: 4.0 }, 150);
+  check('rhythm: a new tempo on a played riff keeps its note values',
+    valueNames(rhythmOf(faster.notes, 150, faster.endTime)) === valueNames(rhythmOf(wobbly, 120, 4.0)), valueNames(rhythmOf(faster.notes, 150, faster.endTime)));
+  check('rhythm: ...and an old riff without an end time keeps none', retime({ bpm: 120, notes: wobbly, endTime: undefined }, 150).endTime === undefined);
 }
 
 // --- Distorted, fast playing (from the Crazy Train and pentatonic recordings) ---

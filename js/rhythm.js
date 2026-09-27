@@ -49,24 +49,118 @@ const VALUES = [
   { beats: 0.25, name: 'sixteenth', dotted: false },
 ];
 
+// --- Reading the rhythm: which note values did you play? ---
+//
+// Real playing is never exactly on the beat, and the tempo drifts a little. So instead of
+// snapping each note to the nearest sixteenth on its own, Riff Boi tries every way the riff
+// could be written and keeps the most likely one (this is called the Viterbi algorithm). It
+// weighs up three things:
+// - timing: how far each gap between two notes is from the note value it's written as,
+// - drift: the beat may speed up or slow down a little, but only gradually,
+// - simple beats: each note is read in a "mode": quarters (every note on a beat), eighths (on a
+//   beat or halfway) or sixteenths. Finer modes cost a little per note and switching costs more,
+//   so a riff of quarter notes doesn't get one stray sixteenth just because a note was late.
+const TEMPO_STEP = 0.01;     // one step of drift = 2^0.01, about 0.7% faster or slower
+const DRIFT_STEPS = 12;      // the beat may drift up to 12 steps (about 9%) away from the tempo
+const TIMING = 0.08;         // beats: how far off a gap typically is from its note value
+const TIMING_LONG = 0.05;    // ...plus this share of the note value (long notes are less exact)
+const SPEED_CHANGE = 0.3;    // the cost of the beat changing speed by one step between two notes
+const AWAY = 0.02;           // the cost of starting away from the tempo, per step squared
+const MODE_COST = [0, 0.25, 0.5]; // the cost per note of each mode: quarters, eighths, sixteenths
+const PLACE_COST = [         // the cost of each place in the beat, in each mode (Infinity = can't)
+  [0, Infinity, Infinity, Infinity], // quarters: on the beat
+  [0, Infinity, 0.1, Infinity],      // eighths: on the beat or halfway (the "and")
+  [0, 0.3, 0.1, 0.3],                // sixteenths: anywhere (the "e" and the "a" cost more)
+];
+const SWITCH = 3;            // the cost of switching modes
+const EXACT = 0.03;          // beats: notes this close to the sixteenths are exact (a tab written by hand)
+
+// x: when each note starts, in beats from the first note. `timing` is how far off a gap
+// typically is (in beats). Returns the most likely length of each gap in sixteenths (`steps`),
+// how fast the beat was going at each note compared to the tempo (`speeds`), and how unlikely
+// that reading is (`cost`, lower = more likely).
+function readRhythm(x, driftSteps = DRIFT_STEPS, timing = TIMING) {
+  const speeds = Array.from({ length: 2 * driftSteps + 1 }, (_, k) => 2 ** ((k - driftSteps) * TEMPO_STEP));
+  const S = speeds.length;
+  const count = 3 * S * 4;
+  const state = (mode, k, place) => (mode * S + k) * 4 + place; // place = sixteenths into the beat (0-3)
+  let cost = new Float64Array(count).fill(Infinity);
+  for (let mode = 0; mode < 3; mode++) {
+    for (let k = 0; k < S; k++) cost[state(mode, k, 0)] = AWAY * (k - driftSteps) ** 2 + MODE_COST[mode];
+  }
+  const trail = []; // for each gap: the state each state came from, and the gap's length
+  for (let i = 1; i < x.length; i++) {
+    const next = new Float64Array(count).fill(Infinity);
+    const from = new Int32Array(count);
+    const length = new Int32Array(count);
+    for (let k = 0; k < S; k++) {
+      const gap = (x[i] - x[i - 1]) * speeds[k]; // in beats, at the speed the beat is going
+      const nearest = Math.max(1, Math.round(gap / GRID));
+      for (let steps = Math.max(1, nearest - 1); steps <= nearest + 1; steps++) {
+        const spread = Math.hypot(timing, TIMING_LONG * steps * GRID);
+        const off = ((gap - steps * GRID) / spread) ** 2 / 2;
+        for (let change = -2; change <= 2; change++) {
+          const before = k - change;
+          if (before < 0 || before >= S) continue;
+          for (let mode0 = 0; mode0 < 3; mode0++) {
+            for (let place0 = 0; place0 < 4; place0++) {
+              const was = state(mode0, before, place0);
+              if (cost[was] === Infinity) continue;
+              const place = (place0 + steps) % 4;
+              const soFar = cost[was] + off + SPEED_CHANGE * change * change;
+              for (let mode = 0; mode < 3; mode++) {
+                const c = soFar + MODE_COST[mode] + PLACE_COST[mode][place] + (mode === mode0 ? 0 : SWITCH);
+                const now = state(mode, k, place);
+                if (c < next[now]) {
+                  next[now] = c;
+                  from[now] = was;
+                  length[now] = steps;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    cost = next;
+    trail.push({ from, length });
+  }
+  // The cheapest ending, then back along the trail to the start.
+  let end = 0;
+  for (let s = 1; s < count; s++) if (cost[s] < cost[end]) end = s;
+  const speedAt = (s) => speeds[Math.floor(s / 4) % S];
+  const steps = [];
+  const speedList = [speedAt(end)];
+  for (let i = trail.length - 1, s = end; i >= 0; i--) {
+    steps.unshift(trail[i].length[s]);
+    s = trail[i].from[s];
+    speedList.unshift(speedAt(s));
+  }
+  return { steps, speeds: speedList, cost: cost[end] };
+}
+
 // notes: the riff's notes in order, each with `t` (seconds since New Riff).
 // endTime: when the riff ended (seconds), for the last note's length (null = a quarter note).
 // Returns one { beat, value } per note: `beat` is where it starts (the first note is beat 0),
 // `value` is its note value. A note lasts until the next one starts; any leftover time
-// that no note value fits is just space (like a short rest).
+// that no note value fits is just space (like a short rest). The rhythm only depends on the
+// notes' times in beats, so a riff sped up or slowed down with its tempo keeps its note values.
 export function rhythmOf(notes, bpm, endTime = null) {
   if (notes.length === 0) return [];
-  const toBeats = (t) => ((t - notes[0].t) * bpm) / 60;
+  const x = notes.map((note) => ((note.t - notes[0].t) * bpm) / 60);
   const snap = (beats) => Math.round(beats / GRID) * GRID;
-  // Snap every start to the nearest sixteenth; two notes can't share a spot.
-  const starts = [];
-  for (const note of notes) {
-    let beat = snap(toBeats(note.t));
-    if (starts.length && beat <= starts[starts.length - 1]) beat = starts[starts.length - 1] + GRID;
-    starts.push(beat);
+  // Already right on the sixteenths (like a tab written by hand)? Then that's the rhythm.
+  let starts = x.map(snap);
+  let speed = 1;
+  if (!x.every((beat, i) => Math.abs(beat - starts[i]) < EXACT && (i === 0 || starts[i] > starts[i - 1]))) {
+    const reading = readRhythm(x);
+    let beat = 0;
+    starts = [0, ...reading.steps.map((steps) => (beat += steps * GRID))];
+    speed = reading.speeds[reading.speeds.length - 1];
   }
+  // The last note lasts until the end (at the speed the beat was going then): at least a sixteenth.
   const last = starts[starts.length - 1];
-  const end = endTime === null ? last + 1 : Math.max(last + GRID, snap(toBeats(endTime)));
+  const end = endTime === null ? last + 1 : last + Math.max(GRID, snap(((endTime - notes[notes.length - 1].t) * bpm * speed) / 60));
   return starts.map((beat, i) => ({ beat, value: valueFor((i + 1 < starts.length ? starts[i + 1] : end) - beat) }));
 }
 
@@ -88,88 +182,47 @@ export function valueFor(beats) {
 // those apart. So the guess lands in this range when it can (from 80 up to, not including,
 // 160 BPM). If the real tempo is outside it, type the right one on the saved riff.
 export const AUTO_TEMPO_RANGE = [80, 160];
-const PULSE_FIT = 0.15;    // a gap fits if it's within 15% of a pulse of a whole number of pulses
-const OFF_NOTES = 1 / 8;   // up to 1 note in 8 may be off the beat (played early or late, or an extra note)
-const MIDDLE = 0.15;       // ...but not within 15% of a pulse of right in the middle (that's a real shorter note)
-const SHORTEST_PULSE = 0.06; // seconds: sixteenths at 250 BPM, faster than anyone picks
-const LONG_PAUSE = 2.5;      // seconds: a gap this long is a pause, not part of the rhythm
+const TEMPO_TRIES = 1.01;     // try every tempo in the range, 1% apart
+const TRY_DRIFT = 4;          // while trying, the beat may drift 4 steps (about 3%)
+const TIMING_SECONDS = 0.035; // how far off a gap between two notes typically is, in seconds
+const FINER = 0.6;            // a faster tempo has a finer grid of sixteenths, which fits any
+                              // timing a bit better; this cost per gap evens that out
+const SURE_BELOW = 0.8;       // a reading that costs less than this per gap is a sure one
+const MOST_NOTES = 48;        // the first 48 notes are plenty (and it stays quick)
 
-// notes: the riff's notes in order, each with `t` (seconds). Returns the tempo in BPM, or null
-// if there are fewer than 4 notes or they don't follow a steady beat.
+// notes: the riff's notes in order, each with `t` (seconds). Tries every tempo in the range
+// and reads the rhythm at each one (see readRhythm): the tempo with the most likely reading
+// wins. Returns { bpm, sure }, or null with fewer than 2 notes. It always makes a guess;
+// `sure` is false with fewer than 4 notes, or when even the best reading doesn't fit well
+// (like playing freely, with no steady beat).
 export function detectTempo(notes) {
-  const times = notes.map((note) => note.t);
-  const gaps = times.slice(1).map((t, i) => t - times[i]);
-  const counted = gaps.filter((gap) => gap < LONG_PAUSE).length; // long pauses don't count
-  if (counted < 3) return null;
-  // The pulse: the longest steady step that every gap is a whole number of. A riff of eighths
-  // and quarters has an eighth-note pulse; 3+3+2 sixteenths has a sixteenth pulse.
-  const allowed = Math.floor(counted * OFF_NOTES);
-  let pulse = null;
-  for (let step = LONG_PAUSE; step >= SHORTEST_PULSE; step /= 1.01) {
-    if (offNotes(gaps, step) <= allowed) {
-      pulse = step;
-      break;
-    }
-  }
-  if (!pulse) return null;
-  // That step is only close. Fine-tune it with every note, 3 times over (each time the count
-  // gets more exact).
-  let exact = pulse;
-  for (let pass = 0; pass < 3; pass++) exact = fitPulse(times, exact);
-  // The pulse is a half note, a quarter, an eighth or a sixteenth: pick the one that puts the
-  // tempo in the range, or as close to it as possible.
+  const times = notes.slice(0, MOST_NOTES).map((note) => note.t);
+  if (times.length < 2) return null;
+  const gaps = times.length - 1;
   const [low, high] = AUTO_TEMPO_RANGE;
-  const outside = (bpm) => (bpm < low ? Math.log2(low / bpm) : bpm >= high ? Math.log2(bpm / high) + 1e-9 : 0);
-  const tempo = [0.5, 1, 2, 4].map((pulsesPerBeat) => 60 / (exact * pulsesPerBeat))
-    .reduce((best, bpm) => (outside(bpm) < outside(best) ? bpm : best));
-  return Math.round(Math.min(240, Math.max(40, tempo)));
-}
-
-// How many notes are off the beat with this pulse. A gap that isn't a whole number of pulses
-// must add up to one with the next gap: that's one note played early or late, or an extra
-// note in between. If it doesn't, it's a real note the pulse can't explain, so the pulse is
-// wrong (Infinity). A real sixteenth among eighths is like that. So is a note right in the
-// middle between two pulses (like two sixteenths in a row): that's a shorter note, not a late one.
-function offNotes(gaps, pulse) {
-  let off = 0;
-  for (let i = 0; i < gaps.length; i++) {
-    if (gaps[i] >= LONG_PAUSE || fits(gaps[i], pulse)) continue;
-    const part = gaps[i] / pulse - Math.floor(gaps[i] / pulse); // 0.5 = right in the middle
-    if (Math.abs(part - 0.5) < MIDDLE) return Infinity;
-    const next = gaps[i + 1];
-    if (next === undefined || next >= LONG_PAUSE || !fits(gaps[i] + next, pulse)) return Infinity;
-    off++;
-    i++; // the next gap is already used up
+  let best = null;
+  for (let bpm = low; bpm < high; bpm *= TEMPO_TRIES) {
+    const reading = readRhythm(times.map((t) => ((t - times[0]) * bpm) / 60), TRY_DRIFT, (TIMING_SECONDS * bpm) / 60);
+    const cost = reading.cost + FINER * gaps * Math.log(bpm / low);
+    if (!best || cost < best.cost) best = { bpm, cost, reading };
   }
-  return off;
-}
-
-// Is this gap (close to) a whole number of pulses, at least 1?
-function fits(gap, pulse) {
-  const pulses = gap / pulse;
-  return Math.round(pulses) >= 1 && Math.abs(pulses - Math.round(pulses)) <= PULSE_FIT;
-}
-
-// Count where each note starts, in pulses (an extra note right after another counts as the
-// same place), then find the straight line that best fits those places and the note times
-// (least squares): its slope is the exact pulse. A long pause starts a new stretch, since
-// nobody pauses for an exact number of beats.
-function fitPulse(times, pulse) {
+  // The exact tempo: the straight line that best fits the notes' times against their beats
+  // (least squares). Its slope is the seconds per beat.
+  let beat = 0;
+  const beats = [0, ...best.reading.steps.map((steps) => (beat += steps * GRID))];
+  const meanBeat = beats.reduce((sum, b) => sum + b, 0) / beats.length;
+  const meanTime = times.reduce((sum, t) => sum + t, 0) / times.length;
   let up = 0;
   let across = 0;
-  let from = 0;
-  for (let i = 1; i <= times.length; i++) {
-    if (i < times.length && times[i] - times[i - 1] < LONG_PAUSE) continue;
-    const stretch = times.slice(from, i); // the notes up to a pause (or the end)
-    let place = 0;
-    const places = stretch.map((t, j) => (j === 0 ? 0 : (place += Math.round((t - stretch[j - 1]) / pulse))));
-    const meanPlace = places.reduce((sum, x) => sum + x, 0) / places.length;
-    const meanTime = stretch.reduce((sum, t) => sum + t, 0) / stretch.length;
-    places.forEach((x, j) => {
-      up += (x - meanPlace) * (stretch[j] - meanTime);
-      across += (x - meanPlace) ** 2;
-    });
-    from = i;
-  }
-  return across > 0 ? up / across : pulse;
+  beats.forEach((b, i) => {
+    up += (b - meanBeat) * (times[i] - meanTime);
+    across += (b - meanBeat) ** 2;
+  });
+  let bpm = across > 0 ? 60 / (up / across) : best.bpm;
+  // Drifting can take it just outside the range. Twice as slow always works (eighths become
+  // quarters). Half as fast turns sixteenths into 32nds, which Riff Boi doesn't write.
+  while (bpm < low) bpm *= 2;
+  if (bpm >= high && beats.every((b) => b % 0.5 === 0)) bpm /= 2;
+  const sure = times.length >= 4 && best.reading.cost / gaps < SURE_BELOW;
+  return { bpm: Math.round(Math.min(240, Math.max(40, bpm))), sure };
 }

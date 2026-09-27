@@ -124,13 +124,15 @@
       <button id="riff-share-btn" class="secondary-btn copy-btn">Share</button>
       <!-- Only for a riff opened from a shared link -->
       <button id="riff-save-btn" class="secondary-btn add-note-btn" hidden>Save to my riffs</button>
-      <!-- This riff's tempo: type a new one to fix it (like an Auto guess that came out double or half speed) -->
+      <!-- This riff's tempo: type a new one to speed it up or slow it down -->
       <label id="riff-tempo" class="riff-tempo">
       <span class="setting-label">Tempo</span>
       <input id="riff-bpm-input" class="bpm-input" type="number" inputmode="numeric" min="40" max="240" step="1" aria-label="This riff's tempo in beats per minute">
       <span class="setting-unit">BPM</span>
       <span id="riff-auto-tag" class="muted">auto</span>
       </label>
+      <!-- Tempo was wrong when it was recorded? Work it out again and read the rhythm again -->
+      <button id="riff-detect-btn" class="small-btn" type="button">Detect tempo</button>
     </div>
     <!-- Practice: slow it down, play it over and over, and hear a click on the beat -->
     <div class="practice-row">

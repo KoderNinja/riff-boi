@@ -12,7 +12,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 
 - Writes tab live while you play single notes.
 - Hears string bends and writes them like real tab: `7b9` for a bend, `7b9r7` for a bend and release, `7pb9r7` for a pre-bend.
-- Draws the tab like a tab site (Songsterr style): string lines with the fret numbers on them, bar lines, and the rhythm underneath, at the tempo you set, in the time signature you pick (2/4 to 12/8). It can also work out the tempo from how you played (Auto detect tempo), and you can fix a saved riff's tempo by typing it. You can turn off Show note lengths to just see the notes.
+- Draws the tab like a tab site (Songsterr style): string lines with the fret numbers on them, bar lines, and the rhythm underneath, at the tempo you set, in the time signature you pick (2/4 to 12/8). It can also work out the tempo from how you played (Auto detect tempo), even when your timing drifts a little, and says when it isn't sure. On a saved riff, typing a new tempo plays it faster or slower, and Detect tempo reads the rhythm again if the tempo was wrong. You can turn off Show note lengths to just see the notes.
 - Saves each riff to a Latest Riffs list that's still there next time you open it. You can rename or delete riffs there.
 - Shows how sure it is about the tab, with a hint when something's off, like background noise or an out-of-tune guitar, and fades the notes it wasn't sure about, so you know which ones to check.
 - Lets you write a tab by hand too (New Tab): pick a string, a fret and a note value for each note.
@@ -64,11 +64,11 @@ node tools/check.mjs
 node tools/score.mjs
 ```
 
-`check.mjs` runs 188 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, input picker, saving, tab editor, playback, upload, scale finder and share link logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 113 of 115 notes right (98%) and puts all 84 checked notes on the right string.
+`check.mjs` runs 212 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, input picker, saving, tab editor, playback, upload, scale finder and share link logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 113 of 115 notes right (98%) and puts all 84 checked notes on the right string.
 
 ## What it can't do yet
 
-It only hears single notes, so no chords or power chords yet. It assumes standard tuning. The string and fret are a best guess, because the sound doesn't say which string you played (drag a note on a saved riff to move it). A really soft first note can get missed. A pre-bend only shows up once you release it, since until then it sounds just like a normal note, and a very slow bend (slower than about 0.4 seconds for a whole step) can come out as separate notes. Auto tempo needs a steady beat and at least 4 notes, and it can come out at double or half speed (you can type the right tempo on the saved riff). On an iPhone, the silent switch can mute playback. Uploaded recordings can be up to 5 minutes long.
+It only hears single notes, so no chords or power chords yet. It assumes standard tuning. The string and fret are a best guess, because the sound doesn't say which string you played (drag a note on a saved riff to move it). A really soft first note can get missed. A pre-bend only shows up once you release it, since until then it sounds just like a normal note, and a very slow bend (slower than about 0.4 seconds for a whole step) can come out as separate notes. Auto tempo can come out at double or half speed (the same notes written twice as long or half as long), and with no steady beat it's only a guess (it says "not sure"). It doesn't write triplets yet. On an iPhone, the silent switch can mute playback. Uploaded recordings can be up to 5 minutes long.
 
 ## How I made it
 
