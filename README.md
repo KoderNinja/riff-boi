@@ -22,7 +22,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 - Says which key and scale a riff sounds like, like E minor pentatonic.
 - Shares a riff with a link: the riff is packed into the link itself, so nothing is uploaded anywhere.
 - Gets the tab of a recording too: upload an mp3, wav or m4a.
-- Camera (new, being tested): watches your fretting hand to pick the right string. It learns where the frets are from the notes you play, so there's nothing to set up. The hand tracking is Google's MediaPipe, running in your browser; the video never leaves your device.
+- Camera (beta): watches your fretting hand to pick the right string. It learns where the frets are from the notes you play, so there's nothing to set up. The hand tracking is Google's MediaPipe, running in your browser; the video never leaves your device.
 - Has a tuner built in.
 - Lets you pick your mic or audio interface, remembers it, and tells you when it can't hear your guitar.
 

@@ -10,7 +10,7 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 
 Where we left off (Sep 26, 2026, late night):
 - Pushed and live (Sep 26, late): the new tempo detection and rhythm reader, bends and vibrato, Save .txt, marking harmonics.
-- New and not pushed: the Camera switch (home screen). Test it in Chrome at http://localhost:8000 (Cmd+Shift+R): turn Camera on, hold the guitar so the camera sees your fretting hand and the neck, play a few notes, and check the strings. Tell Claude what the camera box says and whether the strings are right.
+- The camera is a beta for now (the switch says "Camera (beta)"), to work on later: test it with a real camera and guitar in Chrome, then make it more accurate.
 - Also new and not pushed: bends that pause halfway and vibrato no longer make extra notes (RIFFTEST now comes out right: ...G4b2 at the end).
 - Also new and not pushed: Save .txt (next to Share on a saved riff).
 - Also new and not pushed: mark a natural harmonic by hand (tap a note, pick Harmonic, the tab shows <12>).
