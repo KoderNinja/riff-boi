@@ -960,3 +960,38 @@ body {
   max-width: 28em;
   text-align: center;
 }
+
+/* The camera on the Recording screen: shown mirrored, like a mirror, with the hand drawn on top. */
+.camera-box {
+  margin: 12px auto 0;
+  max-width: 320px;
+}
+
+.camera-box[hidden] {
+  display: none;
+}
+
+.camera-view {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--muted);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #000;
+}
+
+.camera-view video,
+.camera-view canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.camera-status {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  text-align: center;
+}

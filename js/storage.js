@@ -16,7 +16,7 @@ export function loadRiffs() {
 // Settings: the tempo (BPM), whether Riff Boi works the tempo out by itself (Auto), the time
 // signature, and whether the tab shows rhythm. Remembered between visits.
 const SETTINGS_KEY = 'riffboi.settings';
-export const DEFAULT_SETTINGS = { bpm: 120, autoTempo: false, meter: '4/4', rhythm: true };
+export const DEFAULT_SETTINGS = { bpm: 120, autoTempo: false, meter: '4/4', rhythm: true, camera: false };
 
 export function loadSettings() {
   try {

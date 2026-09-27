@@ -44,6 +44,7 @@
       <label class="rhythm-switch" title="Work out the tempo from my notes when I tap Stop"><input id="auto-tempo-input" type="checkbox"> <span class="setting-label">Auto detect tempo</span></label>
       <label class="meter-picker"><span class="setting-label">Time</span> <select id="meter-select" class="input-select" aria-label="Time signature"></select></label>
       <label class="rhythm-switch" title="Turn off to just see the notes, evenly spaced"><input id="rhythm-input" type="checkbox" checked> <span class="setting-label">Show note lengths</span></label>
+      <label class="rhythm-switch" title="Watch my fretting hand to pick the right string"><input id="camera-input" type="checkbox"> <span class="setting-label">Camera</span></label>
     </div>
     <!-- Which input Riff Boi listens to: the mic or your audio interface (remembered between visits) -->
     <label class="input-picker">
@@ -66,6 +67,11 @@
       <span id="note-freq" class="note-freq">Play a note</span>
     </div>
     <div id="live-tab" class="tab"></div>
+    <!-- Camera (if it's on): your fretting hand, to pick the right string. The video stays on your device. -->
+    <div id="camera-box" class="camera-box" hidden>
+      <div class="camera-view"><video id="camera-video" playsinline muted></video><canvas id="camera-canvas"></canvas></div>
+      <p id="camera-status" class="muted camera-status"></p>
+    </div>
     <!-- Confidence bar: how sure Riff Boi is about the tab (filled in by app.js) -->
     <div id="live-confidence" class="confidence">
       <div class="confidence-label"><span>Confidence</span><span class="confidence-pct">–</span></div>

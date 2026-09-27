@@ -9,13 +9,14 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 ## Next up
 
 Where we left off (Sep 26, 2026, late night):
-- New and not pushed yet: the count-in is out, and the new tempo detection and rhythm reader (Auto tempo finds the tempo on real playing instead of giving up and reusing 141; "not sure" when it can't tell; the live tab works the tempo out as you play; a saved riff's tempo box plays faster or slower; a Detect tempo button). Test it in Chrome at http://localhost:8000 (Cmd+Shift+R first), then push.
+- Pushed and live (Sep 26, late): the new tempo detection and rhythm reader, bends and vibrato, Save .txt, marking harmonics.
+- New and not pushed: the Camera switch (home screen). Test it in Chrome at http://localhost:8000 (Cmd+Shift+R): turn Camera on, hold the guitar so the camera sees your fretting hand and the neck, play a few notes, and check the strings. Tell Claude what the camera box says and whether the strings are right.
 - Also new and not pushed: bends that pause halfway and vibrato no longer make extra notes (RIFFTEST now comes out right: ...G4b2 at the end).
 - Also new and not pushed: Save .txt (next to Share on a saved riff).
 - Also new and not pushed: mark a natural harmonic by hand (tap a note, pick Harmonic, the tab shows <12>).
 - Later (after the hackathon, or if there's time): Riff Boi hearing natural harmonics by itself (their tone is purer than a fretted note). Needs my recordings of harmonics.
 - I'll send mp3s of bends, slides and vibrato with the tab of what I played, like RIFFTEST.mp3.
-- Accuracy: 113 of 115 notes, 84/84 strings, 0 wrong. 224 checks pass.
+- Accuracy: 113 of 115 notes, 84/84 strings, 0 wrong. 230 checks pass.
 - Testing on my Mac: use Chrome at http://localhost:8000 and press Cmd+Shift+R after changes (the local server lets Chrome keep old copies of files, and a mix of old and new stops the page from working). The Claude app's browser pane blocks the mic, so record in Chrome.
 - My part next (the deadline is Wednesday Sep 30, 5pm EDT): test on my iPhone at riffboi.com and with my guitar, the precision test, screenshots, the Devpost description and AI part (my words), the README "AI use" part, a practice run, the demo video, then submit Wednesday morning. The list is below.
 

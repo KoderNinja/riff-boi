@@ -3,6 +3,8 @@
 import { startListening, stopListening, listInputs, onInputsChange, soundInfo, recordedSound } from './audio.js';
 import { wavFile } from './wav.js';
 import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS, readNote, midiToName } from './notes.js';
+import { prepareHandTracking, startCamera, stopCamera, handAt, showNeck } from './camera.js';
+import { learnNeck, spotForHand, MIN_NOTES } from './neck.js';
 import { placeNotes, otherSpots, positionsFor, harmonicSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken, linkMark, textFileName } from './tab.js';
 import { tabSvg } from './tabsvg.js';
 import { METERS, detectTempo, barStarts } from './rhythm.js';
@@ -90,7 +92,60 @@ function formatTime(seconds) {
 function currentRiff() {
   const notes = cleanUpRiff(riffNotes);
   placeNotes(notes);
+  if (settings.camera) placeWithCamera(notes);
   return notes;
+}
+
+// With the camera on: learn where the frets are from the notes so far (see neck.js), then move
+// each note to the string that fits where the fretting hand was when it was played.
+const CAMERA_NOTES = 40; // learn from the last 40 notes the camera saw
+function placeWithCamera(notes) {
+  const seen = notes.filter((note) => note.hand).slice(-CAMERA_NOTES);
+  const neck = learnNeck(seen.map((note) => ({ hand: note.hand, spots: positionsFor(note.midi) })));
+  showNeck(neck);
+  if (!neck) {
+    if (cameraOn) $('camera-status').textContent = `Play ${MIN_NOTES - seen.length > 0 ? MIN_NOTES - seen.length : 'a few'} more notes so the camera can learn your neck`;
+    return;
+  }
+  for (const note of notes) {
+    const spot = note.hand && spotForHand(note.hand, positionsFor(note.midi), neck);
+    if (spot) Object.assign(note, spot);
+  }
+  $('camera-status').textContent = 'Camera: picking strings from your hand';
+}
+
+// Camera on or off, remembered. It runs while you record.
+let cameraOn = false;
+
+// Before listening starts: hand tracking must be ready, since getting it ready freezes the page for a moment.
+async function readyCameraIfOn() {
+  $('camera-box').hidden = !settings.camera;
+  if (!settings.camera) return;
+  $('camera-status').textContent = 'Loading hand tracking (the first time takes a moment)…';
+  try {
+    await prepareHandTracking();
+  } catch (err) {
+    console.error(err);
+    $('camera-status').textContent = "Couldn't load hand tracking. Check your internet";
+  }
+}
+
+async function startCameraIfOn() {
+  if (!settings.camera || !(await prepareHandTracking().then(() => true, () => false))) return;
+  const status = (text) => ($('camera-status').textContent = text);
+  try {
+    await startCamera($('camera-video'), $('camera-canvas'), status);
+    cameraOn = true;
+  } catch (err) {
+    console.error(err);
+    status(err.name === 'NotAllowedError' ? 'The camera is blocked. Allow it in the browser to use it' : "Couldn't start the camera");
+  }
+}
+
+function stopCameraIfOn() {
+  cameraOn = false;
+  stopCamera($('camera-video'));
+  $('camera-box').hidden = true;
 }
 
 // --- Settings: tempo (BPM) or Auto, time signature and rhythm on/off, remembered between visits ---
@@ -127,6 +182,15 @@ $('rhythm-input').addEventListener('change', (event) => {
   settings.rhythm = event.target.checked;
   saveSettings(settings); // only for new riffs: saved riffs keep the rhythm they were recorded with
 });
+
+// Camera: watch the fretting hand to pick strings (see placeWithCamera).
+$('camera-input').checked = settings.camera;
+$('camera-input').addEventListener('change', (event) => {
+  settings.camera = event.target.checked;
+  saveSettings(settings);
+  if (settings.camera) prepareHandTracking().catch(console.error); // get it ready while you're on the home screen
+});
+if (settings.camera) prepareHandTracking().catch(console.error);
 
 // Auto: Riff Boi works out the tempo from your notes when you tap Stop (see detectTempo).
 $('auto-tempo-input').checked = settings.autoTempo;
@@ -183,6 +247,7 @@ function markUnsure(notes, live = false) {
 // again every 4 notes after that, from your last 24 notes (so it stays quick while you play).
 // Until then it uses the last tempo.
 const LIVE_TEMPO_NOTES = 24;
+const HEARD_AFTER_MS = 60; // a note is written down about 60 ms after it's played
 let liveTempo = null; // { count, bpm }: the tempo worked out when there were `count` notes
 
 function liveBpm(notes) {
@@ -435,6 +500,8 @@ function handleReading(freq, clarity, volume) {
     Object.assign(riffNotes[riffNotes.length - 1], result.bend);
   } else if (result) {
     result.t = round(result.t, 2);
+    // Where the fretting hand was when it was played (the note is heard about 60 ms after).
+    if (cameraOn) result.hand = handAt(performance.now() - HEARD_AFTER_MS);
     riffNotes.push(result); // the tracker keeps updating this note's peak loudness
   }
   // The last note lasts while its own pitch can still be heard. Just checking the volume isn't
@@ -499,12 +566,16 @@ $('new-riff-btn').addEventListener('click', async () => {
   showMessage(statusMsg, statusHint);
   stopBtn.disabled = false;
   showScreen('recording');
+  await readyCameraIfOn();
+  if (stopBtn.disabled) return; // Stop was tapped while hand tracking loaded
+  startTime = performance.now(); // the clock starts once it's really listening
   try {
     await startListening(handleReading, loadInputId(), { keepSound: DEBUG });
   } catch (err) {
     console.error(err);
     showMessage(statusMsg, statusHint, problemFor(err));
   }
+  startCameraIfOn(); // after the mic, so the browser asks about one thing at a time
 });
 
 // The tempo to save a riff at. With Auto detect tempo on, work it out from the notes (not with
@@ -528,6 +599,7 @@ stopBtn.addEventListener('click', async () => {
   // The last note lasts until it couldn't be heard any more (or until Stop, if it was still ringing).
   const endTime = Math.min((performance.now() - startTime) / 1000, lastSound);
   stopListening();
+  stopCameraIfOn();
   saveReadingsBtn.hidden = !DEBUG;
   $('save-sound-btn').hidden = !DEBUG;
   const notes = currentRiff();

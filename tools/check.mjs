@@ -17,6 +17,7 @@ import { readingsFrom } from '../js/upload.js';
 import { findScale } from '../js/scale.js';
 import { wavFile } from '../js/wav.js';
 import { riffToLink, riffFromLink } from '../js/share.js';
+import { learnNeck, spotForHand, fretAt, MIN_NOTES } from '../js/neck.js';
 
 let allOk = true;
 function check(label, ok, detail = '') {
@@ -901,6 +902,40 @@ check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().m
   check('harmonics: share links carry them, and a harmonic at a fret that can\'t make that note is turned down',
     sharedHarmonic?.notes[1].harmonic === true && sharedHarmonic.notes[1].fret === 12 && !('harmonic' in sharedHarmonic.notes[0])
     && riffFromLink(pack([[67, 3, 7, 0, 0, 0, 0, 0, 1]])) === null && riffFromLink(pack([[74, 3, 7, 0, 0, 0, 0, 0, 1]]))?.notes[0].harmonic === true);
+}
+
+// --- Camera: learning where the frets are from the notes you play (neck.js) ---
+{
+  // A made-up camera view: the neck runs a bit downhill to the right, the knuckles are 60 px apart,
+  // fret 0 is 80 px along. Fingertips sit on the frets of a box (index at the box's fret, then one
+  // fret per finger), with a small repeatable wobble like real tracking.
+  const u = [Math.cos(0.2), Math.sin(0.2)];
+  const normal = [-u[1], u[0]];
+  const length = 8.6 * 60;
+  const at = (fret) => 80 + length * (1 - 2 ** (-fret / 12));
+  let wobble = 0;
+  const handAtBox = (box) => {
+    const point = (d, across) => { wobble = (wobble * 7 + 3) % 11; const w = (wobble - 5) * 1.2; return [(d + w) * u[0] + across * normal[0], (d + w) * u[1] + across * normal[1]]; };
+    const knuckle = at(box) - 10;
+    return { tips: [0, 1, 2, 3].map((f) => point(at(box + f), 60)), knuckles: [point(knuckle, 0), [point(knuckle, 0)[0] + 60 * u[0], point(knuckle, 0)[1] + 60 * u[1]]] };
+  };
+  // A minor pentatonic in the 5th-fret box, then the same scale in the 12th-fret box.
+  const played = [[6, 5], [6, 8], [5, 5], [5, 7], [4, 5], [4, 7], [3, 5], [3, 7], [2, 5], [2, 8], [1, 5], [1, 8],
+    [6, 12], [6, 15], [5, 12], [5, 14], [4, 12], [4, 14], [3, 12], [3, 14], [2, 13], [2, 15], [1, 12], [1, 15]];
+  const notes = played.map(([string, fret]) => {
+    const midi = [64, 59, 55, 50, 45, 40][string - 1] + fret;
+    return { midi, string, fret, hand: handAtBox(fret >= 12 ? 12 : 5), spots: positionsFor(midi) };
+  });
+  check('camera: it waits for a few notes before it trusts the neck', learnNeck(notes.slice(0, MIN_NOTES - 1)) === null);
+  const neck = learnNeck(notes);
+  check('camera: it learns where fret 0 is from the notes alone (within a quarter of a fret)', neck && Math.abs(fretAt(80, neck.nut, neck.length)) < 0.25, JSON.stringify(neck));
+  const picked = notes.map((n) => spotForHand(n.hand, n.spots, neck));
+  check('camera: every note goes on the string the hand was at, in both boxes',
+    picked.every((spot, i) => spot && spot.string === notes[i].string && spot.fret === notes[i].fret), picked.map((spot) => spot && `${spot.string}/${spot.fret}`).join(' '));
+  const early = learnNeck(notes.slice(0, 6));
+  check('camera: 6 notes in one box are already enough', early && notes.slice(0, 6).every((n) => spotForHand(n.hand, n.spots, early)?.string === n.string), JSON.stringify(early));
+  check('camera: an open string isn\'t forced by the hand (the usual rule decides)', spotForHand(handAtBox(5), [{ string: 5, fret: 0 }], neck) === null);
+  check('camera: frets get closer together up the neck (fret 12 is halfway)', Math.abs(fretAt(50, 0, 100) - 12) < 1e-9 && fretAt(-5, 0, 100) === 0 && fretAt(99, 0, 100) === 24);
 }
 
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');

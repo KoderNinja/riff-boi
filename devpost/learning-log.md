@@ -267,3 +267,8 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 ## Sep 26, 2026: Marking natural harmonics
 - A harmonic at the 12th fret is the exact same note as fret 12, so Riff Boi can't hear the difference yet (the tone is purer, which might work later). For now I mark them by hand: tap a note and pick where it was played as a harmonic, and the tab shows `<12>`.
 - The math: touching the string over the 12th, 7th, 5th and 4th frets gives notes 12, 19, 24 and 28 semitones above the open string. So E4 can be a harmonic at the 7th fret of the A string or the 5th fret of the low E.
+
+## Sep 26, 2026: Starting the camera
+- The camera doesn't need to see the strings. The sound already says the note, and the same note sits about 5 frets apart on neighboring strings, so knowing where my hand is along the neck picks the string.
+- No setup: Riff Boi learns where the frets are from the notes I play. My knuckles line up with the neck, a neck is about 8.6 times as long as my knuckles are wide, and the first few notes show where fret 0 must be (it tries every "this finger played this spot" and keeps the one that explains the most notes).
+- The hand tracking (MediaPipe) froze the page for 7 seconds the first time it looked, while the graphics chip got ready. That would have stopped listening, so it now warms up before recording starts.
