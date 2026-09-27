@@ -3,9 +3,10 @@
 Helpers for the Devpost page and the video. The words on Devpost and in the video are mine; this is just the checklist, the facts and the outline.
 
 ## Screenshots (`devpost/screenshots/`)
-Taken from riffboi.com on Sep 26 (3:2 for the gallery, plus a phone one). I can take my own too.
+Taken from riffboi.com on Sep 26 and 27 (3:2 for the gallery, plus a phone one). I can take my own too.
 - `home.png`: the home screen
-- `riff-bend.png`: RIFFTEST as a saved riff (rhythm, tempo, the buttons)
+- `riff-bend.png`: RIFFTEST as a saved riff (rhythm, tempo, the buttons; its bend at the end is cut off on the right)
+- `bends.png`: my real 7b9 bends from Sep 27 (moved to the G string, where I played them), with the bend arrows and the release
 - `riff-rhythm.png`: a pentatonic run with rhythm
 - `phone-riff.png`: RIFFTEST on a phone
 

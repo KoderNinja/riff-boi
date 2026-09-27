@@ -8,6 +8,8 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 
 **Try it:** https://riffboi.com (allow the mic when your browser asks)
 
+![A saved riff in Riff Boi: the tab with bar lines and the rhythm underneath, and buttons to play, copy, share or save it](devpost/screenshots/riff-rhythm.png)
+
 ## What it does
 
 - Writes tab live while you play single notes.
@@ -49,13 +51,13 @@ If it can't hear your guitar, add `?debug` to the address (like https://riffboi.
 
 ## How it works
 
-The browser's Web Audio API listens to the mic 60 times a second, and [Pitchy](https://github.com/ianprime0509/pitchy) works out the pitch of each slice of sound and how clear it is. `js/notes.js` turns those pitches into notes. It decides when a new note starts (a pick, a pitch change, a hammer-on) and ignores harmonics and background noise. It also follows the pitch closely to hear bends: a bend glides smoothly through the pitches in between, while a hammer-on or slide jumps from fret to fret. `js/tab.js` picks a string and fret for each note. The sound can't tell you which string you played, so it goes with the spot that needs the least hand movement. `js/rhythm.js` turns when each note started into note values (quarter, eighth and so on) using your tempo and time signature, and it can work out the tempo from your playing when Auto is on. `js/tabsvg.js` draws the tab picture. `js/confidence.js` scores how clear, in tune, quiet and steady the notes were, and `js/editor.js` turns a tab you write by hand into the same kind of riff, `js/playback.js` plays a tab back with a plucked-string sound made from noise (the Karplus-Strong trick), `js/upload.js` reads a recording with the same steps as listening live, just all at once, `js/scale.js` works out the key and scale, `js/share.js` packs a riff into a link, and `js/storage.js` saves riffs in the browser's localStorage, so there's no server and no accounts.
+The browser's Web Audio API listens to the mic 60 times a second, and [Pitchy](https://github.com/ianprime0509/pitchy) works out the pitch of each slice of sound and how clear it is. `js/notes.js` turns those pitches into notes. It decides when a new note starts (a pick, a pitch change, a hammer-on) and ignores harmonics and background noise. It also follows the pitch closely to hear bends: a bend glides smoothly through the pitches in between, while a hammer-on or slide jumps from fret to fret. `js/tab.js` picks a string and fret for each note. The sound can't tell you which string you played, so it goes with the spot that needs the least hand movement. `js/rhythm.js` turns when each note started into note values (quarter, eighth and so on) using your tempo and time signature, and it can work out the tempo from your playing when Auto is on. `js/tabsvg.js` draws the tab picture. `js/confidence.js` scores how clear, in tune, quiet and steady the notes were, and `js/editor.js` turns a tab you write by hand into the same kind of riff, `js/playback.js` plays a tab back with a plucked-string sound made from noise (the Karplus-Strong trick), `js/upload.js` reads a recording with the same steps as listening live, just all at once, `js/scale.js` works out the key and scale, `js/share.js` packs a riff into a link, `js/storage.js` saves riffs in the browser's localStorage and `js/sounds.js` keeps each riff's real sound in IndexedDB, so there's no server and no accounts. For the camera beta, `js/camera.js` sends camera frames to MediaPipe's hand tracking, which runs in a background worker (`js/hand-worker.js`) so listening never has to wait for it, and `js/neck.js` works out where the frets are from the 2-note setup and which string fits where your hand was.
 
 The full plan is in [`devpost/spec.md`](devpost/spec.md).
 
 ## Built with
 
-Plain HTML, CSS and JavaScript (no framework), the Web Audio API, Pitchy 4.1.0 from the jsDelivr CDN, localStorage, and the UnifrakturCook and Oswald fonts from Google Fonts. Node.js is only used for the test scripts.
+Plain HTML, CSS and JavaScript (no framework), the Web Audio API, Pitchy 4.1.0 from the jsDelivr CDN, localStorage, IndexedDB and the MediaRecorder API (for Your sound), MediaPipe's Hand Landmarker (tasks-vision) in a Web Worker for the camera beta, and the UnifrakturCook and Oswald fonts from Google Fonts. It's hosted on Vercel. Node.js is only used for the test scripts.
 
 ## Tests
 
@@ -70,7 +72,7 @@ node tools/score.mjs
 
 ## What it can't do yet
 
-It only hears single notes, so no chords or power chords yet. It assumes standard tuning. The string and fret are a best guess, because the sound doesn't say which string you played (drag a note on a saved riff to move it). A really soft first note can get missed. A pre-bend only shows up once you release it, since until then it sounds just like a normal note, and a very slow bend (slower than about 0.4 seconds for a whole step) can come out as separate notes. Auto tempo can come out at double or half speed (the same notes written twice as long or half as long), and with no steady beat it's only a guess (it says "not sure"). It doesn't write triplets yet. On an iPhone, the silent switch can mute playback. Uploaded recordings can be up to 5 minutes long.
+It only hears single notes, so no chords or power chords yet. It assumes standard tuning. The string and fret are a best guess, because the sound doesn't say which string you played (drag a note on a saved riff to move it, or try the camera beta). A really soft first note can get missed. A pre-bend only shows up once you release it, since until then it sounds just like a normal note, and a very slow bend (slower than about 0.4 seconds for a whole step) can come out as separate notes. Auto tempo can come out at double or half speed (the same notes written twice as long or half as long), and with no steady beat it's only a guess (it says "not sure"). It doesn't write triplets yet. On an iPhone, the silent switch can mute playback. Uploaded recordings can be up to 5 minutes long.
 
 ## How I made it
 

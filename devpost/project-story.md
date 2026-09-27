@@ -20,6 +20,10 @@ Vibrato was a weird one. When I added vibrato to a note, Riff Boi thought I was 
 
 And bends: if I paused halfway up a bend, it wrote three separate notes. Now it keeps following the bend through the pause.
 
+Then my own bends broke in a different way. A 7b9 on my guitar came out as three separate notes. I recorded it and looked at the pitch numbers: my D was a little sharp, and I start bending right after I pick, before Riff Boi had even measured the note. My first fix broke Crazy Train, one of my test riffs that already worked. The scoreboard caught it, so I kept narrowing the fix until every old recording scored the same and all my bends came out right.
+
+The camera mode had its own problems. At first it couldn't find my fretting hand at all: the picture was cropped, and it was guessing where the frets were. Now there's a 5-second setup where I play the 3rd and 12th frets, and it draws the frets right on the video.
+
 ## Accomplishments that I'm proud of
 On my test recordings it gets **116 out of 118 notes** right, every bend included, and puts 84 of 87 on the right string. And it works with my actual rig, distortion and all, not just a clean guitar.
 
@@ -27,7 +31,7 @@ On my test recordings it gets **116 out of 118 notes** right, every bend include
 Way more than I expected about how sound works: pitch, overtones, why distortion makes everything harder. I learned that fixing one thing can break another (that happened a lot), which is why the automatic checks matter. And I learned how to take an idea all the way to something live on a real website that other people can use.
 
 ## What's next
-There's a camera mode in beta that watches my fretting hand to get the string right. After that I want it to hear harmonics, support Drop D, and maybe make a bass version.
+There's a camera mode in beta that watches my fretting hand to get the string right. Next I want to make it more accurate, then have Riff Boi hear harmonics, support Drop D, and maybe make a bass version.
 
 ## How I used AI
 I built Riff Boi with Claude Code as a coding partner. The idea, the features and the design choices were mine, and I recorded and labeled the test riffs and tested everything on my guitar. Claude Code wrote most of the code and tests and explained it to me as we went. It also helped write this story from my notes, and I edited it.

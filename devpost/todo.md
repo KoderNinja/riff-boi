@@ -9,6 +9,8 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 ## Next up
 
 Where we left off (Sep 27, 2026):
+- While I was away (Sep 27 afternoon), Claude: smoke-tested riffboi.com (recording with a bend and release, the riff screen, playback, Your sound, share links, upload, New Tab, tuner, delete and Delete all: all fine), re-checked the bend fix, added a screenshot and the missing tech (MediaPipe, IndexedDB, Vercel) to the README, added the bend fix and camera setup to my story's challenges and the video script, and made `bends.png` (my real bends) for the gallery. Not pushed yet.
+- Questions for me: (1) push those commits? (2) keep the 2 new paragraphs in my story's Challenges? (3) use `bends.png` in the Devpost gallery? (4) tap Copy and Share once on riffboi.com: do they say "Copied" and "Link copied"? (the test browser couldn't do real taps) (5) with the camera on, do the strings come out right?
 - Feature freeze (my call, Sep 27): no new features before the deadline, only fixes from my tests.
 - The video script is back in `devpost/video/script.md` (it got deleted by accident on Sep 26), with the camera setup added. The README's "AI use" part is now the "How I used AI" part of my project story: I still need to check the wording.
 - Camera (beta) got a 5-second setup, because on my guitar the dots weren't on my fretting hand. To test it: turn on Camera (beta), tap Set up camera, play the 3rd fret and then the 12th fret on the low E with my first finger, and check the white lines sit on my frets. Then record a riff and see if the strings come out right. (Sep 27: the setup works really well on my guitar.)
