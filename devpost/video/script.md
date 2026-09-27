@@ -20,6 +20,10 @@ I hit New Riff and just play. The note I'm playing shows up right away in gray, 
 
 When I hit Stop, it saves the riff. I have Auto detect tempo on, so it figured out the tempo just from how I played.
 
+[Open the riff, tap Play under "Your sound"]
+
+It also keeps my actual sound, so I can listen to exactly how I played it right next to the tab, or download it.
+
 [Tap a note, change the fret, drag one to another string, mark a hammer-on]
 
 If it guessed something wrong, I can tap a note and change the fret, drag it to another string, or mark a hammer-on, a slide or a harmonic.
