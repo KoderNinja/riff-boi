@@ -1,8 +1,9 @@
 // app.js — starts Riff Boi, switches screens and wires up the buttons.
 
-import { startListening, stopListening, listInputs, onInputsChange, soundInfo, recordedSound } from './audio.js';
+import { startListening, stopListening, listInputs, onInputsChange, soundInfo, recordedSound, recording } from './audio.js';
 import { wavFile } from './wav.js';
 import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS, readNote, midiToName } from './notes.js';
+import { saveSound, loadSound, deleteSound, soundExtension } from './sounds.js';
 import { prepareHandTracking, startCamera, stopCamera, handAt, showNeck } from './camera.js';
 import { learnNeck, spotForHand, MIN_NOTES } from './neck.js';
 import { placeNotes, otherSpots, positionsFor, harmonicSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken, linkMark, textFileName } from './tab.js';
@@ -277,6 +278,7 @@ function showConfidence(element, confidence) {
 const MINI_TAB_NOTES = 12; // how many notes the preview on each riff card shows
 
 function showHome() {
+  stopSound();
   // Leaving a shared riff: take it out of the address, so a reload doesn't open it again.
   if (location.hash.startsWith('#riff=')) history.replaceState(null, '', location.pathname + location.search);
   const riffs = loadRiffs();
@@ -343,6 +345,7 @@ function riffActions(riff) {
     if (!confirm(`Delete "${title}"? This can't be undone.`)) return;
     try {
       deleteRiff(riff.id);
+      deleteSound(riff.id).catch(console.error);
     } catch (err) {
       console.error(err); // the browser blocked saving: the riff stays
     }
@@ -388,7 +391,9 @@ function startRename(row, riff) {
 let shownRiff = null; // the riff on this screen
 
 function showRiff(riff) {
+  stopSound();
   shownRiff = riff;
+  $('sound-row').hidden = !riff.sound;
   $('riff-save-btn').hidden = !riff.shared;
   $('riff-title').textContent = riffTitle(riff);
   drawRiff(riff);
@@ -570,7 +575,7 @@ $('new-riff-btn').addEventListener('click', async () => {
   if (stopBtn.disabled) return; // Stop was tapped while hand tracking loaded
   startTime = performance.now(); // the clock starts once it's really listening
   try {
-    await startListening(handleReading, loadInputId(), { keepSound: DEBUG });
+    await startListening(handleReading, loadInputId(), { keepSound: DEBUG, record: true });
   } catch (err) {
     console.error(err);
     showMessage(statusMsg, statusHint, problemFor(err));
@@ -627,7 +632,7 @@ stopBtn.addEventListener('click', async () => {
     showHome();
     return;
   }
-  await wait(500);
+  await Promise.all([wait(500), keepSound(riff, await recording())]);
   $('saving-title').textContent = 'Saved';
   const tempo = !auto ? '' : detected === null ? ` · Couldn't tell the tempo, used ${bpm} BPM` : ` · Tempo ${bpm} BPM${detected.sure ? '' : ' (not sure)'}`;
   $('saving-details').textContent = `${riff.label} · ${noteCount(riff.notes.length)}${tempo}`;
@@ -1047,8 +1052,70 @@ async function tabFromRecording(file, name) {
     return showProblem("Couldn't save", 'Your browser blocked saving (private window?)');
   }
   if (detected?.sure) setBpm(bpm); // the next riff's live tab starts at this tempo
+  await keepSound(riff, file); // the uploaded file is its real sound
   showRiff(riff);
 }
+
+// --- Your sound: the real recording of a riff (see sounds.js) ---
+
+// Keep a riff's sound (a Blob), and mark the riff so its page shows the sound row. If the
+// browser won't keep it (private windows, or it's full), the riff is still saved without it.
+async function keepSound(riff, blob) {
+  if (!blob) return;
+  try {
+    await saveSound(riff.id, blob);
+    Object.assign(riff, updateRiff(riff.id, { sound: true }) ?? { sound: true });
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+let soundPlayer = null; // { audio, url } while your sound plays
+
+function stopSound() {
+  if (!soundPlayer) return;
+  soundPlayer.audio.pause();
+  URL.revokeObjectURL(soundPlayer.url);
+  soundPlayer = null;
+  $('sound-play-btn').textContent = 'Play';
+}
+
+// The riff's sound, or null (with a message) if it's gone (like after clearing the browser's data).
+async function riffSound() {
+  const blob = await loadSound(shownRiff.id).catch((err) => (console.error(err), null));
+  if (!blob) flashHint("This riff's sound isn't in this browser any more");
+  return blob ?? null;
+}
+
+$('sound-play-btn').addEventListener('click', async () => {
+  if (soundPlayer) return stopSound();
+  stopPlayback(); // one sound at a time
+  const blob = await riffSound();
+  if (!blob) return;
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  soundPlayer = { audio, url };
+  audio.addEventListener('ended', stopSound);
+  $('sound-play-btn').textContent = 'Stop';
+  audio.play().catch((err) => {
+    console.error(err);
+    stopSound();
+  });
+});
+
+// Download the sound: an uploaded file keeps its own name and ending.
+$('sound-save-btn').addEventListener('click', async () => {
+  const blob = await riffSound();
+  if (!blob) return;
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = blob.name || textFileName(riffTitle(shownRiff)).replace(/\.txt$/, `.${soundExtension(blob.type)}`);
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+});
 
 // Show a problem on the Saving screen for a moment, then go home.
 async function showProblem(title, details) {

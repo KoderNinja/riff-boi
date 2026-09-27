@@ -18,6 +18,7 @@ import { findScale } from '../js/scale.js';
 import { wavFile } from '../js/wav.js';
 import { riffToLink, riffFromLink } from '../js/share.js';
 import { learnNeck, spotForHand, fretAt, MIN_NOTES } from '../js/neck.js';
+import { soundExtension } from '../js/sounds.js';
 
 let allOk = true;
 function check(label, ok, detail = '') {
@@ -41,6 +42,11 @@ for (const file of readdirSync(new URL('../js/', import.meta.url)).filter((name)
 check('text file: a riff\'s name makes its file name ("Sep 26, 9:26 PM" → "Sep 26, 9.26 PM.txt")', textFileName('Sep 26, 9:26 PM') === 'Sep 26, 9.26 PM.txt', textFileName('Sep 26, 9:26 PM'));
 check('text file: characters files can\'t have are taken out, and a blank name is "riff"',
   textFileName('AC/DC riff: take 2?') === 'AC.DC riff. take 2.txt' && textFileName('  ') === 'riff.txt' && textFileName(undefined) === 'riff.txt', `${textFileName('AC/DC riff: take 2?')} ${textFileName('  ')}`);
+
+// --- Your sound: the file ending for downloading a riff's recording ---
+check('your sound: the file ending comes from the sound type (webm, m4a, mp3, wav; unknown is webm)',
+  ['audio/webm;codecs=opus', 'audio/mp4', 'audio/mpeg', 'audio/wav', '', 'video/x-weird'].map(soundExtension).join(' ') === 'webm m4a mp3 wav webm webm',
+  ['audio/webm;codecs=opus', 'audio/mp4', 'audio/mpeg', 'audio/wav', '', 'video/x-weird'].map(soundExtension).join(' '));
 
 // --- Frequency → note ---
 for (const [freq, name] of [[110, 'A2'], [82.41, 'E2'], [329.63, 'E4'], [196, 'G3'], [1174.66, 'D6']]) {

@@ -951,6 +951,7 @@ body {
   margin-top: 12px;
 }
 
+.practice-row[hidden],
 .practice-row .rhythm-switch[hidden] {
   display: none;
 }

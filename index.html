@@ -143,6 +143,12 @@
       <button id="riff-detect-btn" class="small-btn" type="button">Detect tempo</button>
     </div>
     <!-- Practice: slow it down, play it over and over, and hear a click on the beat -->
+    <!-- Your real sound (a recorded or uploaded riff), kept in this browser -->
+    <div id="sound-row" class="practice-row" hidden>
+      <span class="setting-label">Your sound</span>
+      <button id="sound-play-btn" class="secondary-btn play-btn">Play</button>
+      <button id="sound-save-btn" class="secondary-btn copy-btn">Download</button>
+    </div>
     <div class="practice-row">
       <label class="meter-picker"><span class="setting-label">Speed</span> <select id="speed-select" class="input-select"><option value="1">100%</option><option value="0.75">75%</option><option value="0.5">50%</option></select></label>
       <label class="rhythm-switch"><input id="loop-input" type="checkbox"> <span class="setting-label">Loop</span></label>

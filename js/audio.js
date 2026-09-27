@@ -17,7 +17,7 @@ let session = 0; // goes up every time listening stops, so a start that's still 
 // Start listening to an input: its id from listInputs(), or '' for the default input.
 // onReading(freq, clarity, volume) is called 60 times a second.
 // `keepSound` (only with ?debug) also keeps the raw sound, for recordedSound().
-export async function startListening(onReading, deviceId = '', { keepSound = false } = {}) {
+export async function startListening(onReading, deviceId = '', { keepSound = false, record = false } = {}) {
   const mySession = ++session;
   // Create the audio context right away, while we're still inside the button tap
   // (browsers only allow sound to start from something the user did). iPhones often
@@ -32,6 +32,7 @@ export async function startListening(onReading, deviceId = '', { keepSound = fal
     return;
   }
   stream = micStream;
+  if (record) startTake(micStream);
 
   let PitchDetector;
   try {
@@ -102,8 +103,43 @@ export function recordedSound() {
   return { samples, sampleRate: sound.sampleRate };
 }
 
+// The real sound of what you play, for listening back (see sounds.js): the browser's own
+// recorder, which squeezes it small (a minute is well under a megabyte).
+let take = null;      // { recorder, done } while recording
+let lastTake = null;  // a promise of the last recording (a Blob), or of null if there's none
+
+function startTake(micStream) {
+  take = null;
+  lastTake = null;
+  if (typeof MediaRecorder === 'undefined') return;
+  try {
+    const recorder = new MediaRecorder(micStream);
+    const pieces = [];
+    recorder.ondataavailable = (event) => {
+      if (event.data.size) pieces.push(event.data);
+    };
+    const done = new Promise((resolve) => {
+      recorder.onstop = () => resolve(pieces.length ? new Blob(pieces, { type: recorder.mimeType || pieces[0].type }) : null);
+    });
+    recorder.start(1000); // a piece every second, so a long take doesn't sit in one big piece
+    take = { recorder, done };
+  } catch (err) {
+    console.error(err); // no recording this time: the tab still works
+  }
+}
+
+// The last recording (after stopListening): resolves with a Blob, or null if there isn't one.
+export function recording() {
+  return lastTake ?? Promise.resolve(null);
+}
+
 export function stopListening() {
   session++;
+  if (take) {
+    if (take.recorder.state !== 'inactive') take.recorder.stop();
+    lastTake = take.done;
+    take = null;
+  }
   if (loopId !== null) clearInterval(loopId);
   if (stream) stream.getTracks().forEach((track) => track.stop());
   if (audioContext && audioContext.state !== 'closed') audioContext.close();

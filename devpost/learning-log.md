@@ -272,3 +272,6 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - The camera doesn't need to see the strings. The sound already says the note, and the same note sits about 5 frets apart on neighboring strings, so knowing where my hand is along the neck picks the string.
 - No setup: Riff Boi learns where the frets are from the notes I play. My knuckles line up with the neck, a neck is about 8.6 times as long as my knuckles are wide, and the first few notes show where fret 0 must be (it tries every "this finger played this spot" and keeps the one that explains the most notes).
 - The hand tracking (MediaPipe) froze the page for 7 seconds the first time it looked, while the graphics chip got ready. That would have stopped listening, so it now warms up before recording starts.
+
+## Sep 26, 2026: Keeping my real sound
+- Now every riff keeps a recording of how I actually played it, next to the tab. The browser has its own recorder that squeezes the sound small (3 seconds was about 44 KB). Sound is way too big for localStorage, so it goes in IndexedDB, a bigger storage built into the browser.
