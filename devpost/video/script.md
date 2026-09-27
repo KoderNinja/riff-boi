@@ -62,6 +62,6 @@ The hardest part was making it accurate on my real rig. Distortion makes the ove
 To know if a fix actually worked, I recorded myself and wrote down exactly what I played. This script scores Riff Boi on those recordings, and right now it gets 113 out of 115 notes right. And these 235 checks make sure a fix doesn't break something that already worked.
 
 ## 6. What I learned and what's next (3:50 to 4:20)
-[The camera setup, if it works well for you (the white fret lines on your neck), or the home screen]
+[Turn on Camera (beta), tap Set up camera, play the 3rd and then the 12th fret on the low E, and show the white fret lines on your neck]
 
 I learned a ton about how sound works, and that you have to measure things instead of guessing. I'm also working on a camera mode, in beta. I play two notes so it learns where my frets are, and then it watches my fretting hand to pick the right string. You can try Riff Boi right now at riffboi.com. Thanks for watching!
