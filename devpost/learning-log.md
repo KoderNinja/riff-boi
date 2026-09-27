@@ -260,3 +260,6 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - The bend stopped for a moment about 2/3 of the way up. Riff Boi saw the pitch settle "between two notes" and decided it wasn't a bend. Now a pause at least half a step up, between two notes, keeps the bend going.
 - My first try broke a real note in Crazy Train: a G#2 played sharp and an A2 played flat were only 2/3 of a step apart, so they looked like a paused bend. The fix: a pause can't be sitting on a real note. The scoreboard caught this, which is exactly why it's there.
 - Vibrato makes the volume pulse, and Riff Boi took each pulse as a new pick. The difference I found in my recordings: a real pick on a ringing string blurs the pitch for a moment (or makes the volume jump all at once), and vibrato just swells. Now RIFFTEST comes out right, and the scoreboard didn't change.
+
+## Sep 26, 2026: Saving a riff as a file
+- Save .txt saves the same tab as Copy into a text file. The browser makes the file from the text in memory (a Blob) and downloads it, so there's still no server. File names can't have / or :, so a riff called "Sep 26, 9:26 PM" saves as "Sep 26, 9.26 PM.txt".

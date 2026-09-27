@@ -5,7 +5,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { readNote, createNoteTracker, cleanUpRiff, tuningOf, stillRinging, RINGING_READINGS, notesFromReadings } from '../js/notes.js';
-import { placeNotes, positionsFor, drawTab, tabToken, otherSpots, tabText, fretOn, withFret, linkMark } from '../js/tab.js';
+import { placeNotes, positionsFor, drawTab, tabToken, otherSpots, tabText, fretOn, withFret, linkMark, textFileName } from '../js/tab.js';
 import { riffConfidence, isUnsure } from '../js/confidence.js';
 import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS, barStarts } from '../js/rhythm.js';
 import { tabSvg } from '../js/tabsvg.js';
@@ -35,6 +35,11 @@ for (const file of readdirSync(new URL('../js/', import.meta.url)).filter((name)
   }
   check(`${file} has no syntax errors`, ok);
 }
+
+// --- Save .txt: a file name from the riff's name ---
+check('text file: a riff\'s name makes its file name ("Sep 26, 9:26 PM" → "Sep 26, 9.26 PM.txt")', textFileName('Sep 26, 9:26 PM') === 'Sep 26, 9.26 PM.txt', textFileName('Sep 26, 9:26 PM'));
+check('text file: characters files can\'t have are taken out, and a blank name is "riff"',
+  textFileName('AC/DC riff: take 2?') === 'AC.DC riff. take 2.txt' && textFileName('  ') === 'riff.txt' && textFileName(undefined) === 'riff.txt', `${textFileName('AC/DC riff: take 2?')} ${textFileName('  ')}`);
 
 // --- Frequency → note ---
 for (const [freq, name] of [[110, 'A2'], [82.41, 'E2'], [329.63, 'E4'], [196, 'G3'], [1174.66, 'D6']]) {

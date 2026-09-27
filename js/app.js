@@ -3,7 +3,7 @@
 import { startListening, stopListening, listInputs, onInputsChange, soundInfo, recordedSound } from './audio.js';
 import { wavFile } from './wav.js';
 import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS, readNote, midiToName } from './notes.js';
-import { placeNotes, otherSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken, linkMark } from './tab.js';
+import { placeNotes, otherSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken, linkMark, textFileName } from './tab.js';
 import { tabSvg } from './tabsvg.js';
 import { METERS, detectTempo, barStarts } from './rhythm.js';
 import { loadRiffs, saveRiff, updateRiff, deleteRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
@@ -609,6 +609,18 @@ $('riff-copy-btn').addEventListener('click', async () => {
   button.focus(); // the hidden box took the focus
   clearTimeout(copiedTimer);
   copiedTimer = setTimeout(() => (button.textContent = 'Copy'), 2000);
+});
+
+// Save the riff as a text file, the same tab as Copy. On a phone it goes to Downloads (Files).
+$('riff-file-btn').addEventListener('click', () => {
+  const url = URL.createObjectURL(new Blob([riffAsText(shownRiff)], { type: 'text/plain' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = textFileName(riffTitle(shownRiff));
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000); // a phone may still be reading it for a moment
 });
 
 // --- Share a riff with a link ---

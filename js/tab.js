@@ -179,3 +179,10 @@ export function drawTab(element, notes) {
   element.textContent = tabText(notes);
   element.scrollLeft = element.scrollWidth; // keep the newest notes in view
 }
+
+// A file name for a riff's text tab: its title without the characters file names can't have
+// (like / and :), e.g. "Sep 26, 9:26 PM" → "Sep 26, 9.26 PM.txt".
+export function textFileName(title) {
+  const clean = String(title ?? '').replace(/[\\/:*?"<>|]+/g, '.').replace(/\s+/g, ' ').replace(/^[. ]+|[. ]+$/g, '');
+  return `${clean || 'riff'}.txt`;
+}

@@ -18,7 +18,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 - Lets you write a tab by hand too (New Tab): pick a string, a fret and a note value for each note.
 - Plays a riff back with a plucked-string sound, so you can hear what the tab says. For practice it can slow down (75% or 50%), loop, and click on the beat.
 - Lets you fix a saved riff's tab: drag a note to another string (the string is a best guess), or tap it to change its fret, mark a hammer-on, pull-off or slide, or delete it.
-- Copies a riff as text tab (with bar lines), to paste into a message or a forum.
+- Copies a riff as text tab (with bar lines), to paste into a message or a forum, or saves it as a .txt file (Save .txt).
 - Says which key and scale a riff sounds like, like E minor pentatonic.
 - Shares a riff with a link: the riff is packed into the link itself, so nothing is uploaded anywhere.
 - Gets the tab of a recording too: upload an mp3, wav or m4a.
@@ -64,7 +64,7 @@ node tools/check.mjs
 node tools/score.mjs
 ```
 
-`check.mjs` runs 217 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, input picker, saving, tab editor, playback, upload, scale finder and share link logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 113 of 115 notes right (98%) and puts all 84 checked notes on the right string.
+`check.mjs` runs 219 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, input picker, saving, tab editor, playback, upload, scale finder and share link logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 113 of 115 notes right (98%) and puts all 84 checked notes on the right string.
 
 ## What it can't do yet
 
