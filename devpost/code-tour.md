@@ -30,7 +30,7 @@ It wires up the buttons and switches screens. The important part is `handleReadi
 - After 5 seconds (300 readings) with no notes, it shows "Can't hear your guitar".
 - It keeps track of when the last note's own pitch was last heard (`stillRinging`), so on Stop the last note ends there, not when you tapped Stop.
 
-It also handles the tempo (40 to 240 BPM), the Auto detect tempo switch, the time signature, the Show note lengths switch (rhythm on or off) and the input picker, all remembered between visits. On Stop, with Auto on, it asks `detectTempo` for the tempo and saves it with the riff. On a saved riff, typing a new tempo saves it and redraws the tab. With `?debug` in the address, it records every raw reading so you can save them as a file, and shows the mic's numbers on screen.
+It also handles the tempo (40 to 240 BPM), the Auto detect tempo switch, the time signature, the Show note lengths switch (rhythm on or off) and the Camera (beta) switch, all remembered between visits. (The input picker was taken out on Sep 26, the learner's call: Riff Boi uses the computer's default input.) Delete all, under Latest Riffs, deletes every riff and its sound after a confirm. On Stop, with Auto on, it asks `detectTempo` for the tempo and saves it with the riff. On a saved riff, typing a new tempo saves it and redraws the tab. With `?debug` in the address, it records every raw reading so you can save them as a file, and shows the mic's numbers on screen.
 
 ## `js/audio.js`: the ears
 
@@ -122,7 +122,7 @@ Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs`
 
 ## `tools/`: the tests
 
-- `check.mjs`: 231 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
+- `check.mjs`: 232 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
 - `score.mjs`: the scoreboard. It replays my 8 real recordings and compares them to what I really played (the `.txt` answer files): 110 of 115 notes, and 83 of 83 on the right string.
 - `replay.mjs`: replays one `?debug` recording through the current code, to compare before and after a change.
 

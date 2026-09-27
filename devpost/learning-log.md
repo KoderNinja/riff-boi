@@ -275,3 +275,7 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 
 ## Sep 26, 2026: Keeping my real sound
 - Now every riff keeps a recording of how I actually played it, next to the tab. The browser has its own recorder that squeezes the sound small (3 seconds was about 44 KB). Sound is way too big for localStorage, so it goes in IndexedDB, a bigger storage built into the browser.
+
+## Sep 26, 2026: Less clutter, and Delete all
+- I took out the input picker. Riff Boi just uses my computer's default input now, and I pick my audio interface in the Mac's sound settings. One less thing on the home screen.
+- Delete all clears every riff and its sound, but only after a pop-up asks if I'm sure, with how many riffs will be gone.

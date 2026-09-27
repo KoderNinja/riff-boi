@@ -13,7 +13,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 - Writes tab live while you play single notes.
 - Hears string bends and writes them like real tab: `7b9` for a bend, `7b9r7` for a bend and release, `7pb9r7` for a pre-bend.
 - Draws the tab like a tab site (Songsterr style): string lines with the fret numbers on them, bar lines, and the rhythm underneath, at the tempo you set, in the time signature you pick (2/4 to 12/8). It can also work out the tempo from how you played (Auto detect tempo), even when your timing drifts a little, and says when it isn't sure. On a saved riff, typing a new tempo plays it faster or slower, and Detect tempo reads the rhythm again if the tempo was wrong. You can turn off Show note lengths to just see the notes.
-- Saves each riff to a Latest Riffs list that's still there next time you open it. You can rename or delete riffs there.
+- Saves each riff to a Latest Riffs list that's still there next time you open it. You can rename or delete riffs there, or delete them all (it asks first).
 - Shows how sure it is about the tab, with a hint when something's off, like background noise or an out-of-tune guitar, and fades the notes it wasn't sure about, so you know which ones to check.
 - Lets you write a tab by hand too (New Tab): pick a string, a fret and a note value for each note.
 - Keeps the real sound of each riff (your recording, or the file you uploaded), so you can listen to how you actually played it or download it. It's kept in your browser and never uploaded.
@@ -25,7 +25,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 - Gets the tab of a recording too: upload an mp3, wav or m4a.
 - Camera (beta): watches your fretting hand to pick the right string. It learns where the frets are from the notes you play, so there's nothing to set up. The hand tracking is Google's MediaPipe, running in your browser; the video never leaves your device.
 - Has a tuner built in.
-- Lets you pick your mic or audio interface, remembers it, and tells you when it can't hear your guitar.
+- Tells you when it can't hear your guitar. It listens to your computer's default input, so to use an audio interface, pick it as the input in your computer's sound settings.
 
 ## Run it
 
@@ -66,7 +66,7 @@ node tools/check.mjs
 node tools/score.mjs
 ```
 
-`check.mjs` runs 231 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, input picker, saving, tab editor, playback, upload, scale finder and share link logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 113 of 115 notes right (98%) and puts all 84 checked notes on the right string.
+`check.mjs` runs 232 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, mic, saving, tab editor, playback, upload, scale finder and share link logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 113 of 115 notes right (98%) and puts all 84 checked notes on the right string.
 
 ## What it can't do yet
 

@@ -34,6 +34,7 @@ async function withStore(mode, action) {
 export const saveSound = (id, blob) => withStore('readwrite', (store) => store.put(blob, id));
 export const loadSound = (id) => withStore('readonly', (store) => store.get(id));
 export const deleteSound = (id) => withStore('readwrite', (store) => store.delete(id));
+export const deleteAllSounds = () => withStore('readwrite', (store) => store.clear());
 
 // The file ending for a sound's type, for downloading it: "audio/webm;codecs=opus" → "webm".
 export function soundExtension(type = '') {

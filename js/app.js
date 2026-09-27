@@ -1,15 +1,15 @@
 // app.js — starts Riff Boi, switches screens and wires up the buttons.
 
-import { startListening, stopListening, listInputs, onInputsChange, soundInfo, recordedSound, recording } from './audio.js';
+import { startListening, stopListening, soundInfo, recordedSound, recording } from './audio.js';
 import { wavFile } from './wav.js';
 import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS, readNote, midiToName } from './notes.js';
-import { saveSound, loadSound, deleteSound, soundExtension } from './sounds.js';
+import { saveSound, loadSound, deleteSound, deleteAllSounds, soundExtension } from './sounds.js';
 import { prepareHandTracking, startCamera, stopCamera, handAt, showNeck } from './camera.js';
 import { learnNeck, spotForHand, MIN_NOTES } from './neck.js';
 import { placeNotes, otherSpots, positionsFor, harmonicSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken, linkMark, textFileName } from './tab.js';
 import { tabSvg } from './tabsvg.js';
 import { METERS, detectTempo, barStarts } from './rhythm.js';
-import { loadRiffs, saveRiff, updateRiff, deleteRiff, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS, loadInputId, saveInputId } from './storage.js';
+import { loadRiffs, saveRiff, updateRiff, deleteRiff, deleteAllRiffs, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS } from './storage.js';
 import { riffConfidence, isUnsure } from './confidence.js';
 import { writtenRiff, retime, EDITOR_MAX_FRET, typedFret } from './editor.js';
 import { playNotes } from './playback.js';
@@ -211,27 +211,6 @@ $('meter-select').addEventListener('change', (event) => {
   saveSettings(settings);
 });
 
-// --- Input picker: the mic or your audio interface, remembered between visits ---
-
-const inputSelect = $('input-select');
-
-// Fill the dropdown with the inputs the browser can see. It only shares their names once
-// you've allowed the mic, so before your first riff there's just "Default input".
-async function showInputs() {
-  let inputs = [];
-  try {
-    inputs = await listInputs();
-  } catch (err) {
-    console.error(err);
-  }
-  inputSelect.replaceChildren(new Option('Default input', ''), ...inputs.map((input) => new Option(input.name, input.id)));
-  // Show your pick if it's plugged in. If it isn't, Riff Boi uses the default input for now.
-  const saved = loadInputId();
-  inputSelect.value = inputs.some((input) => input.id === saved) ? saved : '';
-}
-
-inputSelect.addEventListener('change', () => saveInputId(inputSelect.value));
-onInputsChange(showInputs); // an input was plugged in or unplugged
 
 // The live tab, redrawn when a note is added or changes. The newest note is red.
 // Notes Riff Boi wasn't sure about are drawn faded. The note still ringing isn't judged until it
@@ -277,6 +256,19 @@ function showConfidence(element, confidence) {
 
 const MINI_TAB_NOTES = 12; // how many notes the preview on each riff card shows
 
+// Delete all: every riff and its sound, after a check that you really mean it.
+$('delete-all-btn').addEventListener('click', () => {
+  const count = loadRiffs().length;
+  if (!confirm(`Delete all ${count} riff${count === 1 ? '' : 's'}? Every tab and recording will be gone, and this can't be undone.`)) return;
+  try {
+    deleteAllRiffs();
+    deleteAllSounds().catch(console.error);
+  } catch (err) {
+    console.error(err); // the browser blocked saving: the riffs stay
+  }
+  showHome();
+});
+
 function showHome() {
   stopSound();
   // Leaving a shared riff: take it out of the address, so a reload doesn't open it again.
@@ -317,7 +309,7 @@ function showHome() {
     return item;
   }));
   $('no-riffs-msg').hidden = riffs.length > 0;
-  showInputs(); // after your first riff, the inputs' real names show up
+  $('delete-all-btn').hidden = riffs.length === 0;
   showScreen('home');
 }
 
@@ -575,7 +567,7 @@ $('new-riff-btn').addEventListener('click', async () => {
   if (stopBtn.disabled) return; // Stop was tapped while hand tracking loaded
   startTime = performance.now(); // the clock starts once it's really listening
   try {
-    await startListening(handleReading, loadInputId(), { keepSound: DEBUG, record: true });
+    await startListening(handleReading, { keepSound: DEBUG, record: true });
   } catch (err) {
     console.error(err);
     showMessage(statusMsg, statusHint, problemFor(err));
@@ -1342,7 +1334,7 @@ $('tuner-btn').addEventListener('click', async () => {
   showMessage($('tuner-msg'), $('tuner-hint'));
   showScreen('tuner');
   try {
-    await startListening(handleTunerReading, loadInputId());
+    await startListening(handleTunerReading);
   } catch (err) {
     console.error(err);
     showMessage($('tuner-msg'), $('tuner-hint'), problemFor(err));

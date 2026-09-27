@@ -46,15 +46,12 @@
       <label class="rhythm-switch" title="Turn off to just see the notes, evenly spaced"><input id="rhythm-input" type="checkbox" checked> <span class="setting-label">Show note lengths</span></label>
       <label class="rhythm-switch" title="Watch my fretting hand to pick the right string"><input id="camera-input" type="checkbox"> <span class="setting-label">Camera (beta)</span></label>
     </div>
-    <!-- Which input Riff Boi listens to: the mic or your audio interface (remembered between visits) -->
-    <label class="input-picker">
-      <span class="setting-label">Input</span>
-      <select id="input-select" class="input-select"><option value="">Default input</option></select>
-    </label>
     <!-- Only shown when the address ends in ?debug (for tuning note detection) -->
     <button id="save-readings-btn" class="small-btn" hidden>Save last recording's readings</button>
     <button id="save-sound-btn" class="small-btn" hidden>Save last recording's sound (WAV)</button>
     <h2 class="screen-title">Latest Riffs</h2>
+    <!-- Delete every riff (after a check that you really mean it) -->
+    <button id="delete-all-btn" class="riff-action riff-delete delete-all" hidden>Delete all</button>
     <p id="no-riffs-msg" class="muted no-riffs">No riffs yet. Tap New Riff, allow the mic, and play single notes.</p>
     <ul id="riff-list" class="riff-list"></ul>
   </section>

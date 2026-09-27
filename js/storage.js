@@ -34,25 +34,6 @@ export function saveSettings(settings) {
   }
 }
 
-// The audio input you picked (its device id), or '' for the default input.
-const INPUT_KEY = 'riffboi.inputDeviceId';
-
-export function loadInputId() {
-  try {
-    return localStorage.getItem(INPUT_KEY) || '';
-  } catch {
-    return '';
-  }
-}
-
-export function saveInputId(deviceId) {
-  try {
-    if (deviceId) localStorage.setItem(INPUT_KEY, deviceId);
-    else localStorage.removeItem(INPUT_KEY);
-  } catch {
-    // Not vital either: the picker just won't be remembered.
-  }
-}
 
 // Save a new riff at the top of the list and return it.
 // `confidence` is how sure Riff Boi was about it (see confidence.js), or null.
@@ -99,6 +80,11 @@ export function updateRiff(id, changes) {
 // Delete a saved riff. Throws if the browser won't let us save.
 export function deleteRiff(id) {
   localStorage.setItem(RIFFS_KEY, JSON.stringify(loadRiffs().filter((riff) => riff.id !== id)));
+}
+
+// Delete every saved riff. Throws if the browser won't let us save.
+export function deleteAllRiffs() {
+  localStorage.setItem(RIFFS_KEY, '[]');
 }
 
 // How to draw a saved riff's tab: at the tempo it was played (riffs from before tempo

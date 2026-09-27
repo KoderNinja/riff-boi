@@ -9,8 +9,8 @@ import { placeNotes, positionsFor, drawTab, tabToken, otherSpots, tabText, fretO
 import { riffConfidence, isUnsure } from '../js/confidence.js';
 import { rhythmOf, meterOf, barOf, groupOf, detectTempo, METERS, barStarts } from '../js/rhythm.js';
 import { tabSvg } from '../js/tabsvg.js';
-import { openInput, listInputs } from '../js/audio.js';
-import { saveRiff, loadRiffs, updateRiff, deleteRiff, riffTiming } from '../js/storage.js';
+import { openInput } from '../js/audio.js';
+import { saveRiff, loadRiffs, updateRiff, deleteRiff, deleteAllRiffs, riffTiming } from '../js/storage.js';
 import { writtenRiff, retime, typedFret } from '../js/editor.js';
 import { playbackPlan, pitchPoints, pluckSamples, loopFor, clickTimes } from '../js/playback.js';
 import { readingsFrom } from '../js/upload.js';
@@ -527,53 +527,27 @@ drawTab(el, riff);
 const lines = el.textContent.split('\n');
 check('tab is six lines of equal length', lines.length === 6 && new Set(lines.map((l) => l.length)).size === 1);
 
-// --- Input picker (audio.js), with a pretend mic, so no real audio is needed ---
+// --- Opening the mic (audio.js), with a pretend mic, so no real audio is needed ---
 {
   const tries = []; // what audio.js asked the browser for, each time
-  let fail = null;  // (what it asked for) => an error to throw, or nothing
+  let fail = null;  // () => an error to throw, or nothing
   Object.defineProperty(navigator, 'mediaDevices', {
     configurable: true,
     value: {
       async getUserMedia({ audio }) {
         tries.push(audio);
-        const error = fail?.(audio);
+        const error = fail?.();
         if (error) throw error;
-        return audio.deviceId ? 'picked input' : 'default input';
-      },
-      async enumerateDevices() {
-        return [
-          { kind: 'audioinput', deviceId: 'default', label: 'Default - MacBook Air Microphone' },
-          { kind: 'audioinput', deviceId: 'mic', label: 'MacBook Air Microphone' },
-          { kind: 'audioinput', deviceId: 'scarlett', label: 'Scarlett 2i2 USB' },
-          { kind: 'audioinput', deviceId: '', label: '' },
-          { kind: 'videoinput', deviceId: 'cam', label: 'FaceTime HD Camera' },
-        ];
+        return 'default input';
       },
     },
   });
-  const named = (name) => Object.assign(new Error(name), { name });
   const guitarSound = (audio) => audio.echoCancellation === false && audio.noiseSuppression === false && audio.autoGainControl === false;
-
-  check('input picker: opens the input you picked, with the voice clean-up turned off',
-    await openInput('scarlett') === 'picked input' && tries[0].deviceId.exact === 'scarlett' && guitarSound(tries[0]), JSON.stringify(tries));
-
-  tries.length = 0;
-  check('input picker: with nothing picked, it opens the default input',
-    await openInput('') === 'default input' && tries.length === 1 && !tries[0].deviceId && guitarSound(tries[0]), JSON.stringify(tries));
-
-  tries.length = 0;
-  fail = (audio) => audio.deviceId && named('OverconstrainedError');
-  check('input picker: an unplugged input falls back to the default input',
-    await openInput('scarlett') === 'default input' && tries.length === 2 && !tries[1].deviceId && guitarSound(tries[1]), JSON.stringify(tries));
-
-  tries.length = 0;
-  fail = () => named('NotAllowedError');
-  const blocked = await openInput('scarlett').then(() => 'opened', (err) => err.name);
-  check('input picker: a blocked mic is reported, not hidden by the fallback', blocked === 'NotAllowedError' && tries.length === 1, `${blocked} after ${tries.length} tries`);
-
-  const inputs = await listInputs();
-  check('input picker: lists real inputs only (no "Default" copies, cameras or nameless inputs)',
-    inputs.map((input) => input.name).join(' | ') === 'MacBook Air Microphone | Scarlett 2i2 USB', JSON.stringify(inputs));
+  check('mic: opens the default input, with the voice clean-up turned off',
+    await openInput() === 'default input' && tries.length === 1 && !tries[0].deviceId && guitarSound(tries[0]), JSON.stringify(tries));
+  fail = () => Object.assign(new Error('NotAllowedError'), { name: 'NotAllowedError' });
+  const blocked = await openInput().then(() => 'opened', (err) => err.name);
+  check('mic: a blocked mic is reported', blocked === 'NotAllowedError', blocked);
 }
 
 // --- Saved riffs keep the rhythm they were recorded with ---
@@ -604,6 +578,12 @@ const reloaded = loadRiffs().find((riff) => riff.id === saved.id);
 check('saved riff: typing a new tempo saves it, and it\'s not "auto" any more',
   fixed?.bpm === 180 && reloaded.bpm === 180 && reloaded.autoTempo === false && reloaded.meter === '7/8' && loadRiffs()[0].bpm === 90, JSON.stringify(reloaded));
 check('saved riff: changing a riff that isn\'t there does nothing', updateRiff('gone', { bpm: 100 }) === null && loadRiffs().length === 4);
+{
+  const kept = shelf.get('riffboi.riffs');
+  deleteAllRiffs();
+  check('delete all: every riff is gone', loadRiffs().length === 0);
+  shelf.set('riffboi.riffs', kept); // put them back for the checks below
+}
 
 // --- New Tab: a tab written by hand ---
 {

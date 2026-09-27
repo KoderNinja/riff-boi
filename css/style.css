@@ -201,9 +201,7 @@ body {
   accent-color: var(--red);
 }
 
-/* Input picker: which mic or audio interface Riff Boi listens to. The time signature picker
-   looks the same. */
-.input-picker,
+/* The time signature picker. */
 .meter-picker {
   display: flex;
   align-items: center;
@@ -995,4 +993,14 @@ body {
   margin: 6px 0 0;
   font-size: 0.85rem;
   text-align: center;
+}
+
+/* "Delete all" under the Latest Riffs heading. */
+.delete-all {
+  display: block;
+  margin: -4px auto 12px;
+}
+
+.delete-all[hidden] {
+  display: none;
 }
