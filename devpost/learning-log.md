@@ -283,3 +283,9 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 ## Sep 27, 2026: The camera in the background
 - The hand tracking used to run on the same "thread" as the listening, so while it looked at a camera frame, the listening had to wait. Now it runs in a worker, a separate thread in the browser, and the page only spends a tiny moment passing it each frame. That keeps the note timing just as exact with the camera on.
 - It also smooths the hand: each note uses the middle of the last few camera looks, so one shaky frame doesn't move a note to the wrong string.
+
+## Sep 27, 2026: The camera gets a setup
+- When I tried the camera with my guitar, the red dots weren't on my fretting hand. Looking into it turned up a few likely reasons: the picture was cut down to 4:3, which chops off the sides (right where my fretting hand is), the dots were tiny, and it picked my hand using MediaPipe's left/right label, which gets confused by a hand wrapped around a neck.
+- Now it uses the whole picture, draws every hand it sees (red for my fretting hand, gray for the other one), and tells them apart by shape: my fretting hand's knuckles point down the neck toward my other hand. That works for left-handed players too.
+- Guessing where the frets are from my notes didn't work well, because the camera can't see where the nut is. So now there's a 5-second setup: I play the 3rd fret and then the 12th fret on the low E. Frets get closer together by the same rule on every guitar, so two measured frets are enough to work out all the others, and it draws them on the video so I can check.
+- I thought about an AI that looks at the picture instead. It would be too slow to keep up while I play, cost money for every picture, and need a secret key on a server. Two measured frets and some math are free and instant.

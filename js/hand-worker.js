@@ -11,7 +11,15 @@ let landmarker = null;
 
 async function load() {
   const files = await FilesetResolver.forVisionTasks(`${VISION_URL}/wasm`, true); // true: the module version, for a worker
-  const options = (delegate) => ({ baseOptions: { modelAssetPath: MODEL_URL, delegate }, runningMode: 'VIDEO', numHands: 2 });
+  const options = (delegate) => ({
+    baseOptions: { modelAssetPath: MODEL_URL, delegate },
+    runningMode: 'VIDEO',
+    numHands: 2,
+    // Easier to find than the usual 0.5: a hand around a guitar neck is partly hidden by it.
+    minHandDetectionConfidence: 0.3,
+    minHandPresenceConfidence: 0.4,
+    minTrackingConfidence: 0.4,
+  });
   try {
     landmarker = await HandLandmarker.createFromOptions(files, options('GPU'));
   } catch {
@@ -33,8 +41,8 @@ self.onmessage = async ({ data }) => {
     }
   } else if (data.type === 'look') {
     const started = performance.now();
-    const { landmarks, handedness } = landmarker.detectForVideo(data.frame, data.at);
+    const { landmarks } = landmarker.detectForVideo(data.frame, data.at);
     data.frame.close();
-    self.postMessage({ type: 'hands', at: data.at, landmarks, handedness, took: performance.now() - started });
+    self.postMessage({ type: 'hands', at: data.at, landmarks, took: performance.now() - started });
   }
 };

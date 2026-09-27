@@ -45,6 +45,7 @@
       <label class="meter-picker"><span class="setting-label">Time</span> <select id="meter-select" class="input-select" aria-label="Time signature"></select></label>
       <label class="rhythm-switch" title="Turn off to just see the notes, evenly spaced"><input id="rhythm-input" type="checkbox" checked> <span class="setting-label">Show note lengths</span></label>
       <label class="rhythm-switch" title="Watch my fretting hand to pick the right string"><input id="camera-input" type="checkbox"> <span class="setting-label">Camera (beta)</span></label>
+      <button id="camera-setup-btn" class="small-btn" hidden>Set up camera</button>
     </div>
     <!-- Only shown when the address ends in ?debug (for tuning note detection) -->
     <button id="save-readings-btn" class="small-btn" hidden>Save last recording's readings</button>
@@ -104,6 +105,23 @@
     </div>
     <p id="tuner-debug" class="debug-info" hidden></p>
     <button id="tuner-done-btn" class="big-btn bottom-btn">Done</button>
+  </section>
+
+  <!-- Camera setup (beta): two notes show Riff Boi where your frets are in the picture -->
+  <section id="screen-camera-setup" class="screen" hidden>
+    <h2 class="screen-title">Camera setup</h2>
+    <p id="setup-step" class="setup-step"></p>
+    <div class="camera-box">
+      <div class="camera-view"><video id="setup-video" playsinline muted></video><canvas id="setup-canvas"></canvas></div>
+      <p id="setup-status" class="muted camera-status"></p>
+    </div>
+    <p class="muted setup-tip">Put the camera where it can see the whole neck, in good light. Red dots mark your fretting hand, gray dots your other hand.</p>
+    <div class="status">
+      <p id="setup-msg" class="status-msg"></p>
+      <p id="setup-hint" class="status-hint"></p>
+    </div>
+    <button id="setup-again-btn" class="secondary-btn">Start over</button>
+    <button id="setup-done-btn" class="big-btn bottom-btn">Done</button>
   </section>
 
   <!-- Saving confirmation -->

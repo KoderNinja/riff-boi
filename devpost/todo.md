@@ -8,12 +8,13 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 
 ## Next up
 
-Where we left off (Sep 26, 2026, late night):
+Where we left off (Sep 27, 2026):
+- Camera (beta) got a 5-second setup, because on my guitar the dots weren't on my fretting hand. To test it: turn on Camera (beta), tap Set up camera, play the 3rd fret and then the 12th fret on the low E with my first finger, and check the white lines sit on my frets. Then record a riff and see if the strings come out right.
 - Everything is pushed and live at https://riffboi.com: new tempo detection and rhythm, bends and vibrato fixes, Save .txt, marking harmonics, Camera (beta), Your sound (the real recording of each riff), Delete all, and the input picker taken out (pick the audio interface in the Mac's sound settings).
 - Submission stuff is ready in `devpost/`: the project story (`project-story.md`, copy the raw Markdown into Devpost), the video script and diagram (`video/`), screenshots (`screenshots/`) and the submission kit (`submission-kit.md`). A reminder is scheduled for Sunday 10am.
-- Accuracy: 113 of 115 notes, 84/84 strings, 0 wrong. 232 checks pass.
+- Accuracy: 113 of 115 notes, 84/84 strings, 0 wrong. 235 checks pass.
 - My part next (the deadline is Wednesday Sep 30, 5pm EDT): test the new features with my guitar and iPhone, the elevator pitch (my words), paste the story, tags, links and screenshots into Devpost, the README "AI use" part, a practice run, record and upload the video, then submit Wednesday morning.
-- Later: the camera beta (test with a real camera, then make it more accurate), hearing harmonics, an AI agent for accuracy, and the ideas below. I'll send mp3s of bends, slides and vibrato with the tabs.
+- Later: the camera beta (if it still loses my hand, zoom the picture in on the neck), hearing harmonics, an AI agent for accuracy, and the ideas below. I'll send mp3s of bends, slides and vibrato with the tabs.
 
 ### My answers to Claude's questions (Sep 26)
 1. Dragging keeps the same note and tapping changes the fret: that's right.

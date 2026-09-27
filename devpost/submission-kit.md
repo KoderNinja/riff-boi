@@ -27,7 +27,7 @@ What I did and decided:
 - The idea (tab from a riff while I play), who it's for, and the name.
 - The look, the layout and the icon (picked from options), and the names of switches like "Show note lengths" and "Auto detect tempo".
 - Which features, and in what order (the ranked ideas list), and what to take out again (Try a sample, the count-in).
-- Design choices along the way: harmonics marked by hand, the camera finding my hand spot by itself, the tempo box speeding a riff up.
+- Design choices along the way: harmonics marked by hand, the camera (first it tried to find my frets by itself, then got a 5-second setup when that didn't work), the tempo box speeding a riff up.
 - Played and labeled the test recordings the scoreboard uses, tested on my guitar and phone, and decided when to push.
 
 What Claude Code did:

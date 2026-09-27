@@ -23,7 +23,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 - Says which key and scale a riff sounds like, like E minor pentatonic.
 - Shares a riff with a link: the riff is packed into the link itself, so nothing is uploaded anywhere.
 - Gets the tab of a recording too: upload an mp3, wav or m4a.
-- Camera (beta): watches your fretting hand to pick the right string. It learns where the frets are from the notes you play, so there's nothing to set up. The hand tracking is Google's MediaPipe, running in your browser; the video never leaves your device.
+- Camera (beta): watches your fretting hand to pick the right string. A 5-second setup shows it where your frets are: tap Set up camera, play the 3rd fret and then the 12th fret on the low E, and it draws your frets on the video. The hand tracking is Google's MediaPipe, running in your browser; the video never leaves your device.
 - Has a tuner built in.
 - Tells you when it can't hear your guitar. It listens to your computer's default input, so to use an audio interface, pick it as the input in your computer's sound settings.
 
@@ -66,7 +66,7 @@ node tools/check.mjs
 node tools/score.mjs
 ```
 
-`check.mjs` runs 232 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, mic, saving, tab editor, playback, upload, scale finder and share link logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 113 of 115 notes right (98%) and puts all 84 checked notes on the right string.
+`check.mjs` runs 235 checks on the note, bend, rhythm, time signature, tempo, tab, confidence, mic, saving, tab editor, playback, upload, scale finder and share link logic, no guitar needed. `score.mjs` scores Riff Boi against recordings of me playing, where I wrote down exactly what I played. Right now it gets 113 of 115 notes right (98%) and puts all 84 checked notes on the right string.
 
 ## What it can't do yet
 

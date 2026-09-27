@@ -4,9 +4,9 @@ import { startListening, stopListening, soundInfo, recordedSound, recording } fr
 import { wavFile } from './wav.js';
 import { createNoteTracker, cleanUpRiff, stillRinging, tuningOf, median, TUNER_CLARITY, IN_TUNE_CENTS, VOLUME_MIN, RINGING_READINGS, readNote, midiToName } from './notes.js';
 import { saveSound, loadSound, deleteSound, deleteAllSounds, soundExtension } from './sounds.js';
-import { prepareHandTracking, handTrackingReady, startCamera, stopCamera, handAt, showNeck } from './camera.js';
-import { learnNeck, spotForHand, MIN_NOTES } from './neck.js';
-import { placeNotes, otherSpots, positionsFor, harmonicSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken, linkMark, textFileName } from './tab.js';
+import { prepareHandTracking, handTrackingReady, startCamera, stopCamera, handAt, setNeck } from './camera.js';
+import { neckFromSetup, spotForHand, SETUP_FRETS } from './neck.js';
+import { placeNotes, otherSpots, positionsFor, harmonicSpots, STRING_NAMES, tabText, fretOn, withFret, tabToken, linkMark, textFileName, TUNING } from './tab.js';
 import { tabSvg } from './tabsvg.js';
 import { METERS, detectTempo, barStarts } from './rhythm.js';
 import { loadRiffs, saveRiff, updateRiff, deleteRiff, deleteAllRiffs, riffTiming, loadSettings, saveSettings, DEFAULT_SETTINGS } from './storage.js';
@@ -22,6 +22,7 @@ const screens = {
   recording: document.getElementById('screen-recording'),
   saving: document.getElementById('screen-saving'),
   tuner: document.getElementById('screen-tuner'),
+  cameraSetup: document.getElementById('screen-camera-setup'),
   riff: document.getElementById('screen-riff'),
   editor: document.getElementById('screen-editor'),
 };
@@ -97,31 +98,50 @@ function currentRiff() {
   return notes;
 }
 
-// With the camera on: learn where the frets are from the notes so far (see neck.js), then move
-// each note to the string that fits where the fretting hand was when it was played.
-const CAMERA_NOTES = 40; // learn from the last 40 notes the camera saw
+// With the camera on and set up: move each note to the string that fits where the fretting hand
+// was when it was played (see neck.js). Notes it can't tell apart keep the usual rule's string.
 function placeWithCamera(notes) {
-  const seen = notes.filter((note) => note.hand).slice(-CAMERA_NOTES);
-  const neck = learnNeck(seen.map((note) => ({ hand: note.hand, spots: positionsFor(note.midi) })));
-  showNeck(neck);
-  if (!neck) {
-    if (cameraOn) {
-      $('camera-status').textContent = seen.length === 0 && notes.length > 0
-        ? "Can't see your fretting hand yet. Get your hand and the neck in the picture"
-        : `Play ${MIN_NOTES - seen.length > 0 ? MIN_NOTES - seen.length : 'a few'} more notes so the camera can learn your neck`;
-    }
-    return;
-  }
-  for (const note of notes) {
-    const spot = note.hand && spotForHand(note.hand, positionsFor(note.midi), neck);
+  if (!cameraNeck) return;
+  const seen = notes.filter((note) => note.hand);
+  for (const note of seen) {
+    const spot = spotForHand(note.hand, positionsFor(note.midi), cameraNeck);
     if (spot) Object.assign(note, spot);
   }
-  $('camera-status').textContent = 'Camera: picking strings from your hand';
+  if (cameraOn && notes.length) {
+    $('camera-status').textContent = seen.length
+      ? 'Camera: picking strings from your hand'
+      : "Can't see your fretting hand on the neck. If you or the camera moved, set it up again";
+  }
 }
 
-// Camera on or off, remembered. It runs while you record.
+// Is the camera running while you record?
 let cameraOn = false;
+// Where the frets are in the camera picture, from the setup. Only for this visit: the camera or
+// the guitar will probably have moved by next time.
+let cameraNeck = null;
 
+// Start the camera in `video` once hand tracking has loaded. `status(text)` says how it's going,
+// and `wanted()` says whether it's still needed (you may have moved on while it loaded).
+// Returns whether it started.
+async function openCamera(video, canvas, status, wanted) {
+  if (!handTrackingReady()) status('Loading hand tracking (the first time takes a moment)…');
+  try {
+    await prepareHandTracking();
+  } catch (err) {
+    console.error(err);
+    status("Couldn't load hand tracking. Check your internet");
+    return false;
+  }
+  if (!wanted()) return false;
+  status('Starting the camera…');
+  try {
+    return await startCamera(video, canvas);
+  } catch (err) {
+    console.error(err);
+    status(err.name === 'NotAllowedError' ? 'The camera is blocked. Allow it in the browser to use it' : "Couldn't start the camera");
+    return false;
+  }
+}
 
 // The camera joins in once hand tracking has loaded (it loads in the background, so listening
 // starts right away and never waits for it). Notes before that use the usual string rule.
@@ -129,21 +149,9 @@ async function startCameraIfOn() {
   $('camera-box').hidden = !settings.camera;
   if (!settings.camera) return;
   const status = (text) => ($('camera-status').textContent = text);
-  if (!handTrackingReady()) status('Loading hand tracking (the first time takes a moment)…');
-  try {
-    await prepareHandTracking();
-  } catch (err) {
-    console.error(err);
-    return status("Couldn't load hand tracking. Check your internet");
-  }
-  if (stopBtn.disabled) return; // Stop was tapped while it loaded
-  try {
-    await startCamera($('camera-video'), $('camera-canvas'), status);
-    cameraOn = true;
-  } catch (err) {
-    console.error(err);
-    status(err.name === 'NotAllowedError' ? 'The camera is blocked. Allow it in the browser to use it' : "Couldn't start the camera");
-  }
+  cameraOn = await openCamera($('camera-video'), $('camera-canvas'), status, () => !stopBtn.disabled);
+  if (!cameraOn) return;
+  status(cameraNeck ? 'Camera: watching your fretting hand' : "The camera isn't set up, so strings use the usual rule. Tap Set up camera on the home screen first");
 }
 
 function stopCameraIfOn() {
@@ -187,11 +195,13 @@ $('rhythm-input').addEventListener('change', (event) => {
   saveSettings(settings); // only for new riffs: saved riffs keep the rhythm they were recorded with
 });
 
-// Camera: watch the fretting hand to pick strings (see placeWithCamera).
+// Camera: watch the fretting hand to pick strings (see placeWithCamera). It needs the setup first.
 $('camera-input').checked = settings.camera;
+$('camera-setup-btn').hidden = !settings.camera;
 $('camera-input').addEventListener('change', (event) => {
   settings.camera = event.target.checked;
   saveSettings(settings);
+  $('camera-setup-btn').hidden = !settings.camera;
   if (settings.camera) prepareHandTracking().catch(console.error); // get it ready while you're on the home screen
 });
 if (settings.camera) prepareHandTracking().catch(console.error);
@@ -1343,6 +1353,85 @@ $('tuner-btn').addEventListener('click', async () => {
 
 $('tuner-done-btn').addEventListener('click', () => {
   stopListening();
+  showHome();
+});
+
+// --- Camera setup: two notes show Riff Boi where the frets are in the picture (see neck.js) ---
+
+// Play the 3rd fret and then the 12th fret on the low E (a G, then an E) with your first finger.
+const SETUP_STEPS = [
+  { midi: TUNING[5] + SETUP_FRETS[0], text: 'Play the 3rd fret on the low E string (a G) with your first finger, and let it ring' },
+  { midi: TUNING[5] + SETUP_FRETS[1], text: 'Now the 12th fret on the low E string (an E), with the same finger' },
+];
+const SETUP_HOLD = 15;   // readings (a quarter of a second) the note must ring with your hand in view
+let setupStep = 0;
+let setupRun = 0;        // readings in a row of the right note with the hand in view
+let setupHands = [];     // the fretting hand at each step
+let setupOpen = false;   // is the setup screen showing?
+let setupCamera = false; // ...and is its camera running?
+
+// Back to the first note. `problem` says why, if something went wrong.
+function restartSetup(problem = '') {
+  setupStep = 0;
+  setupRun = 0;
+  setupHands = [];
+  setNeck(null); // no old frets on the video, and pick out the fretting hand without them
+  $('setup-step').textContent = SETUP_STEPS[0].text;
+  $('setup-status').textContent = problem;
+}
+
+function handleSetupReading(freq, clarity, volume) {
+  if (setupStep >= SETUP_STEPS.length) return; // done
+  const { midi } = SETUP_STEPS[setupStep];
+  const note = readNote(freq, clarity, volume);
+  // The right note, or an octave or two up (distortion can make a low note sound higher).
+  const right = note !== null && note.midi >= midi && note.midi <= midi + 24 && (note.midi - midi) % 12 === 0;
+  const hand = right && setupCamera ? handAt(performance.now()) : null;
+  if (right && setupCamera && !hand) {
+    $('setup-status').textContent = "I can hear it, but I can't see your fretting hand. Get your hand and the neck in the picture";
+  }
+  setupRun = hand ? setupRun + 1 : 0;
+  if (setupRun < SETUP_HOLD) return;
+  setupHands[setupStep++] = hand;
+  setupRun = 0;
+  $('setup-status').textContent = '';
+  if (setupStep < SETUP_STEPS.length) {
+    $('setup-step').textContent = SETUP_STEPS[setupStep].text;
+    return;
+  }
+  const neck = neckFromSetup(...setupHands);
+  if (!neck) return restartSetup("That didn't look right. The camera may have followed your other hand. Keep your fretting hand in the picture and try again");
+  cameraNeck = neck;
+  setNeck(neck);
+  $('setup-step').textContent = "All set! The white lines should sit on your frets. If they don't, tap Start over";
+  $('camera-setup-btn').textContent = 'Set up camera again';
+}
+
+$('camera-setup-btn').addEventListener('click', async () => {
+  setupOpen = true;
+  setupCamera = false;
+  restartSetup();
+  showMessage($('setup-msg'), $('setup-hint'));
+  showScreen('cameraSetup');
+  try {
+    await startListening(handleSetupReading);
+  } catch (err) {
+    console.error(err);
+    showMessage($('setup-msg'), $('setup-hint'), problemFor(err));
+  }
+  const status = (text) => ($('setup-status').textContent = text);
+  setupCamera = await openCamera($('setup-video'), $('setup-canvas'), status, () => setupOpen);
+  if (setupCamera) status('');
+});
+
+$('setup-again-btn').addEventListener('click', () => restartSetup());
+
+$('setup-done-btn').addEventListener('click', () => {
+  setupOpen = false;
+  setupCamera = false;
+  stopListening();
+  stopCamera($('setup-video'));
+  setNeck(cameraNeck); // the new setup, or the old one if you left before finishing
   showHome();
 });
 
