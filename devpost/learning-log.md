@@ -254,3 +254,9 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - "Modes" fixed the stray dotted notes: a riff of quarter notes stays quarters even when one note is 60 ms late, because switching to sixteenths costs more than one late note.
 - I tested it on made-up riffs (15 rhythms, random tempos, timing wobble and drift) and on my recordings. With normal timing, it finds the tempo 76% of the time instead of 14%, and when it says it's sure, it was right every time in the test. All my steady runs now come out as clean quarter notes.
 - Typing a new tempo on a saved riff now keeps the notes and plays faster or slower, and Detect tempo reads the rhythm again when the tempo was wrong.
+
+## Sep 26, 2026: Bends that pause, and vibrato that isn't a pick
+- My RIFFTEST.mp3 ended with an 8b10 bend with vibrato, and Riff Boi wrote 8-9-10-10-10. Looking at the pitch numbers showed two separate problems.
+- The bend stopped for a moment about 2/3 of the way up. Riff Boi saw the pitch settle "between two notes" and decided it wasn't a bend. Now a pause at least half a step up, between two notes, keeps the bend going.
+- My first try broke a real note in Crazy Train: a G#2 played sharp and an A2 played flat were only 2/3 of a step apart, so they looked like a paused bend. The fix: a pause can't be sitting on a real note. The scoreboard caught this, which is exactly why it's there.
+- Vibrato makes the volume pulse, and Riff Boi took each pulse as a new pick. The difference I found in my recordings: a real pick on a ringing string blurs the pitch for a moment (or makes the volume jump all at once), and vibrato just swells. Now RIFFTEST comes out right, and the scoreboard didn't change.

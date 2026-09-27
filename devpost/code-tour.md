@@ -50,7 +50,7 @@ It turns readings into notes.
 **The note tracker** (`createNoteTracker`) follows the note's *name* (like F#) and works out the octave separately. With distortion, Pitchy often hears the octave above for a moment, and a guitar note's real pitch is its lowest one. A new note starts when:
 - a note name is heard for 3 readings after quiet,
 - the name changes and holds: 3 readings if you picked (or the pitch broke up first, like a new attack does), 4 if you didn't (a hammer-on or pull-off),
-- or you pick the same note again: the volume jumps (1.8 times louder than just before) to at least 75% of the note's loudest moment, and the pitch then holds for 7 readings.
+- or you pick the same note again: the volume jumps (1.8 times louder than just before) to at least 75% of the note's loudest moment, and the pitch then holds for 7 readings. The pick must blur the pitch for a moment or double the volume in one reading, because vibrato makes the volume swell too, and that isn't a pick.
 
 It also says no to a few things:
 - an unpicked jump that's exactly a harmonic of the ringing note (a fifth up, in any octave, or two octaves and a major third),
@@ -122,7 +122,7 @@ Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs`
 
 ## `tools/`: the tests
 
-- `check.mjs`: 212 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
+- `check.mjs`: 217 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
 - `score.mjs`: the scoreboard. It replays my 8 real recordings and compares them to what I really played (the `.txt` answer files): 110 of 115 notes, and 83 of 83 on the right string.
 - `replay.mjs`: replays one `?debug` recording through the current code, to compare before and after a change.
 

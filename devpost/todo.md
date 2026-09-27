@@ -10,9 +10,10 @@ Deadline: Wednesday, Sep 30, 2026 at 5:00pm EDT (Beginner's Paradise – FirstCo
 
 Where we left off (Sep 26, 2026, late night):
 - New and not pushed yet: the count-in is out, and the new tempo detection and rhythm reader (Auto tempo finds the tempo on real playing instead of giving up and reusing 141; "not sure" when it can't tell; the live tab works the tempo out as you play; a saved riff's tempo box plays faster or slower; a Detect tempo button). Test it in Chrome at http://localhost:8000 (Cmd+Shift+R first), then push.
-- Next with Claude, in this order: bends that pause halfway and vibrato that makes extra notes (RIFFTEST showed both), Save a riff as a .txt file, then natural harmonics (like <12>).
+- Also new and not pushed: bends that pause halfway and vibrato no longer make extra notes (RIFFTEST now comes out right: ...G4b2 at the end).
+- Next with Claude: Save a riff as a .txt file, then natural harmonics (like <12>).
 - I'll send mp3s of bends, slides and vibrato with the tab of what I played, like RIFFTEST.mp3.
-- Accuracy: 113 of 115 notes, 84/84 strings, 0 wrong. 212 checks pass.
+- Accuracy: 113 of 115 notes, 84/84 strings, 0 wrong. 217 checks pass.
 - Testing on my Mac: use Chrome at http://localhost:8000 and press Cmd+Shift+R after changes (the local server lets Chrome keep old copies of files, and a mix of old and new stops the page from working). The Claude app's browser pane blocks the mic, so record in Chrome.
 - My part next (the deadline is Wednesday Sep 30, 5pm EDT): test on my iPhone at riffboi.com and with my guitar, the precision test, screenshots, the Devpost description and AI part (my words), the README "AI use" part, a practice run, the demo video, then submit Wednesday morning. The list is below.
 

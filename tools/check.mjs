@@ -72,6 +72,12 @@ const cases = [
   ['a held note is one note', [...pick(45), ...ring(45, 60, 0.2)], 'A2'],
   ['same note after silence is two notes', [...pick(40), ...silence(5), ...pick(40)], 'E2 E2'],
   ['same note picked again while ringing is two notes', [...pick(40), ...ring(40, 5, 0.05), ...pick(40)], 'E2 E2'],
+  // Vibrato makes the volume swell and fade (RIFFTEST): that's one note, not the same note picked again.
+  ['vibrato with a pulsing volume is one note, not re-picks',
+    [[hz(62), 0.95, 0.01], [hz(62), 0.97, 0.12], ...Array.from({ length: 60 }, (_, i) => [hz(62 + 0.2 * Math.sin(i / 2)), 0.98, 0.1 + 0.06 * Math.sin(i / 2)])], 'D4'],
+  // A distorted re-pick: the volume swells over a few readings, but the pick blurs the pitch.
+  ['a re-pick that blurs the pitch counts, even when the volume only swells',
+    [...pick(42), [hz(42), 0.8, 0.09], [hz(42), 0.85, 0.15], [hz(42), 0.95, 0.24], [hz(42), 0.97, 0.3], ...ring(42, 15)], 'F#2 F#2'],
   ['unclear sound makes no notes', Array.from({ length: 60 }, () => [hz(45), 0.5, 0.2]), ''],
   ['picked riff', [...pick(45), ...ring(45, 5, 0.05), ...pick(48), ...ring(48, 5, 0.05), ...pick(50)], 'A2 C3 D3'],
   ['hammer-on (no pick) still counts', [...pick(45), ...ring(48, 8, 0.15)], 'A2 C3'],
@@ -177,6 +183,10 @@ const bendCases = [
   // With distortion, Pitchy often hears the octave above for a moment and the note gets fixed.
   ['a bend on a note whose octave was fixed first', [[hz(74), 0.95, 0.02], [hz(74), 0.97, 0.12], ...ring(74, 3), ...ring(62, 17), ...glide(62, 64, 10), ...hold(64, 20)], 'B3b5'],
   ['vibrato is not a bend', [...pick(62), ...Array.from({ length: 60 }, (_, i) => [hz(62 + 0.4 * Math.sin(i / 2)), 0.97, 0.2])], 'B3'],
+  // RIFFTEST.mp3: the bend stopped for 3 readings about 2/3 of the way to the next note, then went on up.
+  ['a bend that pauses between two notes on its way up is still one bend (RIFFTEST)', [...pick(62), ...glide(62, 62.63, 2), ...hold(62.63, 3), ...glide(62.63, 64, 3), ...hold(64, 20)], 'B3b5'],
+  // Vibrato on a held bend makes the volume swell and fade (RIFFTEST): not new picks.
+  ['vibrato on a held bend doesn\'t add notes (RIFFTEST)', [...pick(62), ...glide(62, 64, 10), ...Array.from({ length: 60 }, (_, i) => [hz(64 + 0.15 * Math.sin(i / 2)), 0.98, 0.1 + 0.06 * Math.sin(i / 2)])], 'B3b5'],
 ];
 for (const [label, readings, expected] of bendCases) {
   const got = tabOf(readings);
@@ -190,6 +200,10 @@ const notBends = [
   ['a smeared note change that stops between two notes is a new note, not a pre-bend (Crazy Train at 9.5 s)',
     [...pick(45), ...[-0.303761, -0.447903, -0.711744, -0.609664, -0.759698, -0.696888, -0.660628].map((o) => [hz(45 + o), 0.97, 0.2]), ...hold(44, 20)], 'A2 G#2'],
   ['a picked note after a bend is a new note', [...pick(62), ...glide(62, 64, 10), ...hold(64, 10), ...pick(67)], 'D4 G4'],
+  // The real notes from Crazy Train at 6.1 s: G#2 played 17 cents sharp, then A2 15 cents flat, so
+  // they're only 2/3 of a step apart. That's two notes, not a bend pausing on its way up.
+  ['two notes a fret apart, one sharp and one flat, are two notes (Crazy Train at 6.1 s)',
+    [...pick(44.17), ...hold(44.17, 8, 0.07), [hz(44.47), 0.71, 0.03], [hz(21.3), 0.78, 0.03], ...hold(44.85, 12, 0.04)], 'G#2 A2'],
 ];
 for (const [label, readings, expected] of notBends) {
   const got = notesFrom(readings);

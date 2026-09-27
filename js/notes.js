@@ -54,6 +54,13 @@ export const GLITCH_READINGS = 2;   // up to this many junk readings don't inter
 export const PICK_JUMP = 1.8;       // volume this many times louder than just before = you picked
 export const PICK_GAP = 6;          // ignore extra jumps for this many readings after a pick
 export const PICK_WINDOW = 10;      // a pick only counts if its note shows up this soon after it
+// Vibrato makes the volume pulse, which can look like a pick. But a pick either blurs the pitch
+// for a moment (on a string that's still ringing) or makes the volume jump in one go, and a
+// vibrato pulse does neither: it swells over a few readings. So picking the same note again (or
+// picking while a bend is held) needs one of those.
+export const STRUCK_CLARITY = 0.9;  // a reading less clear than this (or no pitch) is a blur...
+export const STRUCK_WINDOW = 6;     // ...within this many readings of the pick
+export const STRUCK_JUMP = 2;       // or the volume doubled from one reading to the next
 export const FIX_WINDOW = 10;       // how long after a note appears Riff Boi may fix its octave
 export const REPICK_LEVEL = 0.75;  // picking the same note again must be this loud compared to the note's loudest
 export const REPICK_HOLD = 7;      // ...and then hold its pitch this many readings
@@ -68,6 +75,7 @@ export const BEND_BETWEEN = 0.15;  // a reading this far from a whole semitone i
 export const GLIDE_READINGS = 3;   // a bend passes through at least this many in-between readings
 export const BEND_MAX = 3;         // the biggest bend Riff Boi writes: 3 semitones (1½ steps)
 export const GLIDE_MAX = 40;       // a move that hasn't settled after this many readings (2/3 s) isn't a bend
+export const BEND_PAUSE = 0.5;     // a bend can pause between two notes this far up (semitones) or more
 const SETTLE_READINGS = 3;         // readings the pitch must hold still to count as settled
 // (Tried stricter settling so very slow bends aren't split up: on the learner's recordings it
 // lost 6-7 real notes and heard a false bend, because real notes drift. So bends slower than
@@ -133,6 +141,8 @@ export function createNoteTracker() {
   let volumes = [0, 0, 0];  // the last few volumes, to spot a pick
   let sincePick = Infinity; // readings since the last pick
   let pickUsed = true;      // has the last pick already started a note?
+  let sinceBlur = Infinity; // readings since the last blurry one (see STRUCK_CLARITY)
+  let pickJumped = false;   // did the last pick make the volume jump in one go?
   // Bends (see followBend), reset every time a note starts:
   let base = null;          // the ringing note's own pitch, in semitones with decimals (like MIDI)
   let baseReadings = [];    // its first clear readings, to find `base`
@@ -192,8 +202,14 @@ export function createNoteTracker() {
     const settled = average(recent);
     const steps = Math.round(settled);
     if (unsettled || Math.abs(settled - steps) > BEND_NEAR) {
-      // Never settled, or settled BETWEEN two notes: that's a smeared note change or a wobble,
-      // not a bend we can write. Leave it to the normal note rules (unless the note is bent).
+      // Settled BETWEEN two notes, at least half a step up, and not on a real note either (two
+      // notes a fret apart can sound closer than that when one is sharp and the other flat): a
+      // bend can pause on its way up, so keep following it (for up to GLIDE_MAX readings).
+      const pitchNow = base + settled;
+      const onANote = Math.abs(pitchNow - Math.round(pitchNow)) <= BEND_NEAR;
+      if (!unsettled && settled >= BEND_PAUSE && !onANote && move.length <= GLIDE_MAX) return true;
+      // Never settled, or settled between two notes below that: that's a smeared note change or
+      // a wobble, not a bend we can write. Leave it to the normal note rules (unless the note is bent).
       if (level > 0) return true;
       bendMove = 'jumped';
       return false;
@@ -254,14 +270,18 @@ export function createNoteTracker() {
 
     // Did the volume jump? That's the sound of a pick hitting the string.
     const before = Math.min(...volumes);
+    const last = volumes[volumes.length - 1];
     volumes = [...volumes.slice(1), volume];
     if (volume > VOLUME_MIN && volume > before * PICK_JUMP && sincePick >= PICK_GAP) {
       sincePick = 0;
       pickUsed = false;
+      pickJumped = volume >= last * STRUCK_JUMP;
     } else {
       sincePick++;
     }
     const picked = !pickUsed && sincePick < PICK_WINDOW;
+    sinceBlur = !(freq > 0) || clarity < STRUCK_CLARITY ? 0 : sinceBlur + 1;
+    const struck = picked && (pickJumped || sinceBlur <= STRUCK_WINDOW); // a pick, not a vibrato pulse
 
     // Quiet = the note has ended.
     quiet = volume < VOLUME_MIN ? quiet + 1 : 0;
@@ -302,9 +322,10 @@ export function createNoteTracker() {
     junk = 0;
     const name = note.midi % 12;
 
-    // Is the ringing note being bent? (A new pick always means a new note, so only without one.)
+    // Is the ringing note being bent? (A new pick always means a new note, so only without one.
+    // While a bend is held, only a pick that blurred the pitch counts: vibrato pulses too.)
     let bending = false;
-    if (current && !picked) {
+    if (current && !(picked && (struck || level === 0))) {
       const bend = followBend(freq);
       if (bend && typeof bend === 'object') return bend; // a bend, release or pre-bend just became sure
       bending = bend;
@@ -334,7 +355,7 @@ export function createNoteTracker() {
       // (A short break in the pitch also counts as a pick, since quiet picks don't always make the
       // volume jump. But not right after the note started: that's usually a slide or fret change.)
       const breakPick = pitchBreak && sinceStart > BREAK_RING;
-      if (repickCount === 0 && (picked || breakPick) && volume >= current.peak * REPICK_LEVEL) {
+      if (repickCount === 0 && (struck || breakPick) && volume >= current.peak * REPICK_LEVEL) {
         repickCount = 1;
         repickLow = note.midi;
       } else if (repickCount > 0) {
