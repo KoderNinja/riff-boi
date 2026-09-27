@@ -149,7 +149,11 @@ async function startCameraIfOn() {
   $('camera-box').hidden = !settings.camera;
   if (!settings.camera) return;
   const status = (text) => ($('camera-status').textContent = text);
-  cameraOn = await openCamera($('camera-video'), $('camera-canvas'), status, () => !stopBtn.disabled);
+  const riff = startTime; // this recording (a quick Stop and New Riff starts another one)
+  const stillRecording = () => !stopBtn.disabled && startTime === riff;
+  const started = await openCamera($('camera-video'), $('camera-canvas'), status, stillRecording);
+  if (!stillRecording()) return;
+  cameraOn = started;
   if (!cameraOn) return;
   status(cameraNeck ? 'Camera: watching your fretting hand' : "The camera isn't set up, so strings use the usual rule. Tap Set up camera on the home screen first");
 }
@@ -1367,8 +1371,13 @@ const SETUP_HOLD = 15;   // readings (a quarter of a second) the note must ring 
 let setupStep = 0;
 let setupRun = 0;        // readings in a row of the right note with the hand in view
 let setupHands = [];     // the fretting hand at each step
-let setupOpen = false;   // is the setup screen showing?
-let setupCamera = false; // ...and is its camera running?
+let setupSession = 0;    // goes up every time the setup screen opens or closes, so an older opening gives up
+let setupCamera = false; // is the setup screen's camera running?
+
+// "Set up camera", or "Set up camera again" once it's set up.
+function showSetupButton() {
+  $('camera-setup-btn').textContent = cameraNeck ? 'Set up camera again' : 'Set up camera';
+}
 
 // Back to the first note. `problem` says why, if something went wrong.
 function restartSetup(problem = '') {
@@ -1403,12 +1412,13 @@ function handleSetupReading(freq, clarity, volume) {
   if (!neck) return restartSetup("That didn't look right. The camera may have followed your other hand. Keep your fretting hand in the picture and try again");
   cameraNeck = neck;
   setNeck(neck);
+  showSetupButton();
   $('setup-step').textContent = "All set! The white lines should sit on your frets. If they don't, tap Start over";
-  $('camera-setup-btn').textContent = 'Set up camera again';
 }
 
 $('camera-setup-btn').addEventListener('click', async () => {
-  setupOpen = true;
+  const mine = ++setupSession;
+  const stillOpen = () => setupSession === mine;
   setupCamera = false;
   restartSetup();
   showMessage($('setup-msg'), $('setup-hint'));
@@ -1420,14 +1430,21 @@ $('camera-setup-btn').addEventListener('click', async () => {
     showMessage($('setup-msg'), $('setup-hint'), problemFor(err));
   }
   const status = (text) => ($('setup-status').textContent = text);
-  setupCamera = await openCamera($('setup-video'), $('setup-canvas'), status, () => setupOpen);
-  if (setupCamera) status('');
+  const started = await openCamera($('setup-video'), $('setup-canvas'), status, stillOpen);
+  if (!stillOpen()) return;
+  setupCamera = started;
+  if (started) status('');
 });
 
-$('setup-again-btn').addEventListener('click', () => restartSetup());
+// Start over: the lines were off, so this setup is gone (the usual rule picks strings until the next one).
+$('setup-again-btn').addEventListener('click', () => {
+  cameraNeck = null;
+  showSetupButton();
+  restartSetup();
+});
 
 $('setup-done-btn').addEventListener('click', () => {
-  setupOpen = false;
+  setupSession++;
   setupCamera = false;
   stopListening();
   stopCamera($('setup-video'));

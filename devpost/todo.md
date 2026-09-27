@@ -35,10 +35,13 @@ In order of priority. "Me" is stuff only I can do, "Claude" is building with Cla
 - [x] Me: get the new commits from the cloud session onto GitHub (bring them to my Mac from the zip and push, like last time), so riffboi.com updates. Or give the Claude GitHub App access to the org, so the cloud session can push by itself: https://github.com/apps/claude/installations/select_target, then the `riff-boi` org, then the `riff-boi` repo
 - [ ] Me: test Riff Boi on my iPhone at https://riffboi.com (reload the page first). If it still can't hear, open https://riffboi.com/?debug and send Claude a screenshot of the numbers on the Recording screen
 - [ ] Me: test each new feature with my guitar:
-  - [ ] Input picker and the "Can't hear your guitar" message (slice 4)
+  - [ ] The "Can't hear your guitar" message (the input picker is gone: I pick my interface in the Mac's sound settings)
   - [ ] Confidence bar (slice 6)
-  - [ ] String bends: `7b9`, `7b9r7` and `7pb9r7`
-  - [ ] Note values, drawn like a Songsterr tab, at the BPM I set
+  - [ ] String bends: `7b9`, `7b9r7` and `7pb9r7`, a bend that pauses halfway, and vibrato (no extra notes)
+  - [ ] Note values, drawn like a Songsterr tab, at the BPM I set, and Auto detect tempo (it says "not sure" when it isn't)
+  - [ ] A new tempo typed on a saved riff (plays faster or slower), and Detect tempo
+  - [ ] Save .txt, marking a harmonic, Your sound (Play and Download) and Delete all
+  - [ ] Camera (beta): Set up camera, then record a riff and check the strings
 - [ ] Me: write my Devpost description: what it is, the problem, who it's for and how it works (my words)
 - [ ] Me: say how I used AI (Claude Code) in that description (my words)
 - [ ] Me: take screenshots for the Devpost gallery and thumbnail
