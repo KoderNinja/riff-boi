@@ -1,40 +1,33 @@
 ## Inspiration
-I've played guitar for six years, mostly technical metal and instrumental stuff. When I improvise, I find riffs I want to keep, but the second I stop to write one down, the flow is gone, and half the time I forget the riff anyway. I wanted something where I just play and the tab shows up.
+I've been playing guitar for six years, mostly technical metal and instrumental stuff. A lot of my best riffs come out when I'm just messing around, and I've lost so many of them because by the time I grab a pencil or open a tab editor, the riff's gone. I wanted to just play and have the tab write itself.
 
 ## What it does
-Riff Boi listens to my guitar through the mic or my audio interface and writes the tab live while I play single notes. It hears string bends and writes them like real tab (`7b9`, `7b9r7`), draws the rhythm underneath like a tab site, and works out the tempo by itself. When I tap Stop, the riff is saved, so I don't lose it.
+You hit New Riff, play, and the tab shows up while you're playing. It catches bends (like `7b9`), shows the rhythm under the notes like Songsterr does, and can figure out your tempo on its own. When you hit Stop, the riff gets saved so you don't lose it.
 
-On a saved riff I can fix any note (drag it to another string, change the fret, mark a hammer-on, pull-off, slide or harmonic), play it back with a plucked-string sound, slow it down and loop it to practice, and copy it, share it with a link, or save it as a text file. It also gets the tab from an uploaded recording, tells me what key and scale a riff is in, and has a tuner. It runs in the browser at riffboi.com, with no account and nothing to install.
+After that you can fix notes if it guessed wrong, play the riff back, slow it down to practice it, or copy it, share it with a link, or save it as a text file. You can also upload a recording and get the tab from that. There's a tuner too. It all runs in the browser at riffboi.com. No account, nothing to download.
 
 ## How I built it
-It's plain HTML, CSS and JavaScript, with no framework. The Web Audio API listens to the mic, and the Pitchy library works out the pitch 60 times a second. From there my code decides when a new note starts (a pick, a hammer-on, the same note picked again), follows the pitch to hear bends, picks a string and fret for each note, and reads the rhythm. Riffs are saved in the browser's localStorage, so there's no server. It's hosted on Vercel and updates every time I push to GitHub.
+It's just HTML, CSS and JavaScript, no framework. The browser's Web Audio API listens to the mic, and a library called Pitchy figures out the pitch about 60 times a second. The rest is my code: deciding when a new note actually starts, noticing when the pitch bends instead of jumping, picking which string and fret to write, and working out the rhythm. Everything saves in your browser, so there's no server, and it's hosted on Vercel.
 
-The math that ties it together: every pitch $f$ turns into a note number
-
-$$n = 69 + 12\log_2\left(\frac{f}{440\ \text{Hz}}\right)$$
-
-so A4 (440 Hz) is 69, and each fret is exactly 1. How far a pitch is from the nearest note, in cents, is $100\,(n - \operatorname{round}(n))$. That's how Riff Boi tells a bend (the pitch glides through the in-between values) from a hammer-on (it jumps straight to the next whole number). For playback, the plucked-string sound is the Karplus-Strong trick: a burst of noise goes around a loop, and each new sample is the average of two samples one loop back, a little quieter each time:
-
-$$y[t] = 0.996 \cdot \frac{y[t-N] + y[t-N-1]}{2}$$
-
-The averaging smooths the noise into a tone that fades like a real string, and the loop length $N$ sets the pitch.
-
-To know if a change actually made it better, I recorded myself playing riffs and wrote down exactly what I played. A scoreboard script runs Riff Boi on those recordings and counts right, missed and extra notes. Another script runs 230 automatic checks, so I don't break something that already worked.
+The thing that helped the most was testing with real recordings. I recorded myself playing and wrote down exactly what I played, and a script checks how many notes Riff Boi gets right. That way when I changed something, I knew if it actually got better or if I just thought it did.
 
 ## Challenges I ran into
-- **Distortion.** My amp makes the overtones really loud, so Riff Boi kept hearing notes an octave or a fifth too high, or extra notes that weren't there. It follows the note name first and works out the octave separately, and ignores the overtones it knows distortion makes.
-- **The tempo was stuck on 141.** Auto tempo only worked if every note fit one steady beat, so on real playing it gave up almost every time and quietly used the last tempo it found. I rebuilt it: now it tries every tempo and picks the one where the rhythm makes the most sense. On made-up riffs with normal human timing, it went from right 14% of the time to 76%.
-- **Vibrato looked like picking.** Vibrato makes the volume pulse, and Riff Boi thought every pulse was a new note. Looking at the numbers, a real pick blurs the pitch for a moment and vibrato doesn't, so that's how it tells them apart now.
-- **Bends that pause.** When I paused halfway through a bend, Riff Boi wrote three separate notes. Now a pause between two notes keeps the bend going, as long as it isn't sitting on a real note.
+Distortion was the first big one. My amp makes the overtones really loud, so Riff Boi kept writing notes an octave or a fifth too high, or notes I never played. It took a lot of trial and error to get it to trust the real note.
+
+Then the tempo. It kept saying 141 BPM no matter what I played. It turned out the auto tempo only worked if I played perfectly on the beat, which nobody does, so it gave up and reused an old number. I rebuilt it so it tries every tempo and keeps the one where the rhythm makes the most sense.
+
+Vibrato was a weird one. When I added vibrato to a note, Riff Boi thought I was picking it again and added extra notes. A real pick messes up the pitch for a split second and vibrato doesn't, so that's how it tells them apart now.
+
+And bends: if I paused halfway up a bend, it wrote three separate notes. Now it keeps following the bend through the pause.
 
 ## Accomplishments that I'm proud of
-On my test recordings, Riff Boi gets 113 of 115 notes right (98%) and puts all 84 checked notes on the right string. It works live on my real rig with distortion, not just on clean sound. And every change was measured before and after, so I know it got better instead of guessing.
+On my test recordings it gets 113 out of 115 notes right and puts every checked note on the right string. And it works with my actual rig, distortion and all, not just a clean guitar.
 
 ## What I learned
-How sound turns into numbers: pitch, clarity and volume, and why distortion makes pitch detection hard. How to test with real recordings and a scoreboard instead of just trying it and hoping. That a fix for one problem can break something else, which the tests caught more than once. And how to plan a project, cut features, and ship it live with a real domain.
+Way more than I expected about how sound works: pitch, overtones, why distortion makes everything harder. I learned that fixing one thing can break another (that happened a lot), which is why the automatic checks matter. And I learned how to take an idea all the way to something live on a real website that other people can use.
 
 ## What's next
-A camera mode (it's in beta already) that watches my fretting hand to pick the right string, hearing natural harmonics by themselves, Drop D and other tunings, chords, a bass version, and an iPhone app.
+There's a camera mode in beta that watches my fretting hand to get the string right. After that I want it to hear harmonics, support Drop D, and maybe make a bass version.
 
 ## How I used AI
-I built Riff Boi with Claude Code as my pair programmer. The idea, the features, the design, and what to cut were my decisions. I played and labeled the test recordings and tested everything on my guitar and phone. Claude Code wrote most of the code and the tests, explained how it worked as we went, measured the accuracy on my recordings, and helped write the docs. It also drafted this story from my notes, and I edited it.
+I built Riff Boi with Claude Code as a coding partner. The idea, the features and the design choices were mine, and I recorded and labeled the test riffs and tested everything on my guitar. Claude Code wrote most of the code and tests and explained it to me as we went. It also helped write this story from my notes, and I edited it.
