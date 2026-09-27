@@ -69,6 +69,7 @@ In order of priority. "Me" is stuff only I can do, "Claude" is building with Cla
 - [ ] Me + Claude: better accuracy, and ways to tell which string I played (my request, after everything else)
 
 ### Later, after the hackathon
+- [ ] An AI agent for added accuracy (my idea): an AI model that double-checks the tab against the sound, and learns from the notes I fix, to get notes, strings and rhythm right more often
 - [ ] Upload a tab (a file, or paste it in) and Riff Boi turns it into sheet music (my idea). Tab says the exact string and fret, so the notes are easy. The rhythm only comes along if the tab has it, like a Guitar Pro file
 - [ ] The other way too, upload sheet music and Riff Boi turns it into tab (my idea). It would pick the strings and frets with the same rule it already uses. A music file (like MusicXML) is the easy start; a photo or PDF of printed music needs the computer to read the page first, which is much harder
 - [ ] Only if I want cloud sessions on Riff Boi for good: give the Claude GitHub App access to the org (the link is in the first "must do")
