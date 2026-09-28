@@ -13,6 +13,7 @@ Where we left off (Sep 27, 2026):
 - My answers (Sep 27): pushed, keep the 2 new story paragraphs, and `bends.png` goes in the Devpost gallery instead of `riff-bend.png`.
 - Story (Sep 28, my call): says who did what honestly now ("which I built with Claude Code", "we rebuilt", "we kept narrowing"), all 87 strings, and the "helped write this story" line is back. Updated on Devpost too.
 - The video will say I'd never written code before this hackathon (my call).
+- Layout (Sep 28, my picks): Settings drawer on the home screen, grouped riff buttons, "Write a tab". The Devpost gallery has the new screenshots (home, bends, pentatonic run, phone).
 - Video (Sep 28): the storyboard (`devpost/video/storyboard.md`) and the talking points (`devpost/video/script.md`) are ready, rewritten after four reviews (judge, AI-skeptic judge, guitarist, video coach). The diagram now says "The note tracker" instead of "My note tracker".
 - Devpost draft (Sep 27): Claude updated my story there with today's changes (keeping my own ending) and swapped the gallery to the new home screenshot and `bends.png` (order: home, bends, pentatonic run, phone). My elevator pitch, tags and links are unchanged. Left for me: record and upload the video and add its link, then tick the terms box and Submit.
 - Still to check: tap Copy and Share once on riffboi.com (do they say "Copied" and "Link copied"? The test browser couldn't do real taps), and with the camera on, do the strings come out right?
