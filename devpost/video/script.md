@@ -10,7 +10,7 @@ Talking points for each part of `storyboard.md`. Say it in my own words; don't r
 
 I'm Colton. I've played guitar for six years, mostly metal. My best riffs show up when I'm just messing around, and by the time I write them down, they're gone. So I made Riff Boi. You play, and the tab writes itself.
 
-(Optional, if I want to share it: Before this hackathon, I'd never written code.)
+Before this hackathon, I'd never written code.
 
 ## 3. Live demo, one take (0:25 to 1:05)
 [One unbroken take: the screen, my fretting hand in a corner window, guitar audio from the interface. Say something off the cuff first.]
@@ -78,7 +78,7 @@ It catches mistakes too. This week my own bends came out as three separate notes
 
 The biggest thing I learned: a test only proves something if it can fail. And you have to measure instead of guessing, because fixing one thing can break another.
 
-(Optional: When I started, I'd never written code. Now I can explain how a guitar note turns into tab.)
+And now I can explain how a guitar note turns into tab.
 
 ## 11. Outro (4:20 to 4:30)
 

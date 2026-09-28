@@ -7,20 +7,20 @@ You hit New Riff, play, and the tab shows up while you're playing. It catches be
 After that you can fix notes if it guessed wrong, play the riff back, slow it down to practice it, or copy it, share it with a link, or save it as a text file. You can also upload a recording and get the tab from that. There's a tuner too. It all runs in the browser at [riffboi.com](https://riffboi.com). No account, nothing to download.
 
 ## How I built it
-It's just HTML, CSS and JavaScript, no framework. The browser's Web Audio API listens to the mic, and a library called Pitchy figures out the pitch about 60 times a second. The rest is my code: deciding when a new note actually starts, noticing when the pitch bends instead of jumping, picking which string and fret to write, and working out the rhythm. Everything saves in your browser, so there's no server, and it's hosted on Vercel. The code is on [GitHub](https://github.com/riff-boi/riff-boi).
+It's just HTML, CSS and JavaScript, no framework. The browser's Web Audio API listens to the mic, and a library called Pitchy figures out the pitch about 60 times a second. The rest is Riff Boi's own code, which I built with Claude Code: deciding when a new note actually starts, noticing when the pitch bends instead of jumping, picking which string and fret to write, and working out the rhythm. Everything saves in your browser, so there's no server, and it's hosted on Vercel. The code is on [GitHub](https://github.com/riff-boi/riff-boi).
 
 The thing that helped the most was testing with real recordings. I recorded myself playing and wrote down exactly what I played, and a script checks how many notes Riff Boi gets right. That way when I changed something, I knew if it actually got better or if I just thought it did.
 
 ## Challenges I ran into
 Distortion was the first big one. My amp makes the overtones really loud, so Riff Boi kept writing notes an octave or a fifth too high, or notes I never played. It took a lot of trial and error to get it to trust the real note.
 
-Then the tempo. It kept saying 141 BPM no matter what I played. It turned out the auto tempo only worked if I played perfectly on the beat, which nobody does, so it gave up and reused an old number. I rebuilt it so it tries every tempo and keeps the one where the rhythm makes the most sense.
+Then the tempo. It kept saying 141 BPM no matter what I played. It turned out the auto tempo only worked if I played perfectly on the beat, which nobody does, so it gave up and reused an old number. We rebuilt it so it tries every tempo and keeps the one where the rhythm makes the most sense.
 
 Vibrato was a weird one. When I added vibrato to a note, Riff Boi thought I was picking it again and added extra notes. A real pick messes up the pitch for a split second and vibrato doesn't, so that's how it tells them apart now.
 
 And bends: if I paused halfway up a bend, it wrote three separate notes. Now it keeps following the bend through the pause.
 
-Then my own bends broke in a different way. A 7b9 on my guitar came out as three separate notes. I recorded it and looked at the pitch numbers: my D was a little sharp, and I start bending right after I pick, before Riff Boi had even measured the note. My first fix broke Crazy Train, one of my test riffs that already worked. The scoreboard caught it, so I kept narrowing the fix until every old recording scored the same and all my bends came out right.
+Then my own bends broke in a different way. A 7b9 on my guitar came out as three separate notes. I recorded it, and the pitch numbers showed that my D was a little sharp and that I start bending right after I pick, before Riff Boi had even measured the note. The first fix broke Crazy Train, one of my test riffs that already worked. My scoreboard caught it, so we kept narrowing the fix until every old recording scored the same and all my bends came out right.
 
 The camera mode had its own problems. At first it couldn't find my fretting hand at all: the picture was cropped, and it was guessing where the frets were. Now there's a 5-second setup where I play the 3rd and 12th frets, and it draws the frets right on the video.
 
