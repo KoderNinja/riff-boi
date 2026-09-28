@@ -1,87 +1,81 @@
 # Riff Boi demo video script (about 4:30)
 
-Talking points for each part of `storyboard.md`. Say it in my own words; don't read it word for word. The lines below are just one way to say it. What to show is in [brackets].
+Delivery: a steady pace, a short pause between sections, and my own words. The lines are a guide, not a teleprompter. What to show is in [brackets], and it matches `storyboard.md`.
 
 ## 1. Cold open (0:00 to 0:08)
-[No talking. Play a lick while the tab writes itself. My hands and the screen both in the shot.]
+[No narration. Play a lick while the tab writes itself, with my hands and the screen both in frame.]
 
-## 2. Who I am (0:08 to 0:25)
-[Me with the guitar, to the camera.]
+## 2. Introduction (0:08 to 0:25)
+My name is Colton, and I've played guitar for six years, mostly metal and instrumental music. My best ideas come while I'm improvising, and by the time I stop to write them down, they're gone. Riff Boi solves that: you play, and the tab writes itself. Before this hackathon, I had never written code.
 
-I'm Colton. I've played guitar for six years, mostly metal. My best riffs show up when I'm just messing around, and by the time I write them down, they're gone. So I made Riff Boi. You play, and the tab writes itself.
+## 3. Live demonstration (0:25 to 1:05)
+[One unbroken take: the screen, my fretting hand in a corner window, guitar audio from the interface.]
 
-Before this hackathon, I'd never written code.
+This is a riff Riff Boi has never heard before.
 
-## 3. Live demo, one take (0:25 to 1:05)
-[One unbroken take: the screen, my fretting hand in a corner window, guitar audio from the interface. Say something off the cuff first.]
+[Tap New Riff. Play picked notes, a bend with a release, and a quick hammer-on.]
 
-Here's a riff I've never played for it before.
-
-[Tap New Riff. Play picked notes, a bend I let back down, and a quick hammer-on.]
-
-Each note shows up gray while it's listening and turns red once it's sure. The bend is written like real tab, release and all, and the rhythm goes underneath, like Songsterr.
+Each note appears in gray while Riff Boi is listening and turns red once it's confirmed. Bends are written the way guitarists write them, release included, and the rhythm is notated underneath.
 
 [Tap Stop.]
 
-Stop saves it, and it figured out the tempo from how I played. It's single notes for now, no chords yet.
+When I stop, the riff is saved, and the tempo is detected from my playing. For now it transcribes single notes, not chords.
 
-## 4. How I built it (1:05 to 1:25)
+## 4. How it was built (1:05 to 1:25)
 [To the camera, or the GitHub page.]
 
-I built this with Claude Code, an AI coding tool. It wrote most of the code and the tests and explained them to me as we went. I decided what to build, recorded and labeled every test riff, tested it on my own guitar, and caught what it got wrong. Its tests passed on clean test tones, but my distorted guitar still wrote notes I never played. That's where most of the work went.
+I built Riff Boi with Claude Code, an AI coding assistant. It wrote most of the code and the tests and explained each part to me. I decided what to build, recorded and labeled every test riff, tested it on my own guitar, and caught what it got wrong. Its tests passed on clean test tones, but my distorted guitar still produced notes I never played. Fixing that was most of the work.
 
-## 5. Fix it and practice it (1:25 to 1:45)
+## 5. Editing and practice (1:25 to 1:45)
 [The saved riff.]
 
-The sound can't tell which string I played, so sometimes it picks a different spot. I played this one on the G string, so I just drag it there.
+The sound alone can't identify the string, so Riff Boi sometimes chooses a different position. I played this on the G string, so I drag it there.
 
-[Drag a note. Then Play, Speed 75%, Loop.]
+[Drag a note. Tap Play, set Speed to 75%, and turn on Loop.]
 
-I can slow it down and loop it to practice.
+I can slow it down and loop it for practice,
 
 [Play Your sound.]
 
-And it keeps my real recording right next to the tab.
+and my original recording is saved right next to the tab.
 
-## 6. Everything else (1:45 to 1:53)
-[Montage: Share link, Save .txt, Upload an mp3, Tuner, Write a tab.]
+## 6. Feature overview (1:45 to 1:53)
+[Montage: Link, Save .txt, Upload a recording, Tuner, Write a tab.]
 
-It also shares riffs with a link, gets the tab from a recording, and has a tuner.
+It can also share a riff as a link, create tab from a recording, and tune your guitar.
 
 ## 7. How it works (1:53 to 2:55)
-[Me and the guitar. The Tuner open for part two.]
+[With the guitar. The Tuner open for the second point.]
 
-The browser listens about 60 times a second, and a library called Pitchy tells it the pitch. Everything after that is the note tracker, and it has three problems to solve.
+The browser samples the microphone about 60 times a second, and a library called Pitchy measures the pitch. Everything after that is the note tracker, which solves three problems.
 
-One. [Play the same E on three strings.] These are the same note, so the sound can't tell the string. It picks the spot that needs the least hand movement, and keeps bends away from the nut, where they're hard to play.
+First, [play the same E on three strings] the same note can be played on different strings, and they sound identical. So Riff Boi chooses the position that needs the least hand movement, and keeps bends away from the nut, where they're hard to play.
 
-Two. [On the Tuner, bend a note, then hammer one on.] A bend glides through every pitch in between. A hammer-on jumps straight there. That's how it tells a bend from a new note.
+Second, [on the Tuner, bend a note, then hammer one on] a bend glides through every pitch in between, while a hammer-on jumps straight to the next note. That difference is how it tells them apart.
 
-Three. [Play the 12th and 7th fret harmonics.] These notes are hidden inside every note I play, and distortion makes them loud. So it trusts the lowest note it hears. That's why the early versions wrote notes an octave or a fifth too high.
+Third, [play the 12th and 7th fret harmonics] every note contains higher overtones, and distortion makes them loud. Riff Boi trusts the lowest pitch it hears, which is why early versions wrote notes an octave or a fifth too high.
 
-## 8. The camera, in beta (2:55 to 3:15)
-[Open Settings, turn on Camera (beta), tap Set up camera: the 3rd fret, then the 12th, on the low E. The fret lines appear. Then play a note.]
+## 8. Camera mode, in beta (2:55 to 3:15)
+[Open Settings, turn on Camera (beta), tap Set up camera. Play the 3rd fret, then the 12th, on the low E. The fret lines appear. Then play a note.]
 
-So the sound gives the note, and my hand gives the string. Two notes of setup, and it measures my neck. I thought about an AI that looks at the picture instead, but it would be slow, cost money every time, and need a secret key. Measuring two frets is free and instant.
+The camera adds the missing piece: the sound gives the note, and my hand gives the string. A two-note setup measures the neck. I considered an AI model that analyzes the video instead, but it would be slow, cost money for every image, and need a secret key. Measuring two frets is free and instant.
 
 (Only if it gets the string right every time I test it. If not, show the setup, say it's in beta, and skip the last two sentences.)
 
-## 9. How I know it works (3:15 to 3:55)
-[Terminal: `node tools/score.mjs`, zoomed in on the TOTAL line. Then `tools/recordings/bend-G.txt` next to the tab it wrote.]
+## 9. Results and testing (3:15 to 3:55)
+[Terminal: `node tools/score.mjs`, zoomed in on the TOTAL line. Then `tools/recordings/bend-G.txt` next to the tab it produced.]
 
-How do I know it works? I recorded myself, typed out exactly what I played, and this script scores Riff Boi against it: 116 of 118 notes. My hardest riff, Crazy Train, went from 8 of 31 to 29, with zero wrong notes. It would rather miss a note than write a wrong one.
+To measure accuracy, I recorded myself and wrote down exactly what I played, and a scoring script compares Riff Boi's tab against it. It currently gets 116 of 118 notes right. My hardest test riff, Crazy Train, went from 8 of 31 notes to 29, with no wrong notes. It's tuned to miss a note rather than write the wrong one.
 
-It catches mistakes too. This week my own bends came out as three separate notes. The first fix broke Crazy Train, the scoreboard caught it, and we narrowed the fix until everything passed.
+The scoreboard also catches mistakes. This week my own bends were coming out as three separate notes. The first fix broke Crazy Train, the scoreboard caught it, and we refined the fix until every recording passed.
 
 ## 10. What I learned (3:55 to 4:20)
 [To the camera.]
 
-The biggest thing I learned: a test only proves something if it can fail. And you have to measure instead of guessing, because fixing one thing can break another.
+The most important lesson was that a test only proves something if it can fail. I also learned to measure instead of guessing, because fixing one problem can easily create another. Now I can explain, step by step, how a guitar note becomes tab.
 
-And now I can explain how a guitar note turns into tab.
+## 11. Closing (4:20 to 4:30)
 
-## 11. Outro (4:20 to 4:30)
-
-It's at riffboi.com, free, no account. Plug in and play something.
+Riff Boi is free at riffboi.com, with no account required. Plug in and play something.
 
 [End card: riffboi.com and github.com/riff-boi/riff-boi]
