@@ -10,6 +10,8 @@ Taken from riffboi.com on Sep 26 and 27 (3:2 for the gallery, plus a phone one).
 - `riff-rhythm.png`: a pentatonic run with rhythm
 - `phone-riff.png`: RIFFTEST on a phone
 
+For the gallery (my pick, Sep 27): `bends.png` instead of `riff-bend.png`, plus `riff-rhythm.png`, `home.png` and `phone-riff.png`.
+
 ## Built with (Devpost tags)
 javascript, html5, css3, web-audio-api, pitchy, mediapipe, localstorage, vercel, github, node.js (only for the tests)
 
