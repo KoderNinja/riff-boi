@@ -15,6 +15,9 @@ const MOVE_COST = 2;       // cost per fret of moving your hand outside that box
 const STRING_COST = 1;     // cost per string you jump across
 const OPEN_POSITION = 3;   // hand this close to the nut = open strings are easy
 const WALK_COST = 0.5;     // walking up/down one string a fret at a time: keeping going is cheap
+const LOW_BEND_FRETS = 4;  // bending this close to the nut is hard (and rare in rock and metal),
+const LOW_BEND_COST = 3;   // ...so a bend there costs this much (less than moving the hand 2 frets)
+const OPEN_BEND_COST = 100; // and an open string can't be bent at all
 
 // Every string/fret spot where this note can be played (up to `maxFret`).
 export function positionsFor(midi, maxFret = MAX_FRET) {
@@ -64,6 +67,15 @@ export function withFret(note, fret) {
   return { ...note, fret, midi, name: midiToName(midi), harmonic: undefined }; // a fretted note now
 }
 
+// Extra effort for bending a note at this spot (0 if the note isn't bent). With nothing else to go
+// on, a bent D4 goes on the G string's 7th fret, the classic spot, not the B string's 3rd. In a riff
+// played near the nut, staying there is still cheaper than moving the hand up for one bend.
+function bendCost(spot, bent) {
+  if (!bent) return 0;
+  if (spot.fret === 0) return OPEN_BEND_COST;
+  return spot.fret <= LOW_BEND_FRETS ? LOW_BEND_COST : 0;
+}
+
 export function createPositionPicker(first = null, finger = 0) {
   let boxLow = null;        // lowest fret of the hand's box (null = no note yet)
   let total = 0;            // effort of every move so far
@@ -98,7 +110,8 @@ export function createPositionPicker(first = null, finger = 0) {
     else if (fret > boxLow + BOX_SIZE - 1) boxLow = fret - (BOX_SIZE - 1);
   }
 
-  function pick(midi) {
+  // `bent`: the note is bent (see bendCost).
+  function pick(midi, bent = false) {
     const spots = positionsFor(midi);
     if (spots.length === 0) return null;
 
@@ -106,12 +119,14 @@ export function createPositionPicker(first = null, finger = 0) {
     if (boxLow === null) {
       spot = first ?? firstSpot(spots);
       boxLow = Math.max(spot.fret - finger, 1);
+      total += bendCost(spot, bent);
     } else {
+      const effort = (s) => cost(s) + bendCost(s, bent);
       spot = spots.reduce((best, s) => {
-        const diff = cost(s) - cost(best);
+        const diff = effort(s) - effort(best);
         return diff < 0 || (diff === 0 && s.string > best.string) ? s : best;
       });
-      total += cost(spot);
+      total += effort(spot);
       moveBox(spot.fret);
     }
     // Remember the direction of a walk along a string. Repeating the same fret keeps it.
@@ -139,7 +154,7 @@ export function placeNotes(notes) {
   firstSpots.forEach((first, rank) => {
     for (let finger = 0; finger < BOX_SIZE; finger++) {
       const pick = createPositionPicker(first, finger);
-      const spots = notes.map((note) => pick(note.midi));
+      const spots = notes.map((note) => pick(note.midi, note.bend > 0));
       const total = pick.totalCost();
       const height = spots.reduce((sum, s) => sum + s.fret, 0); // how far up the neck overall
       const better = !best || total < best.total ||

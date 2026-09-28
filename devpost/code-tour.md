@@ -122,8 +122,8 @@ Everything is saved in the browser's localStorage under 3 names: `riffboi.riffs`
 
 ## `tools/`: the tests
 
-- `check.mjs`: 239 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
-- `score.mjs`: the scoreboard. It replays my 9 real recordings and compares them to what I really played (the `.txt` answer files): 116 of 118 notes, 84 of 87 on the right string, and 3 of 3 bends.
+- `check.mjs`: 241 checks with made-up readings, no guitar needed (plus two real recordings for where the last note ends). Run it after every change.
+- `score.mjs`: the scoreboard. It replays my 9 real recordings and compares them to what I really played (the `.txt` answer files): 116 of 118 notes, 87 of 87 on the right string, and 3 of 3 bends.
 - `replay.mjs`: replays one `?debug` recording through the current code, to compare before and after a change.
 
 ## Numbers worth knowing

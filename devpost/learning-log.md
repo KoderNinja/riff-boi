@@ -297,3 +297,8 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - Letting the bend down while muting it made the volume swell like a pick, which added a note, and a release that wobbled as it faded didn't count. Both are fixed.
 - My first try broke Crazy Train (a few notes got lost), so I narrowed each fix until the scoreboard was back where it was. My bend recording is on the scoreboard now, with 3 of 3 bends right.
 
+## Sep 28, 2026: Bends go where you'd really play them
+- My bends came out on the B string's 3rd fret (3b5) instead of where I played them, the G string's 7th fret (7b9). The sound is exactly the same, so Riff Boi just picked the lowest fret.
+- But bending right by the nut is hard, and you can't bend an open string at all. So now a bend at frets 1 to 4 costs a little extra, and an open string never gets a bend. With nothing else to go on, a bent D goes on the G string's 7th fret, the classic spot. In a riff that's really played by the nut, the bend still stays there, because moving the hand up costs more.
+- The scoreboard's strings went from 84 of 87 to 87 of 87.
+

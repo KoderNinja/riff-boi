@@ -25,7 +25,7 @@ Then my own bends broke in a different way. A 7b9 on my guitar came out as three
 The camera mode had its own problems. At first it couldn't find my fretting hand at all: the picture was cropped, and it was guessing where the frets were. Now there's a 5-second setup where I play the 3rd and 12th frets, and it draws the frets right on the video.
 
 ## Accomplishments that I'm proud of
-On my test recordings it gets **116 out of 118 notes** right, every bend included, and puts 84 of 87 on the right string. And it works with my actual rig, distortion and all, not just a clean guitar.
+On my test recordings it gets **116 out of 118 notes** right, every bend included, and puts all 87 on the right string. And it works with my actual rig, distortion and all, not just a clean guitar.
 
 ## What I learned
 Way more than I expected about how sound works: pitch, overtones, why distortion makes everything harder. I learned that fixing one thing can break another (that happened a lot), which is why the automatic checks matter. And I learned how to take an idea all the way to something live on a real website that other people can use.
