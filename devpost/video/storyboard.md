@@ -18,9 +18,9 @@ What the judges score, and what each part of the video is for:
 | 0:25 to 1:05 | **Live demo, one take, no cuts.** Screen with my fretting hand in a corner window. New Riff, play a new riff (picked notes, a bend and release, a hammer-on), Stop. | "A riff I've never played for it," gray then red, the bend, the rhythm, Stop saves it, single notes only | "Gray = hearing it · Red = in the tab" |
 | 1:05 to 1:25 | Me to the camera (or the GitHub page) | How I built it with Claude Code, said plainly | "Built with Claude Code (AI), disclosed" |
 | 1:25 to 1:45 | The saved riff: drag a note to the string I played, Play at 75% with Loop, play Your sound | Fix it, practice it, my real sound | "Fix any note by hand" |
-| 1:45 to 1:53 | **Montage, about 1.5 s each:** Share link, Save .txt, Upload an mp3, Tuner, New Tab | One line, or nothing | A label on each clip |
+| 1:45 to 1:53 | **Montage, about 1.5 s each:** Share link, Save .txt, Upload an mp3, Tuner, Write a tab | One line, or nothing | A label on each clip |
 | 1:53 to 2:55 | **How it works, with the guitar.** The same E on three strings. The Tuner's Hz number during a bend, then a hammer-on. The 12th and 7th fret harmonics. | The three problems the note tracker solves | "1. Which string?" · "2. Bend or new note?" · "3. Overtones" |
-| 2:55 to 3:15 | **Camera (beta):** Set up camera, play the 3rd and 12th frets, the white fret lines appear, then play a note where my hand is | Sound gives the note, my hand gives the string; why a 2-note setup instead of an AI | "Camera (beta)" |
+| 2:55 to 3:15 | **Camera (beta):** Settings, Camera (beta) on, Set up camera, play the 3rd and 12th frets, the white fret lines appear, then play a note where my hand is | Sound gives the note, my hand gives the string; why a 2-note setup instead of an AI | "Camera (beta)" |
 | 3:15 to 3:55 | Terminal running `node tools/score.mjs`, **zoomed in on the TOTAL line**, then `tools/recordings/bend-G.txt` next to the tab it wrote | How I know it works, Crazy Train 8 to 29 of 31, the bend fix that broke Crazy Train | "116 / 118 notes · 0 wrong" |
 | 3:55 to 4:20 | Me to the camera | What I learned: two specific things | "A test only proves something if it can fail" |
 | 4:20 to 4:30 | End card | "Try it at riffboi.com" | "riffboi.com · github.com/riff-boi/riff-boi" |
@@ -39,7 +39,7 @@ What the judges score, and what each part of the video is for:
 **Before:**
 - Tune with the tuner.
 - Reload riffboi.com with Cmd+Shift+R.
-- Turn on Auto detect tempo.
+- Turn on Auto detect tempo (in Settings on the home screen).
 - Delete test riffs so the list looks clean.
 - Do the camera setup if I'm using that part.
 - Close other tabs and turn off notifications.

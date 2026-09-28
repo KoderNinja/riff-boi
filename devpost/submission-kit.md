@@ -3,12 +3,12 @@
 Helpers for the Devpost page and the video. The words on Devpost and in the video are mine; this is just the checklist, the facts and the outline.
 
 ## Screenshots (`devpost/screenshots/`)
-Taken from riffboi.com on Sep 26 and 27 (3:2 for the gallery, plus a phone one). I can take my own too.
+Taken from riffboi.com (3:2 for the gallery, plus a phone one); retaken on Sep 28 with the new layout (Settings drawer, grouped riff buttons). I can take my own too.
 - `home.png`: the home screen
-- `riff-bend.png`: RIFFTEST as a saved riff (rhythm, tempo, the buttons; its bend at the end is cut off on the right)
+- `riff-bend.png`: RIFFTEST as a saved riff (the old layout; its bend at the end is cut off on the right, so it's not in the gallery)
 - `bends.png`: my real 7b9 bends from Sep 27 (moved to the G string, where I played them), with the bend arrows and the release
 - `riff-rhythm.png`: a pentatonic run with rhythm
-- `phone-riff.png`: RIFFTEST on a phone
+- `phone-riff.png`: the pentatonic run on a phone
 
 For the gallery (my pick, Sep 27): `bends.png` instead of `riff-bend.png`, plus `riff-rhythm.png`, `home.png` and `phone-riff.png`.
 

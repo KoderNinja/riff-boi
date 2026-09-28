@@ -44,7 +44,7 @@ I can slow it down and loop it to practice.
 And it keeps my real recording right next to the tab.
 
 ## 6. Everything else (1:45 to 1:53)
-[Montage: Share link, Save .txt, Upload an mp3, Tuner, New Tab.]
+[Montage: Share link, Save .txt, Upload an mp3, Tuner, Write a tab.]
 
 It also shares riffs with a link, gets the tab from a recording, and has a tuner.
 
@@ -60,7 +60,7 @@ Two. [On the Tuner, bend a note, then hammer one on.] A bend glides through ever
 Three. [Play the 12th and 7th fret harmonics.] These notes are hidden inside every note I play, and distortion makes them loud. So it trusts the lowest note it hears. That's why the early versions wrote notes an octave or a fifth too high.
 
 ## 8. The camera, in beta (2:55 to 3:15)
-[Camera (beta) on. Set up camera: the 3rd fret, then the 12th, on the low E. The fret lines appear. Then play a note.]
+[Open Settings, turn on Camera (beta), tap Set up camera: the 3rd fret, then the 12th, on the low E. The fret lines appear. Then play a note.]
 
 So the sound gives the note, and my hand gives the string. Two notes of setup, and it measures my neck. I thought about an AI that looks at the picture instead, but it would be slow, cost money every time, and need a secret key. Measuring two frets is free and instant.
 

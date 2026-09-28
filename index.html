@@ -22,7 +22,7 @@
   <section id="screen-home" class="screen">
     <header class="home-top">
       <h1 class="logo">Riff Boi</h1>
-      <button id="new-tab-btn" class="secondary-btn new-tab-btn">New Tab</button>
+      <button id="new-tab-btn" class="secondary-btn new-tab-btn">Write a tab</button>
       <button id="tuner-btn" class="secondary-btn tuner-btn">Tuner</button>
     </header>
     <button id="new-riff-btn" class="record-btn" title="New Riff (Space)"><span class="record-dot" aria-hidden="true"></span>New Riff</button>
@@ -33,6 +33,9 @@
     </div>
     <!-- Settings for the tab: the tempo you play at (for note values), or Auto (Riff Boi works it
          out from your notes when you tap Stop), the time signature, and rhythm on/off -->
+    <!-- Tucked away in a drawer: the line next to Settings says what's set (see showSettingsSummary) -->
+    <details id="settings-drawer" class="settings-drawer">
+    <summary><span class="setting-label">Settings</span> <span id="settings-summary" class="settings-summary"></span></summary>
     <div class="settings-row">
       <div class="tempo">
         <span class="setting-label">Tempo</span>
@@ -47,6 +50,7 @@
       <label class="rhythm-switch" title="Watch my fretting hand to pick the right string"><input id="camera-input" type="checkbox"> <span class="setting-label">Camera (beta)</span></label>
       <button id="camera-setup-btn" class="small-btn" hidden>Set up camera</button>
     </div>
+    </details>
     <!-- Only shown when the address ends in ?debug (for tuning note detection) -->
     <button id="save-readings-btn" class="small-btn" hidden>Save last recording's readings</button>
     <button id="save-sound-btn" class="small-btn" hidden>Save last recording's sound (WAV)</button>
@@ -139,35 +143,44 @@
     <!-- Tap a note in the tab to move it to another string (the string is Riff Boi's best guess) -->
     <div id="move-row" class="move-row" hidden></div>
     <p id="move-hint" class="muted move-hint">Tap a note to move it to another string</p>
-    <div class="riff-controls">
-      <button id="riff-play-btn" class="secondary-btn play-btn">Play</button>
-      <button id="riff-copy-btn" class="secondary-btn copy-btn">Copy</button>
-      <button id="riff-share-btn" class="secondary-btn copy-btn">Share</button>
-      <!-- The same tab as Copy, saved as a .txt file (on a phone it goes to Files) -->
-      <button id="riff-file-btn" class="secondary-btn copy-btn">Save .txt</button>
-      <!-- Only for a riff opened from a shared link -->
+    <!-- Play it (the big button). A riff opened from a shared link can be saved to my riffs. -->
+    <div class="riff-main">
+      <button id="riff-play-btn" class="secondary-btn play-btn riff-play">Play</button>
       <button id="riff-save-btn" class="secondary-btn add-note-btn" hidden>Save to my riffs</button>
-      <!-- This riff's tempo: type a new one to speed it up or slow it down -->
-      <label id="riff-tempo" class="riff-tempo">
-      <span class="setting-label">Tempo</span>
-      <input id="riff-bpm-input" class="bpm-input" type="number" inputmode="numeric" min="40" max="240" step="1" aria-label="This riff's tempo in beats per minute">
-      <span class="setting-unit">BPM</span>
-      <span id="riff-auto-tag" class="muted">auto</span>
-      </label>
-      <!-- Tempo was wrong when it was recorded? Work it out again and read the rhythm again -->
-      <button id="riff-detect-btn" class="small-btn" type="button">Detect tempo</button>
     </div>
-    <!-- Practice: slow it down, play it over and over, and hear a click on the beat -->
-    <!-- Your real sound (a recorded or uploaded riff), kept in this browser -->
-    <div id="sound-row" class="practice-row" hidden>
-      <span class="setting-label">Your sound</span>
-      <button id="sound-play-btn" class="secondary-btn play-btn">Play</button>
-      <button id="sound-save-btn" class="secondary-btn copy-btn">Download</button>
-    </div>
-    <div class="practice-row">
-      <label class="meter-picker"><span class="setting-label">Speed</span> <select id="speed-select" class="input-select"><option value="1">100%</option><option value="0.75">75%</option><option value="0.5">50%</option></select></label>
-      <label class="rhythm-switch"><input id="loop-input" type="checkbox"> <span class="setting-label">Loop</span></label>
-      <label id="click-switch" class="rhythm-switch"><input id="click-input" type="checkbox"> <span class="setting-label">Click</span></label>
+    <!-- Everything else, in small labeled groups -->
+    <div class="riff-groups">
+      <!-- Practice: slow it down, play it over and over, and hear a click on the beat -->
+      <div class="riff-group">
+        <span class="setting-label group-label">Practice</span>
+        <label class="meter-picker"><span class="setting-label">Speed</span> <select id="speed-select" class="input-select"><option value="1">100%</option><option value="0.75">75%</option><option value="0.5">50%</option></select></label>
+        <label class="rhythm-switch"><input id="loop-input" type="checkbox"> <span class="setting-label">Loop</span></label>
+        <label id="click-switch" class="rhythm-switch"><input id="click-input" type="checkbox"> <span class="setting-label">Click</span></label>
+      </div>
+      <!-- This riff's tempo: type a new one to speed it up or slow it down. Detect works it out again
+           from how it was played, for when the tempo was wrong when it was recorded. -->
+      <div id="tempo-group" class="riff-group">
+        <span class="setting-label group-label">Tempo</span>
+        <label id="riff-tempo" class="riff-tempo">
+          <input id="riff-bpm-input" class="bpm-input" type="number" inputmode="numeric" min="40" max="240" step="1" aria-label="This riff's tempo in beats per minute">
+          <span class="setting-unit">BPM</span>
+          <span id="riff-auto-tag" class="muted">auto</span>
+        </label>
+        <button id="riff-detect-btn" class="small-btn" type="button">Detect</button>
+      </div>
+      <!-- Share: copy it as text tab, send a link (a phone opens its share menu), or save a .txt file -->
+      <div class="riff-group">
+        <span class="setting-label group-label">Share</span>
+        <button id="riff-copy-btn" class="secondary-btn copy-btn">Copy</button>
+        <button id="riff-share-btn" class="secondary-btn copy-btn">Link</button>
+        <button id="riff-file-btn" class="secondary-btn copy-btn">Save .txt</button>
+      </div>
+      <!-- Your real sound (a recorded or uploaded riff), kept in this browser -->
+      <div id="sound-row" class="riff-group" hidden>
+        <span class="setting-label group-label">Your sound</span>
+        <button id="sound-play-btn" class="secondary-btn play-btn">Play</button>
+        <button id="sound-save-btn" class="secondary-btn copy-btn">Download</button>
+      </div>
     </div>
     <!-- Same confidence bar, for the saved riff (hidden for riffs saved before it existed) -->
     <div id="riff-confidence" class="confidence" hidden>
@@ -180,10 +193,10 @@
     <p id="riff-scale" class="muted riff-scale" hidden></p>
   </section>
 
-  <!-- New Tab: write a tab by hand, one note at a time, at the tempo and time signature set on the home screen -->
+  <!-- Write a tab: write a tab by hand, one note at a time, at the tempo and time signature set on the home screen -->
   <section id="screen-editor" class="screen" hidden>
     <button id="editor-back-btn" class="back-btn">← Latest Riffs</button>
-    <h2 class="screen-title">New Tab</h2>
+    <h2 class="screen-title">Write a tab</h2>
     <div id="editor-tab" class="tab"></div>
     <div class="editor-controls">
       <button id="editor-play-btn" class="secondary-btn play-btn" disabled>Play</button>

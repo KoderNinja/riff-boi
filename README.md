@@ -17,7 +17,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 - Draws the tab like a tab site (Songsterr style): string lines with the fret numbers on them, bar lines, and the rhythm underneath, at the tempo you set, in the time signature you pick (2/4 to 12/8). It can also work out the tempo from how you played (Auto detect tempo), even when your timing drifts a little, and says when it isn't sure. On a saved riff, typing a new tempo plays it faster or slower, and Detect tempo reads the rhythm again if the tempo was wrong. You can turn off Show note lengths to just see the notes.
 - Saves each riff to a Latest Riffs list that's still there next time you open it. You can rename or delete riffs there, or delete them all (it asks first).
 - Shows how sure it is about the tab, with a hint when something's off, like background noise or an out-of-tune guitar, and fades the notes it wasn't sure about, so you know which ones to check.
-- Lets you write a tab by hand too (New Tab): pick a string, a fret and a note value for each note.
+- Lets you write a tab by hand too (Write a tab): pick a string, a fret and a note value for each note.
 - Keeps the real sound of each riff (your recording, or the file you uploaded), so you can listen to how you actually played it or download it. It's kept in your browser and never uploaded.
 - Plays a riff back with a plucked-string sound, so you can hear what the tab says. For practice it can slow down (75% or 50%), loop, and click on the beat.
 - Lets you fix a saved riff's tab: drag a note to another string (the string is a best guess), or tap it to change its fret, mark a hammer-on, pull-off or slide, mark a natural harmonic (written `<12>`), or delete it.
@@ -25,7 +25,7 @@ I made it for the [Beginner's Paradise – FirstCommit](https://firstcommit.devp
 - Says which key and scale a riff sounds like, like E minor pentatonic.
 - Shares a riff with a link: the riff is packed into the link itself, so nothing is uploaded anywhere.
 - Gets the tab of a recording too: upload an mp3, wav or m4a.
-- Camera (beta): watches your fretting hand to pick the right string. A 5-second setup shows it where your frets are: tap Set up camera, play the 3rd fret and then the 12th fret on the low E, and it draws your frets on the video. The hand tracking is Google's MediaPipe, running in your browser; the video never leaves your device.
+- Camera (beta): watches your fretting hand to pick the right string. A 5-second setup shows it where your frets are: open Settings, turn on Camera (beta), tap Set up camera, play the 3rd fret and then the 12th fret on the low E, and it draws your frets on the video. The hand tracking is Google's MediaPipe, running in your browser; the video never leaves your device.
 - Has a tuner built in.
 - Tells you when it can't hear your guitar. It listens to your computer's default input, so to use an audio interface, pick it as the input in your computer's sound settings.
 

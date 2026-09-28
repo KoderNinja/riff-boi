@@ -302,3 +302,9 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - But bending right by the nut is hard, and you can't bend an open string at all. So now a bend at frets 1 to 4 costs a little extra, and an open string never gets a bend. With nothing else to go on, a bent D goes on the G string's 7th fret, the classic spot. In a riff that's really played by the nut, the bend still stays there, because moving the hand up costs more.
 - The scoreboard's strings went from 84 of 87 to 87 of 87.
 
+## Sep 28, 2026: Making it less confusing
+- The home screen had every setting out at once: tempo, auto tempo, time signature, note lengths and the camera. Now they're in a Settings drawer, and the line next to it says what's set (like "120 BPM · 4/4 · note lengths on"), so I only open it to change something.
+- A saved riff had a row of buttons that all looked the same. Now Play is big and red on top, and the rest are in small labeled groups: Practice, Tempo, Share and Your sound. On a phone, each group's name gets its own line.
+- "New Tab" is "Write a tab" now, so it can't be mixed up with a browser tab or with New Riff.
+- An old message still said to check my input on the home screen, but the input picker is gone. It points to the computer's sound settings now.
+

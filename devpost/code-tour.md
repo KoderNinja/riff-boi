@@ -94,7 +94,7 @@ They're mixed 35% tone, 25% steadiness, 20% tuning, 20% noise. If Riff Boi had t
 
 ## `js/editor.js`: writing a tab by hand
 
-New Tab lets you write a tab note by note: a string, a fret and a note value. `writtenRiff` turns that into the same kind of riff Riff Boi saves when it hears you (each note starts where the one before ended, in seconds at your tempo), so drawing, saving and the Latest Riffs list all just work. `retime` changes a written tab's tempo but keeps its note values. `app.js` has the buttons: the string and note value rows, the fret box, Add note, Undo and Save.
+Write a tab (it used to be called New Tab) lets you write a tab note by note: a string, a fret and a note value. `writtenRiff` turns that into the same kind of riff Riff Boi saves when it hears you (each note starts where the one before ended, in seconds at your tempo), so drawing, saving and the Latest Riffs list all just work. `retime` changes a written tab's tempo but keeps its note values. `app.js` has the buttons: the string and note value rows, the fret box, Add note, Undo and Save.
 
 ## `js/upload.js`: tabs from a recording
 

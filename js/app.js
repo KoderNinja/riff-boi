@@ -155,7 +155,7 @@ async function startCameraIfOn() {
   if (!stillRecording()) return;
   cameraOn = started;
   if (!cameraOn) return;
-  status(cameraNeck ? 'Camera: watching your fretting hand' : "The camera isn't set up, so strings use the usual rule. Tap Set up camera on the home screen first");
+  status(cameraNeck ? 'Camera: watching your fretting hand' : "The camera isn't set up, so strings use the usual rule. Open Settings on the home screen and tap Set up camera first");
 }
 
 function stopCameraIfOn() {
@@ -178,7 +178,7 @@ function clampBpm(bpm, fallback) {
 function setBpm(bpm) {
   settings.bpm = clampBpm(bpm, DEFAULT_SETTINGS.bpm);
   showTempo();
-  saveSettings(settings);
+  rememberSettings();
 }
 
 // With Auto detect tempo on, the tempo box is blank (Riff Boi works the tempo out); its − and +
@@ -196,7 +196,7 @@ $('bpm-up').addEventListener('click', () => setBpm(settings.bpm + 1));
 $('bpm-input').addEventListener('change', (event) => setBpm(Number(event.target.value)));
 $('rhythm-input').addEventListener('change', (event) => {
   settings.rhythm = event.target.checked;
-  saveSettings(settings); // only for new riffs: saved riffs keep the rhythm they were recorded with
+  rememberSettings(); // only for new riffs: saved riffs keep the rhythm they were recorded with
 });
 
 // Camera: watch the fretting hand to pick strings (see placeWithCamera). It needs the setup first.
@@ -204,18 +204,32 @@ $('camera-input').checked = settings.camera;
 $('camera-setup-btn').hidden = !settings.camera;
 $('camera-input').addEventListener('change', (event) => {
   settings.camera = event.target.checked;
-  saveSettings(settings);
+  rememberSettings();
   $('camera-setup-btn').hidden = !settings.camera;
   if (settings.camera) prepareHandTracking().catch(console.error); // get it ready while you're on the home screen
 });
 if (settings.camera) prepareHandTracking().catch(console.error);
+
+// The line next to Settings on the home screen: what's set, without opening the drawer.
+function showSettingsSummary() {
+  const parts = [settings.autoTempo ? 'Auto tempo' : `${settings.bpm} BPM`, settings.meter, `note lengths ${settings.rhythm ? 'on' : 'off'}`];
+  if (settings.camera) parts.push(cameraNeck ? 'camera on' : 'camera on (not set up)');
+  $('settings-summary').textContent = parts.join(' · ');
+}
+
+// Save the settings and show them on the Settings line.
+function rememberSettings() {
+  saveSettings(settings);
+  showSettingsSummary();
+}
+showSettingsSummary();
 
 // Auto: Riff Boi works out the tempo from your notes when you tap Stop (see detectTempo).
 $('auto-tempo-input').checked = settings.autoTempo;
 $('auto-tempo-input').addEventListener('change', (event) => {
   settings.autoTempo = event.target.checked;
   showTempo();
-  saveSettings(settings);
+  rememberSettings();
 });
 
 // The time signature, for new riffs (saved riffs keep theirs). A saved setting that isn't in
@@ -225,7 +239,7 @@ $('meter-select').replaceChildren(...METERS.map((meter) => new Option(meter, met
 $('meter-select').value = settings.meter;
 $('meter-select').addEventListener('change', (event) => {
   settings.meter = event.target.value;
-  saveSettings(settings);
+  rememberSettings();
 });
 
 
@@ -439,6 +453,7 @@ function drawRiff(riff) {
   $('riff-auto-tag').hidden = !riff.autoTempo;
   $('riff-auto-tag').textContent = riff.unsureTempo ? 'auto, not sure' : 'auto';
   $('riff-detect-btn').hidden = !timing.timing || Boolean(riff.written); // a written tab's rhythm is exact
+  $('tempo-group').hidden = $('riff-tempo').hidden && $('riff-detect-btn').hidden;
 }
 
 // Type a new tempo to speed a riff up or slow it down: its note values stay the same (see retime).
@@ -490,7 +505,7 @@ function problemFor(err) {
 
 // No note after 5 seconds of listening (60 readings a second) means something's off.
 const CANT_HEAR_READINGS = 5 * 60;
-const CANT_HEAR = ["Can't hear your guitar", 'Play a little louder, or check your input on the home screen.'];
+const CANT_HEAR = ["Can't hear your guitar", "Play a little louder, or check your computer's sound settings: your guitar's input should be the one picked."];
 
 // --- Recording ---
 
@@ -725,7 +740,7 @@ $('riff-share-btn').addEventListener('click', async () => {
   button.textContent = (await copyText(url)) ? 'Link copied' : "Couldn't copy";
   button.focus(); // copying may have moved the focus
   clearTimeout(sharedTimer);
-  sharedTimer = setTimeout(() => (button.textContent = 'Share'), 2000);
+  sharedTimer = setTimeout(() => (button.textContent = 'Link'), 2000);
 });
 
 // A riff opened from a link isn't saved until you say so.
@@ -757,7 +772,7 @@ window.addEventListener('hashchange', () => {
 
 // Riff Boi can't hear which string you played, so it guesses. Drag a note up or down to another
 // string: it stays the same note, so its fret changes to match. Or tap it to change its fret
-// (that changes the note), move it with buttons, or delete it. Frets go up to 24, like New Tab.
+// (that changes the note), move it with buttons, or delete it. Frets go up to 24, like Write a tab.
 
 function openEdit(i) {
   stopPlayback(); // both use the red highlight
@@ -1008,7 +1023,7 @@ $('riff-tab').addEventListener('keydown', (event) => {
 // Not while you're typing in a box or have a button picked: Space already presses a picked button.
 document.addEventListener('keydown', (event) => {
   if (event.code !== 'Space' || event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
-  if (event.target.closest('input, select, textarea, button, a, [tabindex]')) return;
+  if (event.target.closest('input, select, textarea, button, a, summary, [tabindex]')) return;
   if (!screens.home.hidden) {
     event.preventDefault(); // Space would scroll the page
     $('new-riff-btn').click();
@@ -1187,7 +1202,7 @@ for (const id of ['speed-select', 'click-input']) {
   });
 }
 
-// --- New Tab: write a tab by hand ---
+// --- Write a tab: by hand, one note at a time ---
 
 const editor = { written: [], string: 6, beats: 1 }; // the notes so far, and what's picked
 
@@ -1377,6 +1392,7 @@ let setupCamera = false; // is the setup screen's camera running?
 // "Set up camera", or "Set up camera again" once it's set up.
 function showSetupButton() {
   $('camera-setup-btn').textContent = cameraNeck ? 'Set up camera again' : 'Set up camera';
+  showSettingsSummary();
 }
 
 // Back to the first note. `problem` says why, if something went wrong.
