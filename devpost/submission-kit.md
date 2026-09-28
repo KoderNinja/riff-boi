@@ -22,7 +22,7 @@ The storyboard is in `devpost/video/storyboard.md` (shots, timing, text on scree
 - Say how I used Claude Code once, early and plainly.
 - Explain how it works with the guitar.
 - End on what I learned.
-- Aim for about 4:30.
+- Aim for about 3:15 (the rules say 3 to 5 minutes, so never under 3:00).
 
 ## Facts for the AI part (to help me remember; I write it myself)
 What I did and decided:
