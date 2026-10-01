@@ -308,3 +308,9 @@ What I learned and the problems I solved while building Riff Boi. I'm using this
 - "New Tab" is "Write a tab" now, so it can't be mixed up with a browser tab or with New Riff.
 - An old message still said to check my input on the home screen, but the input picker is gone. It points to the computer's sound settings now.
 
+## Oct 1, 2026: Sheet music to tab
+- I wanted to take a picture of sheet music and get tab. Reading notes from a photo is the hard part: the AI services that can do it cost money per photo and need an adult's account, and writing our own reader would take weeks. So I went with the free route: Audiveris (a free app) reads the photo and saves it as MusicXML, and Riff Boi reads that file.
+- MusicXML is just text with tags, like `<step>C</step><octave>5</octave>`. A note's number comes from its letter, its octave and any sharp or flat, and its length from `<duration>` compared to `<divisions>` (how many steps make a quarter note).
+- Guitar music is written an octave higher than it sounds, so a part called "Guitar" gets moved down an octave.
+- Then Riff Boi picks the strings and frets the same way it does for anything I play: the spots that need the least hand movement, based on the notes around each one.
+

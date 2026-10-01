@@ -14,6 +14,7 @@ import { riffConfidence, isUnsure } from './confidence.js';
 import { writtenRiff, retime, EDITOR_MAX_FRET, typedFret } from './editor.js';
 import { playNotes } from './playback.js';
 import { riffFromRecording } from './upload.js';
+import { readMusicXml } from './musicxml.js';
 import { findScale } from './scale.js';
 import { riffToLink, riffFromLink } from './share.js';
 
@@ -1039,8 +1040,45 @@ $('upload-btn').addEventListener('click', () => $('upload-input').click());
 $('upload-input').addEventListener('change', () => {
   const file = $('upload-input').files[0];
   $('upload-input').value = ''; // so picking the same file again still works
-  if (file) tabFromRecording(file, file.name.replace(/\.[^.]+$/, '').slice(0, 40));
+  if (!file) return;
+  const name = file.name.replace(/\.[^.]+$/, '').slice(0, 40);
+  if (/\.(musicxml|xml|mxl)$/i.test(file.name)) tabFromSheetMusic(file, name);
+  else tabFromRecording(file, name);
 });
+
+// Sheet music saved as MusicXML (like from Audiveris, which reads a photo of sheet music, or
+// MuseScore): its melody becomes a riff, with strings and frets picked like any riff's (the
+// spots that need the least hand movement). It keeps the file's tempo and time signature.
+async function tabFromSheetMusic(file, name) {
+  $('saving-title').textContent = 'Reading the sheet music…';
+  $('saving-details').textContent = '';
+  $('saving-where').textContent = '';
+  showScreen('saving');
+  let music;
+  try {
+    music = await readMusicXml(file);
+  } catch (err) {
+    console.error(err);
+    return showProblem("Couldn't read that sheet music", 'Use a MusicXML file (.musicxml, .xml or .mxl), like Audiveris or MuseScore save');
+  }
+  if (music.notes.length === 0) return showProblem('No notes found', 'Riff Boi reads one melody, one note at a time');
+  const bpm = clampBpm(music.bpm ?? settings.bpm, settings.bpm);
+  let beat = 0;
+  const notes = music.notes.map(({ midi, beats }) => {
+    const note = { midi, name: midiToName(midi), t: (beat * 60) / bpm };
+    beat += beats;
+    return note;
+  });
+  placeNotes(notes);
+  let riff;
+  try {
+    riff = saveRiff(notes, null, { bpm, endTime: (beat * 60) / bpm, rhythm: true, meter: music.meter ?? settings.meter, written: true, name: music.title.slice(0, 40) || name });
+  } catch (err) {
+    console.error(err);
+    return showProblem("Couldn't save", 'Your browser blocked saving (private window?)');
+  }
+  showRiff(riff);
+}
 
 // Read a recording, save its riff (named `name`) and show it. Uses the tempo, time signature,
 // Auto detect tempo and Show note lengths settings, like a riff you record.

@@ -961,5 +961,48 @@ check('delete: deleting a riff that isn\'t there changes nothing', loadRiffs().m
   check('camera: frets get closer together up the neck (fret 12 is halfway)', Math.abs(fretAt(50, 0, 100) - 12) < 1e-9 && fretAt(-5, 0, 100) === 0 && fretAt(99, 0, 100) === 24);
 }
 
+// --- Sheet music: reading MusicXML (musicxml.js) ---
+{
+  const { readMusicXml } = await import('../js/musicxml.js');
+  const { deflateRawSync } = await import('node:zlib');
+  const note = (step, octave, duration, extra = '') => `<note><pitch><step>${step}</step>${extra.includes('<alter>') ? extra.match(/<alter>.*?<\/alter>/)[0] : ''}<octave>${octave}</octave></pitch><duration>${duration}</duration>${extra.replace(/<alter>.*?<\/alter>/, '')}</note>`;
+  const score = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0"><work><work-title>Test &amp; run</work-title></work>
+<part-list><score-part id="P1"><part-name>Guitar</part-name></score-part></part-list>
+<part id="P1"><measure number="1">
+<attributes><divisions>2</divisions><time><beats>4</beats><beat-type>4</beat-type></time><clef><sign>G</sign><line>2</line></clef></attributes>
+<direction><sound tempo="100"/></direction>
+${note('A', 4, 2)}${note('C', 5, 1, '<tie type="start"/>')}${note('C', 5, 1, '<tie type="stop"/>')}<note><rest/><duration>2</duration></note>
+${note('E', 5, 2)}${note('G', 5, 2, '<chord/>')}${note('B', 3, 2, '<voice>2</voice>')}${note('F', 5, 2, '<alter>1</alter>')}
+</measure></part></score-partwise>`;
+  const expected = '57:1 60:2 64:1 66:1';
+  const shown = (m) => m.notes.map((n) => `${n.midi}:${n.beats}`).join(' ');
+  const plain = await readMusicXml(new Blob([score]));
+  check('sheet music: one melody (ties joined, rests and chords and other voices left out), guitar written an octave up',
+    shown(plain) === expected && plain.bpm === 100 && plain.meter === '4/4' && plain.title === 'Test & run' && plain.skipped === 0, JSON.stringify(plain));
+  // The same score zipped, like a .mxl from Audiveris or MuseScore.
+  const enc = new TextEncoder();
+  const zipOf = (entries) => {
+    const parts = []; const central = []; let at = 0;
+    for (const [name, text] of entries) {
+      const nameBytes = enc.encode(name); const data = deflateRawSync(enc.encode(text));
+      const local = new Uint8Array(30 + nameBytes.length); const lv = new DataView(local.buffer);
+      lv.setUint32(0, 0x04034b50, true); lv.setUint16(8, 8, true); lv.setUint32(18, data.length, true); lv.setUint16(26, nameBytes.length, true); local.set(nameBytes, 30);
+      const dir = new Uint8Array(46 + nameBytes.length); const dv = new DataView(dir.buffer);
+      dv.setUint32(0, 0x02014b50, true); dv.setUint16(10, 8, true); dv.setUint32(20, data.length, true); dv.setUint16(28, nameBytes.length, true); dv.setUint32(42, at, true); dir.set(nameBytes, 46);
+      parts.push(local, data); central.push(dir); at += local.length + data.length;
+    }
+    const size = central.reduce((n, d) => n + d.length, 0);
+    const end = new Uint8Array(22); const ev = new DataView(end.buffer);
+    ev.setUint32(0, 0x06054b50, true); ev.setUint16(10, entries.length, true); ev.setUint32(12, size, true); ev.setUint32(16, at, true);
+    return new Blob([...parts, ...central, end]);
+  };
+  const container = '<?xml version="1.0"?><container><rootfiles><rootfile full-path="music/score.xml"/></rootfiles></container>';
+  const zipped = await readMusicXml(zipOf([['META-INF/container.xml', container], ['music/score.xml', score]]));
+  check('sheet music: a zipped .mxl reads the same', shown(zipped) === expected, shown(zipped));
+  check('sheet music: a file that isn\'t MusicXML is turned down', await readMusicXml(new Blob(['<html></html>'])).then(() => false, () => true));
+}
+
 console.log(allOk ? '\nALL CHECKS PASS' : '\nSOME CHECKS FAILED');
 process.exit(allOk ? 0 : 1);
